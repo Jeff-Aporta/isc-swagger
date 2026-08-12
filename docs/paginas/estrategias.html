@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es" class="theme-dark" data-theme="dark" data-palette="contapyme">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Estrategias · IS-Swagger</title>
+  <meta name="description" content="Las decisiones de diseño del visor y el error concreto que enseñó cada una.">
+  <script src="../preview-boot.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/is-base.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/palettes.min.css">
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/all.min.js"></script>
+  <link rel="stylesheet" href="../styles/doc.css">
+</head>
+<body>
+  <main class="doc">
+
+    <header class="doc__head">
+      <p class="doc__kicker">Estrategias</p>
+      <h1 class="doc__title">Las decisiones, y el error que enseñó cada una</h1>
+      <p class="doc__lede">
+        Ninguna de estas reglas es preferencia estética. Todas salen de un fallo
+        concreto que no dio ningún error: build verde, navegador contento, y algo
+        mal en pantalla.
+      </p>
+    </header>
+
+    <section class="seccion">
+      <h2>El patrón de fallo de este stack</h2>
+      <p>
+        Se repite en casi todo lo que se rompió aquí:
+        <strong>el artefacto se genera bien y el contenido está mal</strong>. Nada
+        lanza, nada avisa, y el síntoma es mudo: el tema no llega, el evento no
+        salta, el resaltado no aparece, el componente no está en la galería.
+      </p>
+      <div class="nota">
+        <p>
+          Por eso las pruebas de este proyecto casi no comprueban que algo
+          <em>funcione</em>. Comprueban que <strong>dos fuentes que deberían decir
+          lo mismo no se hayan separado</strong>. Antes de escribir una prueba
+          nueva la pregunta útil es: <em>¿qué par de cosas puede desincronizarse
+          aquí sin que nada se rompa?</em>
+        </p>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Estrategia 1 · Un solo dueño del estado</h2>
+      <p>
+        <code>sw-app</code> es el único que guarda estado y el único que escribe
+        la URL. Los hijos reciben <code>props</code> y emiten eventos.
+      </p>
+      <div class="contraste">
+        <div class="contraste__lado contraste__lado--antes">
+          <h3 class="contraste__titulo">
+            <is-icon icon="mdi:close-circle-outline"></is-icon>
+            Estado repartido
+          </h3>
+          <ul>
+            <li>Dos componentes escriben el mismo parámetro de la URL.</li>
+            <li>El botón «atrás» deja la vista y la URL en desacuerdo.</li>
+            <li>Nadie sabe quién ganó la última escritura.</li>
+          </ul>
+        </div>
+        <div class="contraste__lado contraste__lado--despues">
+          <h3 class="contraste__titulo">
+            <is-icon icon="mdi:check-circle-outline"></is-icon>
+            Dueño único
+          </h3>
+          <ul>
+            <li>Una escritura de <code>?tab</code>, <code>?op</code>, <code>?opt</code>.</li>
+            <li>Una lectura al arrancar.</li>
+            <li>Un hijo que quiere cambiar algo lo <em>pide</em>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Estrategia 2 · Repintar entero, salvo donde hay foco</h2>
+      <p>
+        Por defecto, asignar <code>props</code> repinta el shadow completo. Es lo
+        correcto para lo inmutable y evita toda la complejidad de un diff. Pero
+        <strong>no</strong> lo es donde el usuario está escribiendo: repintar le
+        quitaría el foco al campo en cada tecla.
+      </p>
+      <div class="tabla">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Componente</th>
+              <th scope="col">Cómo repinta</th>
+              <th scope="col">Por qué</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><code>sw-try</code></th>
+              <td>Tres zonas independientes: URL, aviso, resultado</td>
+              <td>Escribir un parámetro no puede rehacer el formulario</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>sw-nav</code></th>
+              <td>Ignora un cambio de <code>query</code> que venga solo</td>
+              <td>Lo está escribiendo el usuario en ese mismo shadow</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>sw-operation</code></th>
+              <td>No rehace la tarjeta al cambiar de pestaña ni de servidor</td>
+              <td>La cabecera no cambió; solo el cuerpo</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>sw-tag-group</code></th>
+              <td>Distingue «cambió el grupo» de «cambió qué está abierto»</td>
+              <td>Abrir una tarjeta no debe recrear las otras</td>
+            </tr>
+            <tr>
+              <th scope="row">El resto</th>
+              <td>Repintado completo</td>
+              <td>Contenido inmutable, sin estado que conservar</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Si añades un componente con estado editable, <strong>decide esto antes de
+        escribirlo</strong>. Descubrirlo después obliga a reescribir el render.
+      </p>
+    </section>
+
+    <section class="seccion">
+      <h2>Estrategia 3 · El CSS fuera del <code>.ts</code>, y como hoja construida</h2>
+      <p>
+        Dos reglas que van juntas. La primera: el CSS vive en el
+        <code>.css</code> hermano, nunca en una constante del módulo. La segunda:
+        se aplica con <code>adoptedStyleSheets</code>, no con
+        <code>&lt;link&gt;</code>.
+      </p>
+      <div class="diagrama">
+        <is-flowchart open-on-click>
+          <script type="application/json">
+            {
+              "flowchart": {
+                "title": "Por qué no un <link> por shadow root",
+                "subtitle": "el parpadeo que costó dos intentos arreglar",
+                "direction": "TB",
+                "groups": [
+                  { "id": "g-mal", "name": "Con <link>", "hue": 12 },
+                  { "id": "g-bien", "name": "Con hoja construida", "hue": 160 }
+                ],
+                "nodes": [
+                  { "id": "m1", "label": "Cambia de sección", "shape": "stadium", "group": "g-mal" },
+                  { "id": "m2", "label": "Se crean N shadow roots", "group": "g-mal" },
+                  { "id": "m3", "label": "Cada uno pide su <link>", "group": "g-mal",
+                    "desc": "Aplicar un `<link>` **nunca** es síncrono, ni desde caché." },
+                  { "id": "m4", "label": "El navegador pinta sin estilos", "shape": "hexagon", "group": "g-mal" },
+                  { "id": "m5", "label": "Recoloca al resolver", "group": "g-mal",
+                    "desc": "Un frame de vista desordenada, visible en cada cambio." },
+
+                  { "id": "b1", "label": "Cambia de sección", "shape": "stadium", "group": "g-bien" },
+                  { "id": "b2", "label": "Hoja ya en caché por URL", "shape": "cylinder", "group": "g-bien",
+                    "desc": "`precargarCss` la pidió al **cargar el módulo**, no al montar." },
+                  { "id": "b3", "label": "adoptedStyleSheets", "group": "g-bien",
+                    "desc": "Síncrono. Y sobrevive a `replaceChildren()`: es del ShadowRoot, no un hijo." },
+                  { "id": "b4", "label": "Pinta ya con estilos", "shape": "stadium", "group": "g-bien" }
+                ],
+                "edges": [
+                  { "from": "m1", "to": "m2" }, { "from": "m2", "to": "m3" },
+                  { "from": "m3", "to": "m4" }, { "from": "m4", "to": "m5" },
+                  { "from": "b1", "to": "b2" }, { "from": "b2", "to": "b3" }, { "from": "b3", "to": "b4" }
+                ]
+              }
+            }
+          </script>
+        </is-flowchart>
+        <p class="diagrama__pie">
+          El primer intento fue conservar el <code>&lt;link&gt;</code> a través del
+          vaciado. No bastaba, porque el problema no era que se borrara: era que
+          aplicarlo nunca es síncrono.
+        </p>
+      </div>
+      <p>
+        El kit <code>is-*</code> viene del CDN y enlaza sus propios
+        <code>&lt;link&gt;</code> por shadow root.
+        <code>src/js/hojas.js</code> — plano y síncrono en <code>&lt;head&gt;</code>,
+        antes que el kit — envuelve <code>ShadowRoot.prototype.prepend</code> y los
+        cambia por la hoja construida <strong>a partir de la segunda aparición</strong>
+        de cada URL. La primera se deja pasar tal cual, para que ningún componente
+        pueda quedarse sin estilos por culpa de esa capa.
+      </p>
+    </section>
+
+    <section class="seccion">
+      <h2>Estrategia 4 · El enlace es la unidad de compartición</h2>
+      <p>
+        Todo lo que define una vista viaja en la query, en parámetros planos y
+        editables a mano, no en un blob:
+      </p>
+      <pre><code>?conn=&lt;base64url&gt;   la API a la que se conecta
+?tab=&lt;sección&gt;
+?op=&lt;operationId&gt;
+?opt=try|examples|doc
+?server=&lt;base&gt;
+?s=&lt;base64url&gt;      tema, paleta y búsqueda</code></pre>
+      <p>
+        Las escrituras usan <code>replaceState</code>: desplegar una tarjeta no
+        debe llenar el historial de entradas que el botón «atrás» tenga que
+        deshacer una a una.
+      </p>
+      <div class="nota">
+        <p>
+          <code>?conn=</code> tiene precedencia sobre la configuración local del
+          <code>&lt;script&gt;</code>. Es deliberado: un host puede fijar su API por
+          defecto y aun así permitir que un enlace apunte a otra sin tocar nada.
+        </p>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Estrategia 5 · Reusar el kit antes que inventar</h2>
+      <p>
+        Botones, diálogos, campos, selectores, tablas, toasts, iconos y diagramas
+        ya existen en <code>is-*</code>. Un componente <code>sw-*</code> es un
+        <strong>traductor</strong>: convierte el documento del backend en
+        atributos de <code>is-*</code> y nada más.
+      </p>
+      <p>
+        Hay una trampa concreta que justifica la regla: <strong>un valor de enum
+        inventado no falla</strong>. <code>variant="ghost"</code> en un componente
+        que solo acepta <code>filled | outlined | plain</code> no lanza, no avisa
+        en consola y no se ve — el elemento se pinta con los valores por defecto.
+        Antes de usar un valor, se verifica en el <code>.js</code> del kit o en su
+        <code>.md</code>.
+      </p>
+    </section>
+
+    <section class="seccion">
+      <h2>Estrategia 6 · Lo que se pinta es entrada no confiable</h2>
+      <p>
+        El documento lo sirve un backend, pero podría servirlo cualquiera: la URL
+        la escribe quien abre el enlace. Así que:
+      </p>
+      <ul>
+        <li>
+          La plantilla <code>html``</code> escapa todo primitivo por defecto.
+          <code>raw()</code> es la excepción y solo para HTML ya saneado.
+        </li>
+        <li>
+          <code>renderMarkdown</code> escapa <strong>antes</strong> de componer, así
+          que una descripción con <code>&lt;script&gt;</code> se pinta como texto.
+        </li>
+        <li>
+          <code>sw-json</code> resalta sin ejecutar. Y tokeniza el texto crudo
+          escapando dentro del reemplazo — al revés, la regex veía
+          <code>&amp;quot;</code> y el bloque salía sin color.
+        </li>
+      </ul>
+      <p>
+        Las credenciales siguen la misma lógica de mínimo privilegio: el JWT vive
+        en <code>sessionStorage</code> y muere con la pestaña; las credenciales de
+        «recordarme» van a <code>localStorage</code>, ofuscadas y
+        <strong>opt-in</strong>. La ofuscación replica el contrato del backend, no
+        es cifrado, y la interfaz lo dice.
+      </p>
+    </section>
+
+    <section class="seccion">
+      <h2>Estrategia 7 · La documentación también se verifica</h2>
+      <p>
+        Los <code>LLM.md</code> de este repo son contrato, no adorno: un agente los
+        lee y actúa. Un documento desactualizado es peor que no tenerlo, porque
+        se obedece igual.
+      </p>
+      <p>
+        Por eso hay una prueba, <code>tests/docs.test.mjs</code>, que verifica
+        contra el código: que no falte ninguna página, que los enlaces relativos
+        resuelvan, que el catálogo de componentes no tenga fantasmas ni huecos,
+        que la lista de componentes con render manual sea exacta, y que los
+        patrones ya descartados no hayan vuelto.
+      </p>
+      <div class="rejilla">
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="arquitectura">
+          <is-icon class="tarjeta__icono" icon="mdi:sitemap-outline"></is-icon>
+          <h3 class="tarjeta__titulo">Arquitectura</h3>
+          <p>Dónde vive cada capa y cómo se comunican.</p>
+        </button>
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="empezar">
+          <is-icon class="tarjeta__icono" icon="mdi:rocket-launch-outline"></is-icon>
+          <h3 class="tarjeta__titulo">Empezar</h3>
+          <p>Conectar tu API, embeberlo o levantarlo en local.</p>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="../doc-kit.js"></script>
+</body>
+</html>

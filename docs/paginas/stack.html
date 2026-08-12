@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es" class="theme-dark" data-theme="dark" data-palette="contapyme">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>El stack · IS-Swagger</title>
+  <meta name="description" content="TypeScript sin bundler, web components vanilla y CSS hermano por componente.">
+  <script src="../preview-boot.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/is-base.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/palettes.min.css">
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/all.min.js"></script>
+  <link rel="stylesheet" href="../styles/doc.css">
+</head>
+<body>
+  <main class="doc">
+
+    <header class="doc__head">
+      <p class="doc__kicker">Stack</p>
+      <h1 class="doc__title">TypeScript sin bundler, web components sin framework</h1>
+      <p class="doc__lede">
+        El único runtime es el navegador. No hay React, no hay MUI y no hay Babel
+        compilando en cada carga. Lo que el navegador recibe son módulos ES
+        planos y hojas de estilo normales.
+      </p>
+    </header>
+
+    <section class="seccion">
+      <h2>El cambio frente al visor anterior</h2>
+      <div class="tabla">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Capa</th>
+              <th scope="col">Antes (React)</th>
+              <th scope="col">Ahora</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Interfaz</th>
+              <td>React 18 + MUI 5 + Emotion</td>
+              <td>Web components vanilla + kit <code>is-*</code> por CDN</td>
+            </tr>
+            <tr>
+              <th scope="row">Transpilación</th>
+              <td>Babel <strong>en el navegador</strong></td>
+              <td>esbuild en build; el navegador recibe ESM plano</td>
+            </tr>
+            <tr>
+              <th scope="row">Fuente</th>
+              <td><code>.jsx</code></td>
+              <td><code>.ts</code> — solo se borran los tipos, sin empaquetar</td>
+            </tr>
+            <tr>
+              <th scope="row">Estilos</th>
+              <td>Emotion <code>sx</code> + un <code>.css</code> global</td>
+              <td>Un <code>.css</code> hermano por componente, en su shadow</td>
+            </tr>
+            <tr>
+              <th scope="row">Estado</th>
+              <td>Context + hooks repartidos</td>
+              <td>Un solo dueño (<code>sw-app</code>), hijos controlados</td>
+            </tr>
+            <tr>
+              <th scope="row">Distribución</th>
+              <td>4 bundles + vendor CJS</td>
+              <td><code>dist/cdn/</code> plano: un <code>.js</code> y un <code>.css</code> por módulo</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>El build: transpila, no empaqueta</h2>
+      <p>
+        <code>scripts/build.mjs</code> pasa cada <code>.ts</code> por esbuild de
+        forma independiente. esbuild solo le quita los tipos y lo minifica: no
+        resuelve dependencias, no hace tree-shaking, no produce un bundle.
+      </p>
+      <p>
+        La salida se <strong>aplana</strong> a un único directorio, y los imports
+        relativos se reescriben para que todo módulo sea hermano de todos. Eso es
+        lo que permite servir <code>dist/cdn/</code> desde cualquier sitio — un
+        CDN, un worker, una carpeta — sin que nada tenga que resolver rutas.
+      </p>
+      <div class="diagrama">
+        <is-flowchart open-on-click>
+          <script type="application/json">
+            {
+              "flowchart": {
+                "title": "De la fuente al navegador",
+                "subtitle": "sin bundler y sin paso de transpilación en runtime",
+                "direction": "LR",
+                "groups": [
+                  { "id": "g-src", "name": "Fuente", "hue": 199 },
+                  { "id": "g-build", "name": "Build", "hue": 38 },
+                  { "id": "g-out", "name": "Publicado", "hue": 160 }
+                ],
+                "nodes": [
+                  { "id": "ts", "label": "src/**/*.ts", "shape": "cylinder", "group": "g-src",
+                    "desc": "Dominio en `js/`, componentes en `components/sw/`." },
+                  { "id": "css", "label": "sw-x.css hermano", "shape": "cylinder", "group": "g-src",
+                    "desc": "Un archivo por componente. Nunca dentro del `.ts`." },
+                  { "id": "esb", "label": "esbuild por archivo", "group": "g-build",
+                    "desc": "Borra tipos y minifica. **No** empaqueta ni resuelve dependencias." },
+                  { "id": "flat", "label": "Aplanar imports", "shape": "hexagon", "group": "g-build",
+                    "desc": "`../../js/x.js` → `./x.js`. En dist todos son hermanos." },
+                  { "id": "dist", "label": "dist/cdn/ plano", "shape": "cylinder", "group": "g-out",
+                    "desc": "Un `.js` y un `.css` por módulo, todos al mismo nivel." },
+                  { "id": "nav", "label": "Navegador", "shape": "stadium", "group": "g-out",
+                    "desc": "`<script type=\"module\">` nativo. Cero transpilación." }
+                ],
+                "edges": [
+                  { "from": "ts", "to": "esb" },
+                  { "from": "esb", "to": "flat" },
+                  { "from": "flat", "to": "dist" },
+                  { "from": "css", "to": "dist", "label": "se copia", "kind": "dashed" },
+                  { "from": "dist", "to": "nav", "label": "ESM nativo" }
+                ]
+              }
+            }
+          </script>
+        </is-flowchart>
+        <p class="diagrama__pie">
+          El <code>.css</code> no pasa por el compilador de TypeScript: se
+          minifica y se copia al lado de su módulo. Ese emparejamiento es el
+          contrato del que vive <code>adoptCss</code>.
+        </p>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>El contrato del CSS</h2>
+      <p>
+        Cada componente tiene su hoja hermana. El módulo la reclama con
+        <code>adoptCss(shadow, import.meta.url)</code>, que deriva
+        <code>sw-operation.css</code> de <code>sw-operation.js</code> — nadie tiene
+        que declarar la relación en ningún sitio.
+      </p>
+      <pre><code>src/components/sw/sw-operation.ts
+src/components/sw/sw-operation.css
+        ↓ build
+dist/cdn/sw-operation.js
+dist/cdn/sw-operation.css</code></pre>
+      <p>
+        La hoja se aplica como <code>CSSStyleSheet</code> construida y cacheada
+        por URL, no como <code>&lt;link&gt;</code>. Es una diferencia que se ve:
+        un <code>&lt;link&gt;</code> dentro de un shadow root no bloquea el
+        pintado de ese shadow, así que el navegador pinta sin estilos y recoloca
+        al resolver la hoja. Con decenas de shadow roots eso es un parpadeo
+        visible en cada cambio de sección.
+      </p>
+      <div class="nota">
+        <p>
+          <strong>Regla dura:</strong> el CSS nunca vive dentro del
+          <code>.ts</code>. Metido en una constante no se minifica aparte, no se
+          cachea aparte y ninguna herramienta de CSS lo ve. Es un error que este
+          proyecto heredó de un hermano y que hoy vigila una prueba.
+        </p>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Las piezas</h2>
+      <div class="rejilla">
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:language-typescript"></is-icon>
+          <h3 class="tarjeta__titulo">TypeScript estricto</h3>
+          <p>
+            <code>strict</code> + <code>noUncheckedIndexedAccess</code>. Los tipos
+            son ambiente (<code>src/types/</code>): visibles sin importar nada.
+          </p>
+        </article>
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:web"></is-icon>
+          <h3 class="tarjeta__titulo">Web components</h3>
+          <p>
+            Shadow DOM y <code>customElements</code> nativos. Un componente es
+            una clase que pinta, sin ciclo de vida de framework.
+          </p>
+        </article>
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:package-variant-closed"></is-icon>
+          <h3 class="tarjeta__titulo">Kit <code>is-*</code> por CDN</h3>
+          <p>
+            Botones, diálogos, campos, tablas, toasts e iconos ya resueltos. No
+            se reinventa ninguno.
+          </p>
+        </article>
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:flash-outline"></is-icon>
+          <h3 class="tarjeta__titulo">esbuild</h3>
+          <p>
+            Única dependencia de build junto a TypeScript y jsdom. El build
+            entero tarda menos de un segundo.
+          </p>
+        </article>
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:test-tube"></is-icon>
+          <h3 class="tarjeta__titulo"><code>node --test</code></h3>
+          <p>
+            Sin runner externo. Las pruebas corren contra
+            <code>dist/cdn/</code>: lo que rompe en producción es el artefacto.
+          </p>
+        </article>
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:palette-swatch-outline"></is-icon>
+          <h3 class="tarjeta__titulo">Tokens del kit</h3>
+          <p>
+            Todo el color sale de <code>--is-*</code>. Cambiar de tema o de
+            paleta recorre el visor entero sin tocar un componente.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Lo que se ejecuta</h2>
+      <pre><code>npm install
+npm run build      # src/**.ts → dist/cdn/*.js (+ *.css copiados)
+npm run dev        # el mismo build en watch
+npm run typecheck  # tsc --noEmit
+npm test           # build + node --test tests/*.test.mjs</code></pre>
+      <p>
+        Dos archivos quedan fuera del pipeline de TypeScript a propósito:
+        <code>src/js/boot.js</code> y <code>src/js/hojas.js</code>. Corren
+        síncronos en <code>&lt;head&gt;</code>, antes de que exista ningún módulo,
+        para aplicar el tema y preparar la caché de hojas sin parpadeo.
+      </p>
+      <div class="rejilla">
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="arquitectura">
+          <is-icon class="tarjeta__icono" icon="mdi:sitemap-outline"></is-icon>
+          <h3 class="tarjeta__titulo">Arquitectura</h3>
+          <p>Cómo se reparten las capas y cómo viaja un dato hasta la pantalla.</p>
+        </button>
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="estrategias">
+          <is-icon class="tarjeta__icono" icon="mdi:chess-knight"></is-icon>
+          <h3 class="tarjeta__titulo">Estrategias</h3>
+          <p>Por qué el estado tiene un solo dueño y cuándo se repinta a medias.</p>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="../doc-kit.js"></script>
+</body>
+</html>

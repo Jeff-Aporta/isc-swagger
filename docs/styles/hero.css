@@ -1,0 +1,112 @@
+/**
+ * hero.css — solo la portada (`paginas/inicio.html`).
+ *
+ * Vive aparte de `doc.css` porque es la única página con una composición
+ * propia: dos columnas con el vídeo al lado del texto. El resto del sitio es
+ * una columna de lectura y no necesita nada de esto.
+ */
+
+.doc--inicio {
+  gap: 3.25rem;
+}
+
+/* ── Composición ────────────────────────────────────────────── */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  padding-bottom: 1rem;
+}
+
+.hero__texto {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+/* ── Texto ──────────────────────────────────────────────────── */
+
+.hero__kicker {
+  margin: 0;
+  color: var(--is-accent, #1a6eb0);
+  font-size: 0.6875rem;
+  font-weight: 680;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.hero__titulo {
+  margin: 0;
+  font-size: clamp(1.9rem, 1.2rem + 3.2vw, 3.1rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+/* El acento no lleva degradado recortado: sobre tema claro un `background-clip:
+   text` mal calibrado deja el texto invisible, y aquí no compensa el riesgo. */
+.hero__acento {
+  color: var(--is-accent, #1a6eb0);
+}
+
+.hero__lede {
+  margin: 0;
+  max-width: 46ch;
+  font-size: clamp(0.9375rem, 0.9rem + 0.3vw, 1.0625rem);
+  line-height: 1.65;
+  opacity: 0.78;
+  text-wrap: pretty;
+}
+
+.hero__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.35rem;
+}
+
+/* ── Vídeo ──────────────────────────────────────────────────── */
+
+.hero__video {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  min-width: 0;
+}
+
+.hero__video video {
+  display: block;
+  width: 100%;
+  /* El vídeo es 1920×1080; fijar la razón evita que el layout salte cuando
+     todavía no han llegado los metadatos. */
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--is-border-soft, #1f242b);
+  border-radius: 0.85rem;
+  background: var(--is-code-bg, #0f1318);
+}
+
+.hero__video figcaption {
+  color: var(--is-text, #e6edf3);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  opacity: 0.5;
+  text-align: right;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+
+/* Por debajo de 900px las dos columnas dejan el vídeo demasiado pequeño para
+   leer lo que aparece en pantalla: mejor apilar y darle todo el ancho. */
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .hero__video {
+    order: -1;
+  }
+}

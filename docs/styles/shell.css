@@ -1,0 +1,225 @@
+/**
+ * shell.css — chrome del sitio documental (`docs/index.html`).
+ *
+ * El shell es una barra fija, un índice lateral y un iframe con la página. El
+ * iframe es deliberado: cada página documental es un HTML autosuficiente que se
+ * puede abrir a pelo, y así el shell no tiene que reimplementar su carga.
+ */
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  background: var(--is-bg, #0d1117);
+  color: var(--is-text, #e6edf3);
+  font-family: var(--is-font-sans, system-ui, -apple-system, "Segoe UI", sans-serif);
+}
+
+/* ── Barra ──────────────────────────────────────────────────── */
+
+.shell-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  border-bottom: 1px solid var(--is-border-soft, #1f242b);
+  background: var(--is-bg-soft, #14181d);
+}
+
+/* El botón de menú solo existe cuando el índice se convierte en panel. */
+.shell-bar__menu {
+  display: none;
+}
+
+.marca {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.2rem 0.35rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 660;
+  letter-spacing: -0.02em;
+
+  &:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
+
+  &:focus-visible {
+    outline: 2px solid var(--is-accent, #1a6eb0);
+    outline-offset: 1px;
+  }
+}
+
+.marca__acento { color: var(--is-accent, #1a6eb0); }
+
+.marca__sub {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  opacity: 0.5;
+}
+
+.shell-bar__fin {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+/* ── Cuerpo ─────────────────────────────────────────────────── */
+
+.shell-cuerpo {
+  display: grid;
+  grid-template-columns: 15.5rem 1fr;
+  min-height: 0;
+}
+
+.shell-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-height: 0;
+  padding: 0.7rem 0.55rem 2rem;
+  overflow-y: auto;
+  border-right: 1px solid var(--is-border-soft, #1f242b);
+  scrollbar-width: thin;
+}
+
+.shell-nav__grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+
+  & + & { margin-top: 0.9rem; }
+}
+
+.shell-nav__titulo {
+  padding: 0 0.55rem 0.35rem;
+  font-size: 0.625rem;
+  font-weight: 680;
+  letter-spacing: 0.09em;
+  opacity: 0.42;
+  text-transform: uppercase;
+}
+
+.shell-nav__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.42rem 0.55rem;
+  border: 0;
+  border-radius: 0.45rem;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+
+  &:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
+
+  &:focus-visible {
+    outline: 2px solid var(--is-accent, #1a6eb0);
+    outline-offset: -2px;
+  }
+
+  &[aria-current="true"] {
+    background: color-mix(in srgb, var(--is-accent, #1a6eb0) 16%, transparent);
+
+    .shell-nav__nombre { font-weight: 640; }
+    .shell-nav__icono { opacity: 1; }
+  }
+}
+
+.shell-nav__icono {
+  flex-shrink: 0;
+  color: var(--is-accent, #1a6eb0);
+  font-size: 1.05rem;
+  opacity: 0.75;
+}
+
+.shell-nav__texto {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.shell-nav__nombre {
+  font-size: 0.8125rem;
+  font-weight: 550;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-nav__tag {
+  font-family: var(--is-font-mono, ui-monospace, "Cascadia Code", Menlo, monospace);
+  font-size: 0.6875rem;
+  opacity: 0.42;
+}
+
+.doc-frame {
+  border: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ── Fondo del panel (solo móvil) ───────────────────────────── */
+
+.shell-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  background: rgb(0 0 0 / 45%);
+}
+
+/* En claro un 45% de negro es una mancha; basta con insinuar la capa. */
+[data-theme="light"] .shell-fondo {
+  background: rgb(0 0 0 / 22%);
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+
+/* Por debajo de 860px el índice lateral se come el ancho de lectura de las
+   páginas, así que pasa a panel deslizante con el botón de menú. */
+@media (max-width: 860px) {
+  .shell-bar__menu { display: inline-flex; }
+
+  .shell-cuerpo {
+    grid-template-columns: 1fr;
+  }
+
+  .shell-nav {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 9;
+    width: min(17rem, 84vw);
+    padding-top: 1rem;
+    background: var(--is-bg-soft, #14181d);
+    box-shadow: 0.5rem 0 1.5rem rgb(0 0 0 / 35%);
+    transform: translateX(-100%);
+    transition: transform 180ms ease;
+  }
+
+  .nav-abierto .shell-nav {
+    transform: translateX(0);
+  }
+
+  .marca__sub { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-nav { transition: none; }
+}

@@ -1,0 +1,17 @@
+/* sw-method — chip de método HTTP. */
+
+:host {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.metodo {
+  /* Ancho fijo: alinea las rutas de la lista aunque el método cambie. */
+  width: 4.75rem;
+  justify-content: center;
+  font-family: var(--is-font-mono, ui-monospace, "Cascadia Code", Menlo, monospace);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  box-sizing: border-box;
+}

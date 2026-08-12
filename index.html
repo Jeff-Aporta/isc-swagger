@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="es" class="theme-dark" data-theme="dark" data-palette="contapyme">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IS-Swagger · Visor de documentación</title>
+<meta name="description" content="Visor de documentación InSoft: explora, documenta y prueba endpoints.">
+
+<!--
+  Kit is-* por CDN, cargado con el loader y **solo los tags que el visor usa**.
+
+  Antes se traía `all.min.js`, que arrastra el kit entero (12 categorías) para usar 22 tags.
+  El loader pide fichero a fichero y lleva registro anti-redundancia, así que el navegador
+  descarga ~215 KB en vez de todo el catálogo. El inventario y de dónde sale está en LLM.md.
+
+  El commit va fijado en vez de `@main`: jsDelivr cachea la rama hasta 7 días, así que con
+  `@main` un componente recién publicado tarda días en llegar, y el pin hace reproducible el
+  despliegue de gh-pages. Ese mismo sha está anotado en LLM.md.
+-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@1ce1d12227f2988877b81b8f35cba2507dc16bf1/dist/cdn/is-base.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@1ce1d12227f2988877b81b8f35cba2507dc16bf1/dist/cdn/palettes.min.css">
+<script type="module">
+  import { ISWebComponentsLoader as L } from
+    'https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@1ce1d12227f2988877b81b8f35cba2507dc16bf1/dist/cdn/loader.min.js';
+  L.pin('1ce1d12227f2988877b81b8f35cba2507dc16bf1');
+  // Lista viva: si un `sw-*` empieza a usar otro tag del kit, añadirlo aquí y en LLM.md.
+  await L.load(
+    'is-button', 'is-copy-button', 'is-dropdown', 'is-dropdown-item',
+    'is-checkbox', 'is-input', 'is-option', 'is-select', 'is-textarea',
+    'is-spinner', 'is-tag', 'is-theme-toggle', 'is-toast',
+    'is-format-bytes', 'is-format-date', 'is-format-number', 'is-relative-time',
+    'is-callout', 'is-details', 'is-dialog', 'is-divider',
+    'is-icon',
+  );
+</script>
+
+<!--
+  Los dos scripts planos del proyecto. Van síncronos y antes que cualquier
+  módulo: si llegaran después, el trabajo que hacen ya no serviría de nada.
+-->
+<!-- Tema antes del primer pintado: sin esto, un flash claro en cada carga. -->
+<script src="./dist/cdn/boot.js"></script>
+<!--
+  Caché de hojas compartida entre shadow roots. Sin esto, cada componente que
+  se recrea al cambiar de sección se pinta un frame sin estilos y la vista
+  entera se desordena y vuelve a su sitio.
+-->
+<script src="./dist/cdn/hojas.js"></script>
+
+<link rel="stylesheet" href="./src/css/app.css">
+<link rel="stylesheet" href="./src/css/hero.css">
+
+<!--
+  Modo de entrada. Sin `?conn=`, `?spec=` ni `?api=`, se enseña el hero
+  con el vídeo promocional. Si llega alguno de esos, se monta el visor.
+  Se decide en <head> para evitar el flash de un modo antes del otro.
+-->
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var tiene = q.has('conn') || q.has('spec') || q.has('api');
+    document.documentElement.dataset.modo = tiene ? 'app' : 'hero';
+  })();
+</script>
+
+<!--
+  Configuración del visor. Se puede sustituir por `window.__SWAGGER_CONFIG__`
+  desde el host, o pisar con `?spec=<url>` / `?api=<base>` / `?conn=<b64>` en la URL.
+
+  Por defecto carga la spec pública de httpbin para que el visor funcione al
+  abrirlo sin configuración: cualquier endpoint se puede probar contra el
+  servidor real de httpbin.
+-->
+<script type="application/json" id="sw-config">
+{
+  "ns": "ISA",
+  "specUrl": "https://httpbin.org/spec.json",
+  "brand": { "title": "IS-Swagger", "subtitle": "Visor de documentación", "icon": "mdi:api" },
+  "auth": { "enabled": false },
+  "serverSelect": true
+}
+</script>
+</head>
+
+<body>
+
+  <!--
+    Hero. Solo se enseña cuando no llega config por URL. En cuanto el visitante
+    comparte un enlace con `?conn=` (o variantes), este bloque desaparece y el
+    visor toma el control. El vídeo es la presentación del proyecto: si el
+    visitante aún no sabe qué es IS-Swagger, este es su primer contacto.
+  -->
+  <section class="hero" hidden>
+    <div class="hero__texto">
+      <p class="hero__kicker">Visor de APIs · InSoft</p>
+      <h1 class="hero__titulo">
+        Tu API ya está documentada.<br>
+        <span class="hero__acento">Solo no lo sabías.</span>
+      </h1>
+      <p class="hero__lede">
+        IS-Swagger lee la configuración que tu backend ya publica y la convierte
+        en documentación navegable y probable. Sin instalar nada, sin exportar
+        colecciones, sin mantener un segundo catálogo en paralelo.
+      </p>
+      <div class="hero__acciones">
+        <a class="hero__cta hero__cta--principal" href="./docs/">Ver la documentación</a>
+        <a class="hero__cta" href="./docs/?s=eyJwYWdlIjoiY29tcGFyYXRpdmEifQ">Frente a Postman</a>
+      </div>
+    </div>
+    <figure class="hero__video">
+      <video controls playsinline preload="metadata"
+             poster="./docs/video/is-swagger-promo.poster.jpg"
+             aria-label="Vídeo de presentación de IS-Swagger">
+        <source src="./docs/video/is-swagger-promo.mp4" type="video/mp4">
+        <p>
+          Tu navegador no reproduce el vídeo.
+          <a href="./docs/video/is-swagger-promo.mp4">Descárgalo aquí</a>.
+        </p>
+      </video>
+      <figcaption>Presentación · 1080p · 6 min</figcaption>
+    </figure>
+  </section>
+
+  <sw-app hidden></sw-app>
+  <is-toast placement="bottom-end"></is-toast>
+
+  <noscript>
+    <div class="sw-sin-js">
+      <strong>El visor necesita JavaScript.</strong>
+      Es una aplicación de una sola página: sin JS no hay nada que mostrar.
+    </div>
+  </noscript>
+
+  <!--
+    Un solo módulo: `dist/cdn/all.min.js` empaqueta los `sw-*` y su dominio. Antes se listaban
+    los 16 componentes uno a uno, lo que eran 16 peticiones y un orden que había que mantener
+    a mano. El CSS no va dentro del bundle: cada componente lo sigue pidiendo de
+    `dist/cdn/components/sw/<tag>.css`, y el barril fija esa base al arrancar.
+
+    Para incrustar solo una parte en otra página siguen estando los módulos sueltos en
+    `dist/cdn/components/sw/`. `npm run build` genera ambas cosas; `npm run dev`, en watch.
+  -->
+  <script type="module" src="./dist/cdn/all.min.js"></script>
+
+  <!--
+    Quita el `hidden` del bloque que toca según `data-modo`. Se hace en un
+    módulo aparte para que el modo ya esté decidido cuando el visor registre
+    sus custom elements: si se mostrara el visor antes de que existan los
+    componentes, se vería el tag vacío hasta que carguen.
+  -->
+  <script>
+    (function () {
+      var modo = document.documentElement.dataset.modo || 'app';
+      var hero = document.querySelector('.hero');
+      var app = document.querySelector('sw-app');
+      if (modo === 'hero') {
+        hero.hidden = false;
+      } else {
+        app.hidden = false;
+      }
+    })();
+  </script>
+</body>
+</html>

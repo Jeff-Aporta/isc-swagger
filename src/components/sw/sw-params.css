@@ -1,0 +1,55 @@
+/* sw-params — campos de parámetros. */
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.bloque {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.titulo {
+  margin: 0;
+  color: var(--is-text, #e6edf3);
+  font-family: var(--is-font-sans, system-ui, -apple-system, "Segoe UI", sans-serif);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  opacity: 0.6;
+  text-transform: uppercase;
+}
+
+.campos {
+  display: grid;
+  /* Dos columnas cuando caben campos de ~19rem; una sola en móvil. */
+  grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.fila {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+  gap: 0.4rem;
+}
+
+.campo {
+  flex: 1;
+  min-width: 0;
+}
+
+.ubicacion {
+  flex-shrink: 0;
+  margin-top: 1.65rem;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--is-border-soft, #1f242b);
+  border-radius: 0.3rem;
+  color: var(--is-text, #e6edf3);
+  font-family: var(--is-font-mono, ui-monospace, "Cascadia Code", Menlo, monospace);
+  font-size: 0.625rem;
+  letter-spacing: 0.03em;
+  opacity: 0.5;
+}

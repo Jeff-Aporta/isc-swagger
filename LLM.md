@@ -1,0 +1,461 @@
+# LLM.md — isc-swagger
+
+Contrato del proyecto. **Léelo antes de tocar código.** Lo que rompe esto se revierte.
+
+Esta página son las leyes y la historia de errores. El detalle por capa vive en
+`src/`, y se lee en este orden:
+
+| Página | Cuándo |
+| --- | --- |
+| [`src/LLM.md`](src/LLM.md) | Siempre. Índice, regla de reuso del kit, deuda conocida |
+| [`src/js/LLM.md`](src/js/LLM.md) | Vas a tocar dominio, parsers, URL o auth |
+| [`src/components/LLM.md`](src/components/LLM.md) | Vas a tocar pintado, CSS o repintado |
+| [`src/components/sw/LLM.md`](src/components/sw/LLM.md) | Necesitas props/eventos de un `sw-*` |
+| [`docs/LLM.md`](docs/LLM.md) | Vas a tocar el sitio documental |
+
+Guardián de que esas páginas no mienten: `tests/docs.test.mjs`.
+
+## Carta de leyes
+
+| Hacer | No hacer |
+|---|---|
+| CSS en el `.css` **hermano** del componente + `adoptCss(shadow, import.meta.url)` | CSS en una constante del `.ts` (el error de is-tkts) |
+| Reusar `is-*` del kit por CDN | Reinventar botones, diálogos, tablas, toasts o iconos |
+| **`<is-button>`** en vez de `<button>` | Botones nativos en el shadow (el kit ya da todo: variantes, colores, a11y) |
+| **`<is-input>`** en vez de `<input>` | Inputs nativos (excepto `type="color"`, `type="file"`, `type="range"` — sin equivalente) |
+| **`<is-select>` + `<is-select-option>`** en vez de `<select>` + `<option>` | Selects nativos (el kit los estiliza y los integra con el tema) |
+| **`<is-checkbox>`** en vez de `<input type="checkbox">` | Checkboxes nativos en formularios |
+| Dominio sin DOM en `src/js/`, pintado en `src/components/` | Lógica de negocio dentro de un componente |
+| `sw-app` es el único dueño del estado; los hijos reciben `props` y emiten eventos | Que un hijo escriba la URL o el estado global |
+| `props` por **propiedad** | `props` por atributo (llevan objetos y saltos de línea) |
+| Adoptar el CSS **después** de rellenar el shadow | Adoptarlo antes: el vaciado se lleva el `<link>` de respaldo |
+| CSS como hoja construida cacheada (`adoptedStyleSheets`) | Un `<link>` por shadow root: no bloquea el pintado → flicker |
+| `precargarCss(import.meta.url)` al cargar el módulo | Esperar al primer montaje para pedir la hoja |
+| Toda entrada de la spec pasa por `esc()` o por `html\`\`` | `innerHTML` con texto del documento |
+| `?conn=<base64url>` anula el `specUrl` del `<script>` | Dejar que el demo local gane al server real |
+| Buscar por query **siempre** ignora la pestaña activa | Filtrar por tab cuando hay query (esconde lo que el usuario pidió) |
+| `?s=<base64url(JSON)>` lleva tema+paleta+q | Parámetros sueltos para el mismo fin (rompe el estado compartido con `boot.js`) |
+| Click en la marca = reset (`?s=`, `?tab=`, `?op=`, `?opt=`); la `?conn=` se queda | Reiniciar vía location.reload() (rompe el shell sin redibujar) |
+| Botón descargar: `variant="plain"` con solo icono | Texto + borde en una acción que ya tiene el icono claro |
+| Registrar el componente en `index.html`, `all.ts` y `docs/manifest.js` | Dejarlo en uno solo (parcial = bug mudo) |
+| Tests en `tests/*.test.mjs` contra `dist/cdn/` | `.test.ts`: no hay pipeline TS para tests |
+| `?conn=` → `kind: "config"` InSoft pasa por `parseInsoftConfig` | Asumir OpenAPI: el spec sintetizado no lleva `openapi:` en la salida |
+| `auth.loginUrl` por defecto = `DEFAULT_AUTH_LOGIN_URL` (main-orchestrator) | Dejar `auth.enabled: false` cuando el visor trae `viewer.auth.enabled: true` |
+| `index.html` decide `data-modo` (hero vs app) **en `<head>`**, antes del primer pintado | Decidir el modo desde un módulo: el visor parpadea como hero antes de cambiar |
+
+## Arquitectura en tres frases
+
+1. `src/js/` es puro: sin DOM, sin red salvo `fetch` explícito. Es lo que se
+   prueba sin navegador y lo que decide qué se ve.
+2. `src/components/sw/` traduce esos datos a `is-*`. Cada componente es un
+   `.ts` + un `.css` hermano y nada más.
+3. `scripts/build.mjs` transpila (no empaqueta) a `dist/cdn/`, un directorio
+   **plano** donde todo módulo es hermano de todos. Los imports relativos se
+   reescriben; los `.css` se copian al lado de su `.js`.
+
+## Estado: un solo dueño
+
+`sw-app` guarda config, spec, grupos, sesión, servidor, pestaña, operación
+abierta y búsqueda. Todo lo demás es controlado.
+
+- Escritura de la URL: **solo** `sw-app`, vía `js/url-state.ts`.
+- `?s=` (tema+paleta+q) lo escribe `js/search-state.ts`.
+- Un hijo que necesita cambiar algo **emite**: `sw-op-toggle`, `sw-op-tab`,
+  `sw-param-change`, `sw-body-change`, `sw-server-change`, `sw-search`,
+  `sw-nav-tab`, `sw-session-change`, `sw-need-login`, `sw-reset`.
+- `sw-tag-group` reemite sin interpretar: no puede saber qué hay abierto en otro grupo.
+
+## Repintado: cuándo entero y cuándo no
+
+Por defecto, asignar `props` repinta el shadow entero (`crearComponente`). Eso
+es correcto para lo inmutable. **No** lo es donde el usuario tiene el foco:
+
+- `sw-try` reparte el repintado en tres zonas (URL, aviso, resultado) porque
+  escribir en un parámetro le quitaría el foco al campo en cada tecla.
+- `sw-nav` ignora un cambio de `query` que venga solo: lo está escribiendo el
+  usuario en ese mismo shadow.
+- `sw-operation` no rehace la tarjeta al cambiar de pestaña ni de servidor.
+- `sw-tag-group` distingue «cambió el grupo» de «cambió qué está abierto».
+
+### Cambio de pestaña sin flicker
+
+Dos causas distintas, las dos resueltas:
+
+**1. Repintado de más.** `sw-app#cambiarNavTab()` no llama a `#render()`: solo
+`#sincronizarNav()` (cambia `activeTab` y `tabs` en la barra) y `#pintarLista()`
+(repinta solo la lista filtrada). El shell —nav, info, server— queda intacto.
+
+**2. El CSS llegaba tarde.** Un `<link rel="stylesheet">` dentro de un
+ShadowRoot **no bloquea el pintado de ese shadow**: el navegador pinta los
+hijos sin estilos y los recoloca al resolver la hoja, también desde caché,
+porque cargar un `<link>` nunca es síncrono. Cambiar de sección recrea decenas
+de shadow roots, así que se veía la vista entera desordenarse un frame.
+
+La hoja se adopta ahora como `CSSStyleSheet` construida y cacheada por href:
+
+- `adoptCss(shadow, import.meta.url)` (`_shared.ts`) busca la hoja en caché y
+  la aplica con `adoptedStyleSheets` — **síncrono**, y sobrevive a
+  `replaceChildren()` porque es propiedad del ShadowRoot, no un hijo.
+- `precargarCss(import.meta.url)` dispara la descarga al **cargar el módulo**,
+  no al montar la primera instancia: así el primer pintado tampoco parpadea.
+  `crearComponente` lo hace solo; los `#render()` manuales lo llaman aparte.
+- El `<link>` sigue como respaldo: solo en la primera aparición de cada href
+  (mientras baja el texto) y en navegadores sin hojas construibles.
+
+**El kit `is-*` viene del CDN y enlaza dos `<link>` por shadow root**, sin
+caché. `src/js/hojas.js` —plano, síncrono en `<head>`, antes que el kit—
+envuelve `ShadowRoot.prototype.prepend` y cambia esos `<link>` por la hoja
+construida a partir de la segunda aparición del href. La primera se deja pasar
+tal cual: ningún componente puede quedarse sin estilos por esa capa. Publica el
+caché en `globalThis.__swHojas` y `_shared.ts` lo reusa — una sola descarga por
+hoja para todo el visor.
+
+Guardianes: `tests/hojas.test.mjs` (el parche del kit y el caché compartido) y
+`tests/css-adopcion.test.mjs` (adopción síncrona, sin `<link>`, sin segunda
+descarga, y que repintar no se lleve la hoja).
+
+## Coste diferido
+
+`sw-operation` monta su cuerpo al abrir, no al pintar la lista. Una spec con
+doscientos endpoints crearía doscientos `sw-try` con sus campos y su CSS antes
+de que nadie mire ninguno. No lo deshagas «para simplificar».
+
+## Kit `is-*` por CDN: qué se carga y por qué tan poco
+
+**Commit del kit con el que está diseñado este visor:**
+
+```
+Jeff-Aporta/is-webcomponents @ 1ce1d12227f2988877b81b8f35cba2507dc16bf1
+```
+
+Ese sha está pinchado en `index.html` (los dos `<link>` de CSS y el `import` del loader) y en
+el HTML que sirve la API en `/api/is-swagger`. Si un componente del kit cambia de contrato y el
+visor se rompe, **ese es el sha contra el que se escribió**: comparar el componente en ese
+commit con el de `main` dice exactamente qué cambió, y desde ahí se decide si se adapta el
+visor o se re-pincha a un commit anterior. No usar `@main`: jsDelivr cachea la rama hasta 7
+días, así que una publicación reciente tarda en llegar y el despliegue deja de ser reproducible.
+
+### Importación mínima con el loader
+
+`all.min.js` del kit arrastra las 12 categorías. Este visor usa 22 tags, así que carga por
+tag con el loader — que además lleva registro anti-redundancia y no repite peticiones:
+
+```html
+<script type="module">
+  import { ISWebComponentsLoader as L } from
+    'https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@1ce1d12227f2988877b81b8f35cba2507dc16bf1/dist/cdn/loader.min.js';
+  L.pin( + SHA + );
+  await L.load('is-button', 'is-icon', /* … */);
+</script>
+```
+
+El CSS de cada componente lo trae su propio `.min.js` con `adoptCss`; del documento solo hacen
+falta `is-base.min.css` y `palettes.min.css`, que van por `<link>` para no bloquear el pintado.
+
+### Inventario: los 22 tags que usa el visor
+
+Si un `sw-*` empieza a usar otro tag del kit, hay que añadirlo **aquí y en `index.html`**; si no,
+el custom element no hace upgrade y el tag queda en el DOM sin shadow — sin error en consola.
+
+| Categoría | Tags que se usan | Fichero en el CDN |
+|---|---|---|
+| `actions` | `is-button`, `is-copy-button`, `is-dropdown`, `is-dropdown-item` | `actions/<nombre>.min.js` |
+| `forms` | `is-checkbox`, `is-input`, `is-option`, `is-select`, `is-textarea` | `forms/<nombre>.min.js` |
+| `feedback` | `is-spinner`, `is-tag`, `is-theme-toggle`, `is-toast` | `feedback/<nombre>.min.js` |
+| `helpers` | `is-format-bytes`, `is-format-date`, `is-format-number`, `is-relative-time` | `helpers/<nombre>.min.js` |
+| `layout` | `is-callout`, `is-details`, `is-dialog`, `is-divider` | `layout/<nombre>.min.js` |
+| `media` | `is-icon` | `media/icon.min.js` |
+
+El nombre del fichero va **sin** el prefijo `is-`: `is-copy-button` vive en
+`actions/copy-button.min.js`. El loader hace esa traducción; solo importa al depurar un 404.
+
+Cargar por tag son ~215 KB de JS. Cargar las 6 categorías enteras traería componentes que el
+visor no monta (`is-data-grid`, `is-date-picker`, `is-rte`…), así que **no** se usa
+`L.load('forms')` aunque sea más corto de escribir.
+
+## Catálogo `is-*` (qué usar en cada sitio)
+
+Regla: si el kit tiene el componente, se usa; si no, HTML nativo plano
+(`<input type="color">` para picker de color, `<input type="file">` para
+adjuntos por form association, `<input type="range">` para sliders).
+
+| Necesidad | Usar | No usar |
+|---|---|---|
+| Acción (icono, texto, ambos) | `<is-button variant="…" pill? with-caret? color="…">` | `<button>` |
+| Campo de texto / búsqueda | `<is-input type="search\|text\|email\|…">` | `<input>` |
+| Menú desplegable | `<is-dropdown>` con `<is-dropdown-item>` | `<select>` |
+| Set finito de opciones | `<is-select>` con `<is-select-option>` | `<select><option>` |
+| Booleano | `<is-checkbox>` | `<input type="checkbox">` |
+| Icono | `<is-icon icon="mdi:nombre">` (MDI path) | `<svg>` inline, glifos manuales |
+| Diálogo modal | `<is-dialog label="…">` | `<dialog>` manual |
+| Toast | `<is-toast placement="…">` (en `document.body`) | UI de notificación propia |
+| Tema | `<is-theme-toggle>` | lógica de `data-theme` propia |
+| Paleta | `<is-palette-selector>` | variables CSS propias |
+| Menú contextual | `<is-context-menu>` + `<is-context-menu-item>` | listas flotantes caseras |
+| Grupo de botones | `<is-button-group>` | `<div>` con `is-button` flex |
+| FAB | `<is-fab>` | botón circular hecho a mano |
+| Speed dial | `<is-speed-dial>` | FAB con sub-acciones caseras |
+| Botón copiar | `<is-copy-button>` | `<is-button>` con handler |
+| Botón-icono checkbox | `<is-check-icon-button>` | `<is-button>` con icono toggle |
+
+Propiedades del kit que **no son atributos**: `variant`, `color`, `pill`,
+`with-caret`, `loading`, `disabled` (este sí), `invalid`. Pasarlas como
+atributos HTML no falla en silencio — `is-button variant="ghost"` se pinta con
+los defaults sin error y el botón queda sin estilo. Asignar por propiedad:
+
+```ts
+btn.variant = 'plain';
+btn.color = 'neutral';
+btn.pill = true;
+```
+
+## Landing vs app: `data-modo`
+
+`index.html` tiene dos modos:
+
+- **hero**: el visitante llega sin `?conn=` / `?spec=` / `?api=`. Se muestra
+  el vídeo promocional en `src/css/hero.css`. Sin JS, el hero se queda
+  visible por defecto (atributo `hidden` lo oculta solo vía JS).
+- **app**: hay config por URL. El `<sw-app>` se monta y el hero desaparece.
+
+La decisión se hace **en `<head>`**, sincrónica, con un IIFE que escribe
+`document.documentElement.dataset.modo`. Razones:
+
+1. **Antes del primer pintado**: si la decisión se tomara desde un `<script
+   type="module">` (que es diferido por el navegador), el primer frame se
+   pintaría con el modo equivocado y luego saltaría al correcto: flash de
+   contenido que no debería estar ahí.
+2. **Antes de que los custom elements se registren**: si el `<sw-app>` se
+   mostrara antes de que se ejecuten los `<script type="module"
+   src="./dist/cdn/sw-*.js">`, su shadow no existiría y se vería el tag
+   vacío. El script al final del `<body>` quita el `hidden` del bloque
+   correspondiente **después** de que los módulos hayan registrado los
+   componentes.
+
+Guardián visual: si ves el `<sw-app>` sin estilos durante un frame al cargar
+con `?conn=`, el orden de scripts en `index.html` está mal.
+
+## Identidad: el sistema NO se llama OpenAPI
+
+El visor parsea un formato propio de InSoft (`{kind:"config", version, info,
+viewer, paths, catalog, docs, tags}`). OpenAPI nunca debe salir a UI:
+
+- `sw-info.ts` no pinta badge «OpenAPI X.Y».
+- `sw-export.ts` no ofrece «OpenAPI 3 (JSON)» — es «Documento (JSON)».
+- `index.html` no dice «Visor OpenAPI» en título ni descripción.
+- Previews de demo no usan la palabra como marca del visor.
+- `parseInsoftConfig` no emite `spec.openapi` (sería un campo residual sin
+  significado).
+
+Test: `tests/invariantes.test.mjs :: "la spec del InSoft no expone openapi"`
+y `:: "index.html no menciona OpenAPI"`.
+
+## `?conn=` (autoconexión ISS)
+
+Base64url de `{apiBase, paths, title, icon, fixedServer, ...}`. Decodificado:
+
+```
+apiBase:    "https://host/api",            ← obligado
+paths: {                                ← overrides opcionales
+  config:    "/system/swagger/config.json",
+  meta, paths, docsConfig, testing, info
+},
+title, icon, fixedServer, embed, auto
+```
+
+Precedencia: `?conn=` gana sobre `<script id="sw-config">` y `?spec=/?api=`.
+**Bug ya visto**: si el `<script>` trae `specUrl` y `?conn=` no lo borra, el
+visor cae al demo local y el usuario ve otra API. Fix: en `resolveBootConfig`,
+`delete config.specUrl` cuando hay conn.
+
+Al cargar, `loadViewerDocument`:
+
+1. detecta `kind: "config"` → `parseInsoftConfig`
+2. transforma `paths[path][method]` con `responses.template` (`ok`, `auth`,
+   `authForbidden`, `authNotFound`, `deleteEnvelope`, `raw`)
+3. resuelve `catalog.payloads[key]` → ejemplo de respuesta
+4. resuelve `catalog.requestBodies[bodyKey]` → ejemplo de body
+5. mueve `catalog.docs[doc]` → `x-iss-doc-md`
+6. `tag.subgroups` → `tag.x-isa-subgroups`
+7. emite spec sin campo `openapi`
+
+## `?s=` (bolsa de estado visual)
+
+Base64url de `{theme, palette, q, ...}`. La escribe `boot.js` antes del primer
+pintado (tema+paleta). El visor suma `q` (query de búsqueda). F5 restaura todo.
+
+- `js/search-state.ts`: `readSState`, `writeSState`, `getQuery`, `setQuery`, `clearSState`.
+- `setQuery('')` borra la clave; `clearSState()` borra la bolsa entera (reset).
+- `boot.js` no se toca: lee `?s=` y deja `q` en paz al cambiar tema/paleta.
+
+## Búsqueda cross-tab
+
+`sw-app#buscar(query)`:
+1. persiste con `setQuery(q)` en `?s=`
+2. `#pintarLista()` re-filtra
+3. `#gruposVisibles`: con query salta `filterGroupsByNavTab` y busca en todos los
+   tags; sin query filtra por la pestaña activa
+
+`sw-nav` muestra pestañas cuando no hay query; cuando hay, oculta la fila y
+pinta `Resultados para «x»` con botón Limpiar.
+
+## Sesión JWT
+
+`auth.loginUrl` por defecto = `https://main-orchestrator.jeffaporta.workers.dev`.
+`isc-swagger` no debe quedarse con `auth.enabled: false` cuando el visor trae
+`viewer.auth.enabled: true` — siempre se necesita dónde canjear credenciales.
+
+César (`wrapPassword`) + prefijo/sufijo (`abc123`/`xyz987`): **no es cifrado**,
+es el contrato del backend. Documentarlo en UI es parte del contrato.
+
+## Errores aprendidos (no repetir)
+
+1. **CSS embebido en el `.ts`** — heredado de is-tkts, donde estaba justificado
+   por el HTML descargable autocontenido. Aquí no aplica. Guardián:
+   `tests/estructura.test.mjs`.
+
+2. **Imports con carpetas en `dist/`** — el aplanado cubría `from"…"` pero no
+   `import"…"` (import por efecto secundario). Un `import '../../js/x.js'`
+   quedaba apuntando a un directorio inexistente: 404 y el módulo entero no se
+   ejecuta. Guardián: `estructura.test.mjs`.
+
+3. **Diálogo montado en `document.body` con CSS en el shadow** — el diálogo de
+   confirmación de `sw-try` vive en light DOM, así que su CSS está en
+   `src/css/app.css` (`.sw-confirmar-*`). Un `.css` de componente nunca alcanza
+   a un nodo fuera de su shadow.
+
+4. **`is-button type="submit"` no envía el form** — el `<button>` real está en
+   Shadow DOM. `sw-auth` escucha `is-click` y llama `requestSubmit()`. Error
+   conocido del kit; no confiar en el tipo nativo.
+
+5. **Valores de enum inventados en los `is-*`** — `variant="ghost"` cuando el
+   componente no lo acepta no da error, no avisa y no se ve: el elemento se
+   pinta con los valores por defecto. Verifica el enum en el `.js` del kit o en
+   su `.md` antes de usarlo.
+
+6. **Un CE que `createElement` monta sin estar importado** — no hace upgrade: el
+   tag queda en el DOM sin shadow y la vista sale vacía, sin error en consola.
+   Guardián: `estructura.test.mjs` cruza componentes ↔ `index.html` ↔ `all.ts`.
+
+7. **`prefers-color-scheme`** — no se usa. El tema es explícito (`data-theme`
+   en `<html>`, escrito por `boot.js` antes del primer pintado) para que un
+   enlace compartido se vea igual en cualquier equipo.
+
+8. **`?conn=` ignorado por `specUrl` del `<script>`** — el visor mostraba el
+   demo local en vez del server real. Guardián: `invariantes.test.mjs`.
+
+9. **Flicker al cambiar pestaña** — el `<link>` dentro del shadow no bloquea el
+   pintado de ese shadow, así que cada uno de los decenas de shadow roots que
+   se recrean al cambiar de sección se pintaba un frame sin estilos y la vista
+   entera se desordenaba. Conservar el `<link>` a través de `replaceChildren`
+   fue el primer intento y **no bastaba**: el problema no era perderlo, era que
+   nunca fue síncrono. Fix real: hojas construidas cacheadas por href
+   (`adoptedStyleSheets`), más `js/hojas.js` para los shadow roots del kit.
+   Guardianes: `hojas.test.mjs`, `css-adopcion.test.mjs`, `invariantes.test.mjs`.
+
+10. **`auth.enabled: false` cuando `viewer.auth.enabled: true`** — el visor no
+    tenía `loginUrl`, `resolveAuthConfig` lo desactivaba, no había forma de
+    iniciar sesión. Fix: `DEFAULT_AUTH_LOGIN_URL` en `insoft-config.ts`.
+
+11. **OpenAPI en UI** — el visor parsea InSoft, no OpenAPI. Pintar «OpenAPI 3»
+    como marca miente. Guardián: `invariantes.test.mjs` (3 tests).
+
+12. **Búsqueda escondida por la navTab** — con query la pestaña activa filtraba
+    los resultados. Fix: con query, `filterGroupsByNavTab` se salta.
+
+13. **CSS `<link>` no preserva al repintar** — la versión «guardar el `<link>`
+    antes del `replaceChildren` y reponerlo al final» se aplicó en todos los
+    `#render()` manuales y **no bastaba**. Un `<link>` dentro de un shadow
+    nunca bloquea el pintado del shadow: el navegador lo resuelve en
+    segundo plano. Aunque el `<link>` sea la misma hoja ya cacheada, el
+    repintado se ve sin estilos durante un frame. El fix real es propiedad
+    del ShadowRoot, no un hijo: `shadow.adoptedStyleSheets = [hoja]`.
+    `js/hojas.js` parchea `ShadowRoot.prototype.prepend` para los shadow
+    roots del kit; los nuestros ya usan `adoptCss` directamente.
+
+14. **`is-button` ignora atributos que no conoce** — `variant="ghost"` cuando
+    el kit no acepta `ghost` se pinta con los valores por defecto sin
+    error ni aviso. Lo mismo con `color="brandish"`. Verifica el enum en
+    `is-webcomponents/src/components/actions/button.md` antes de usarlo.
+
+15. **El IIFE de `data-modo` debe ir en `<head>`** — la primera vez que se
+    intentó decidir hero vs app desde un `<script type="module">` al final
+    del body, el primer frame pintaba el modo equivocado y luego saltaba
+    al correcto. El IIFE plano en `<head>` lee `location.search` sincrónico
+    y escribe `dataset.modo` antes de que el navegador pida ningún recurso.
+    Mismo razonamiento que `boot.js`: el dato del modo es estado de UI
+    sincrónico, no se puede diferir.
+
+16. **El script final que quita el `hidden` debe ir después de los módulos**
+    — si se pone antes de los `<script type="module" src="./dist/cdn/sw-*.js">`,
+    el `<sw-app>` aparece con `hidden=false` mientras los componentes aún
+    no están registrados: se ve el tag vacío hasta que carguen. Por eso el
+    orden en `index.html` es: módulos → IIFE de un-hide.
+
+## Seguridad de lo que se pinta
+
+La spec es entrada no confiable. `html\`\`` escapa todo primitivo por defecto;
+`raw()` es la excepción y solo para HTML ya saneado (`renderMarkdown`, que
+escapa antes de componer). `sw-json` no ejecuta lo que resalta.
+
+Las credenciales: el JWT va a `sessionStorage` (muere con la pestaña); las
+credenciales de «recordarme» a `localStorage`, ofuscadas y **opt-in**. La
+ofuscación replica el contrato del backend, no es cifrado — decirlo en la UI es
+parte del contrato.
+
+## Añadir un componente `sw-*`
+
+1. `src/components/sw/sw-x.ts` + `src/components/sw/sw-x.css`.
+2. `<script type="module">` en `index.html` (orden importa: el shell
+   `sw-app` y los componentes que usa van al final del grupo de scripts).
+3. Import en `src/components/sw/all.ts` (el build genera `sw.all.js`).
+4. Entrada en `docs/manifest.js` + `docs/previews/sw-x.html` (la galería
+   nueva vive en `docs/`, no en `src/components/demo/`).
+5. Si `#render()` es manual: `adoptCss(this.#root, import.meta.url)` al final
+   de cada salida del render, y `precargarCss(import.meta.url)` junto al
+   `define(...)`. Con `crearComponente` no hay que hacer nada.
+6. `npm test` — `estructura.test.mjs` + `invariantes.test.mjs` + `docs.test.mjs`
+   verifican.
+
+## Testing
+
+`npm test` compila y corre `node --test tests/*.test.mjs`.
+
+| Archivo | Caza |
+|---|---|
+| `openapi.test.mjs` | Lectura de la spec: agrupación, orden, `$ref`, seguridad |
+| `dominio.test.mjs` | Filtros, URLs, errores HTTP, markdown, Postman, sesión, búsqueda, conn |
+| `render.test.mjs` | Que el shadow se llene (jsdom, `is-*` sin registrar) |
+| `app.test.mjs` | El ciclo completo de `sw-app` con la spec de demo real |
+| `estructura.test.mjs` | Inventario: cada componente ↔ `index.html` ↔ `all.ts` ↔ preview ↔ CSS hermano |
+| `conn.test.mjs` | `?conn=`: precedencia, override de paths, default ISS, conn > `<script>` |
+| `insoft-config.test.mjs` | Parser InSoft con fixture real + smoke contra la red |
+| `css-adopcion.test.mjs` | `adoptCss`: hoja síncrona desde caché, una descarga por href, repintar no la pierde |
+| `docs.test.mjs` | Que los `LLM.md` no mienten: catálogo completo, enlaces vivos, reglas que el código sigue cumpliendo |
+| `hojas.test.mjs` | El parche de `js/hojas.js` sobre los shadow roots del kit y el caché compartido |
+| `invariantes.test.mjs` | Regresiones de bugs ya vistos (OpenAPI, flicker, auth, conn, spec por defecto) |
+
+El patrón de fallo de este stack es siempre el mismo: **el artefacto se genera
+bien y el contenido está mal**. Build verde, navegador contento, y el CSS no
+llega, o el evento no salta, o el componente no está en la galería. Antes de
+escribir un test nuevo, la pregunta útil es: *¿qué par de cosas puede
+desincronizarse aquí sin que nada se rompa?*
+
+## Gitignore y `tests/`
+
+`tests/` no está ignorado por `.gitignore`: solo `tests/*.tmp`,
+`tests/coverage/` y `tests/.cache/`. El fixture real del ISS
+(`tests/fixtures/insoft-config.sample.json`, 76 KB) vive dentro del repo
+deliberadamente — `insoft-config.test.mjs` lo usa para cazar regresiones sin
+necesidad de red.
+
+Si en algún momento se mete el repo a git y el fixture resulta pesado, mover
+solo el fixture a `.gitignore` con `!tests/fixtures/insoft-config.sample.json`
+si se quiere commitear o `tests/fixtures/*.sample.json` si se regenera en CI.
+No ignorar `tests/*.test.mjs`: son contrato ejecutable.
+
+## Windows
+
+Commits con `-m "..."` plano; nada de heredocs de bash. `git show > archivo` en
+PowerShell sale UTF-16 y el contenido «desaparece» al parsearlo — usar
+`-Encoding utf8` o `execSync` desde Node.

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es" class="theme-dark" data-theme="dark" data-palette="contapyme">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IS-Swagger · Documentación</title>
+  <meta name="description" content="Visor de APIs de InSoft: documenta, prueba y comparte sin instalar nada.">
+  <script src="../preview-boot.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/is-base.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/palettes.min.css">
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/all.min.js"></script>
+  <link rel="stylesheet" href="../styles/doc.css">
+  <link rel="stylesheet" href="../styles/hero.css">
+</head>
+<body>
+  <main class="doc doc--inicio">
+
+    <!-- ── Hero ────────────────────────────────────────────── -->
+    <section class="hero">
+      <div class="hero__texto">
+        <p class="hero__kicker">Visor de APIs · InSoft</p>
+        <h1 class="hero__titulo">
+          Tu API ya está documentada.<br>
+          <span class="hero__acento">Solo no lo sabías.</span>
+        </h1>
+        <p class="hero__lede">
+          IS-Swagger lee la configuración que tu backend ya publica y la
+          convierte en documentación navegable y probable. Sin instalar nada,
+          sin exportar colecciones, sin mantener un segundo catálogo en paralelo.
+        </p>
+        <div class="hero__acciones">
+          <is-button color="brand" data-ir-a="empezar">
+            <is-icon slot="start" icon="mdi:rocket-launch-outline"></is-icon>
+            Empezar
+          </is-button>
+          <is-button variant="outlined" color="neutral" data-ir-a="comparativa">
+            <is-icon slot="start" icon="mdi:compare-horizontal"></is-icon>
+            Frente a Postman
+          </is-button>
+        </div>
+      </div>
+
+      <!--
+        Vídeo del hero. `poster` cubre el primer pintado; sin `autoplay` para
+        no arrancar sonido sin que nadie lo pida, que es lo que hace que la
+        gente cierre la pestaña. `preload="metadata"` baja solo la cabecera.
+      -->
+      <figure class="hero__video">
+        <video
+          controls
+          playsinline
+          preload="metadata"
+          poster="../video/is-swagger-promo.poster.jpg"
+          aria-label="Vídeo de presentación de IS-Swagger"
+        >
+          <source src="../video/is-swagger-promo.mp4" type="video/mp4">
+          <p>
+            Tu navegador no reproduce el vídeo.
+            <a href="../video/is-swagger-promo.mp4">Descárgalo aquí</a>.
+          </p>
+        </video>
+        <figcaption>Presentación · 1080p · 6 min</figcaption>
+      </figure>
+    </section>
+
+    <!-- ── Qué hace ────────────────────────────────────────── -->
+    <section class="seccion">
+      <h2>Qué hace, en una frase por pieza</h2>
+      <div class="rejilla">
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:link-variant"></is-icon>
+          <h3 class="tarjeta__titulo">Se conecta con un enlace</h3>
+          <p>
+            <code>?conn=</code> lleva la base de la API dentro del propio
+            enlace. Quien lo abre ve tu API, no un formulario de configuración.
+          </p>
+        </article>
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:play-circle-outline"></is-icon>
+          <h3 class="tarjeta__titulo">Prueba en el sitio</h3>
+          <p>
+            Cada endpoint trae sus parámetros, su cuerpo de ejemplo y un botón.
+            La respuesta se enseña con estado, tiempo y tamaño.
+          </p>
+        </article>
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:shield-key-outline"></is-icon>
+          <h3 class="tarjeta__titulo">Respeta la sesión</h3>
+          <p>
+            Login contra el orquestador o un JWT pegado a mano. El token vive en
+            la pestaña y muere con ella.
+          </p>
+        </article>
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:share-variant-outline"></is-icon>
+          <h3 class="tarjeta__titulo">Se comparte por URL</h3>
+          <p>
+            Sección, endpoint abierto, pestaña y búsqueda viajan en la query.
+            Un enlace reabre exactamente lo que querías enseñar.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ── Cifras ──────────────────────────────────────────── -->
+    <section class="seccion">
+      <h2>Lo que cuesta</h2>
+      <div class="cifras">
+        <div class="cifra">
+          <span class="cifra__valor">0</span>
+          <span class="cifra__etiqueta">instalaciones para quien lo usa</span>
+        </div>
+        <div class="cifra">
+          <span class="cifra__valor">0</span>
+          <span class="cifra__etiqueta">dependencias de runtime en el navegador</span>
+        </div>
+        <div class="cifra">
+          <span class="cifra__valor">16</span>
+          <span class="cifra__etiqueta">componentes, cada uno con su CSS aparte</span>
+        </div>
+        <div class="cifra">
+          <span class="cifra__valor">131</span>
+          <span class="cifra__etiqueta">pruebas que corren sin navegador</span>
+        </div>
+      </div>
+      <p>
+        No hay React, no hay MUI y no hay Babel en el navegador. El
+        <a data-ir-a="stack">stack</a> es TypeScript compilado a módulos ES
+        planos y web components sobre el kit <code>is-*</code>.
+      </p>
+    </section>
+
+    <!-- ── Por dónde seguir ────────────────────────────────── -->
+    <section class="seccion">
+      <h2>Por dónde seguir</h2>
+      <div class="rejilla">
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="porque">
+          <is-icon class="tarjeta__icono" icon="mdi:help-circle-outline"></is-icon>
+          <h3 class="tarjeta__titulo">Por qué existe</h3>
+          <p>El problema real: documentación que se desincroniza del código.</p>
+        </button>
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="comparativa">
+          <is-icon class="tarjeta__icono" icon="mdi:compare-horizontal"></is-icon>
+          <h3 class="tarjeta__titulo">Frente a Postman</h3>
+          <p>Qué gana y qué pierde comparado con Postman y con Swagger UI.</p>
+        </button>
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="arquitectura">
+          <is-icon class="tarjeta__icono" icon="mdi:sitemap-outline"></is-icon>
+          <h3 class="tarjeta__titulo">Arquitectura</h3>
+          <p>Cómo viaja un dato desde el backend hasta la tarjeta que se pinta.</p>
+        </button>
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="estrategias">
+          <is-icon class="tarjeta__icono" icon="mdi:chess-knight"></is-icon>
+          <h3 class="tarjeta__titulo">Estrategias</h3>
+          <p>Las decisiones que sostienen el proyecto y el porqué de cada una.</p>
+        </button>
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="sw-app">
+          <is-icon class="tarjeta__icono" icon="mdi:application-outline"></is-icon>
+          <h3 class="tarjeta__titulo">Verlo funcionando</h3>
+          <p>El visor completo, con una API de muestra que responde de verdad.</p>
+        </button>
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="empezar">
+          <is-icon class="tarjeta__icono" icon="mdi:rocket-launch-outline"></is-icon>
+          <h3 class="tarjeta__titulo">Empezar</h3>
+          <p>Conectar tu API, embeberlo en un host o levantarlo en local.</p>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="../doc-kit.js"></script>
+</body>
+</html>

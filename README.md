@@ -1,0 +1,147 @@
+# isc-swagger
+
+Visor de APIs de InSoft en web components. Remake de
+[`../is-swagger`](../is-swagger) sin React, sin MUI y sin Babel.
+
+Documentación completa: **[`docs/index.html`](docs/index.html)**.
+
+## Por qué el remake
+
+`is-swagger` era React + MUI + Babel en el navegador. Portable no era: para
+incrustarlo hacía falta arrastrar React, ReactDOM, MUI, Emotion y un
+transpilador en runtime, y el visor no funcionaba abriendo el HTML a pelo.
+
+Aquí el único runtime es el navegador:
+
+| | `is-swagger` | `isc-swagger` |
+|---|---|---|
+| UI | React 18 + MUI 5 + Emotion | Web components vanilla + kit `is-*` por CDN |
+| Transpilación | Babel **en el navegador** | esbuild en build; el navegador recibe ESM plano |
+| Fuente | `.jsx` | `.ts` (solo se borran los tipos, sin bundler) |
+| CSS | Emotion `sx` + un `.css` global | Un `.css` hermano por componente, adoptado en su shadow |
+| Estado | Context + hooks | Un solo dueño (`sw-app`), hijos controlados |
+| Distribución | 4 bundles + vendor CJS | `dist/cdn/` plano: un `.js` y un `.css` por módulo |
+
+## Arranque
+
+```bash
+npm install
+npm run build     # src/**.ts -> dist/cdn/*.js (+ *.css copiados)
+npm run serve     # http://localhost:4190
+```
+
+`npm run dev` deja el build en watch. `npm test` compila y corre `node --test`.
+
+## Cómo se le dice qué documentar
+
+Por orden de precedencia:
+
+1. `?conn=<base64url>`, `?spec=<url>` o `?api=<base>` — el enlace manda sobre todo.
+2. `window.__SWAGGER_CONFIG__` — lo inyecta el host que embebe el visor.
+3. `<script type="application/json" id="sw-config">` en `index.html`.
+
+Que 1 gane sobre 2 es deliberado: un host puede fijar su API por defecto y aun
+así dejar que alguien comparta un enlace a otra sin tocar nada.
+
+```json
+{
+  "ns": "ISA",
+  "specUrl": "./demo/openapi.sample.json",
+  "apiBase": "https://host/api",
+  "brand": { "title": "IS-Swagger", "subtitle": "Visor de APIs", "icon": "mdi:api" },
+  "auth": { "enabled": true, "loginUrl": "https://main-orchestrator/api", "loginKind": "portal" },
+  "nav": [
+    { "id": "publica", "label": "Pública", "icon": "mdi:earth" },
+    { "id": "admin", "label": "Admin", "tags": ["Admin"], "requiresSession": true }
+  ],
+  "serverSelect": true
+}
+```
+
+Con `apiBase` y sin `specUrl`, el documento se busca en las rutas que el ISS ya
+expone (`/system/swagger/config.json`). Se acepta el **documento InSoft**
+(`kind: "config"`), un **documento IS** (`{ kind, version, viewer, spec }`) o un
+OpenAPI 3 suelto — pero OpenAPI es un formato que el visor *acepta*, no lo que el
+visor *es*: la palabra no sale a la interfaz.
+
+## Estructura
+
+```
+index.html                    SPA autosuficiente (carga dist/cdn por <script type="module">)
+demo/openapi.sample.json      documento de muestra: subgrupos, enum, JWT, obsoleta
+scripts/build.mjs             esbuild -> dist/cdn plano
+src/
+  css/app.css                 canvas y light DOM (lo que no cabe en un shadow)
+  js/                         dominio puro, sin DOM
+  components/sw/              componentes del visor: <tag>.ts + <tag>.css
+  types/swagger.d.ts          tipos ambiente
+docs/                         sitio documental (no se compila)
+  index.html                  shell: barra + índice + iframe
+  paginas/                    prosa: por qué, stack, arquitectura, estrategias
+  previews/                   una página por `sw-*`, con casos en vivo
+  video/                      vídeo del hero
+dist/cdn/                     artefacto publicado: todo plano y hermano
+tests/                        node --test contra dist/cdn
+```
+
+Las carpetas están separadas a propósito, igual que en
+[`is-tkts/app`](../is-tkts/app): `js/` es lo que se puede probar sin navegador,
+`components/` es lo que pinta, y `docs/` es cómo se lee y se mira.
+
+## El contrato del CSS
+
+Cada componente tiene su `.css` **hermano**, nunca CSS dentro del `.ts`:
+
+```
+src/components/sw/sw-operation.ts
+src/components/sw/sw-operation.css
+        ↓ build
+dist/cdn/sw-operation.js
+dist/cdn/sw-operation.css
+```
+
+`adoptCss(shadow, import.meta.url)` deriva la hoja del módulo y la enlaza en el
+ShadowRoot — el mismo contrato que `IsUi.adoptCss` del kit. Se llama **después**
+de rellenar el shadow, porque vaciarlo se lleva el `<link>`.
+
+Esto corrige el error de `is-tkts`, donde el CSS vivía en constantes del `.ts`:
+así no se puede minificar aparte, no se cachea aparte y ninguna herramienta de
+CSS lo ve. `tests/estructura.test.mjs` falla si vuelve a aparecer.
+
+## Componentes
+
+| Tag | Qué hace |
+|---|---|
+| `sw-app` | Shell y **único dueño del estado** |
+| `sw-nav` | Marca, secciones, búsqueda, descargas, sesión, tema |
+| `sw-info` | Título, versión y descripción del documento |
+| `sw-server` | Host contra el que se prueba |
+| `sw-tag-group` | Un tag con sus operaciones (y subgrupos) |
+| `sw-operation` | Tarjeta desplegable con pestañas Probar / Respuestas / Doc |
+| `sw-try` | Arma la petición, la ejecuta y enseña la respuesta |
+| `sw-params` · `sw-body` | Campos y editor JSON (controlados) |
+| `sw-responses` | Respuestas declaradas en el documento |
+| `sw-auth` | Login JWT y pegado de token |
+| `sw-export` | Documento JSON, colección Postman y paquete IS |
+| `sw-method` · `sw-path` · `sw-json` · `sw-doc` | Átomos |
+
+Sitio documental: `docs/index.html`.
+
+## Extensiones `x-*` que se respetan
+
+| Extensión | Dónde | Efecto |
+|---|---|---|
+| `x-isa-subgroups` | tag | Declara y **ordena** las subcarpetas |
+| `x-isa-subgroup` | operación | La mete en una de ellas |
+| `x-iss-doc-md` | operación | Markdown de la pestaña «Doc» |
+| `x-iss-request-body` | operación | Ejemplo del cuerpo |
+| `x-iss-request-body-examples` | operación | Varios ejemplos con nombre |
+
+## Estado en la URL
+
+`?tab=<sección>&op=<operationId>&opt=<try|examples|doc>&server=<base>`
+
+Parámetros planos y editables a mano, no un blob codificado. Las escrituras usan
+`replaceState`: desplegar una tarjeta no debe llenar el historial.
+
+MIT · [Jeff-Aporta](https://github.com/Jeff-Aporta)

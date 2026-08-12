@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es" class="theme-dark" data-theme="dark" data-palette="contapyme">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Por qué existe · IS-Swagger</title>
+  <meta name="description" content="El problema que resuelve IS-Swagger: la documentación de API que se desincroniza del código.">
+  <script src="../preview-boot.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/is-base.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/palettes.min.css">
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/all.min.js"></script>
+  <link rel="stylesheet" href="../styles/doc.css">
+</head>
+<body>
+  <main class="doc">
+
+    <header class="doc__head">
+      <p class="doc__kicker">Fundamentos</p>
+      <h1 class="doc__title">Por qué existe</h1>
+      <p class="doc__lede">
+        Toda documentación de API que se mantiene aparte del código acaba
+        mintiendo. No por descuido: porque son dos artefactos distintos que
+        nadie obliga a decir lo mismo.
+      </p>
+    </header>
+
+    <section class="seccion">
+      <h2>El problema no es escribir la documentación</h2>
+      <p>
+        Escribirla es la parte fácil. El problema es que a los dos meses el
+        endpoint acepta un parámetro nuevo, la colección de Postman sigue con el
+        viejo, y nadie se entera hasta que alguien pierde media tarde
+        depurando una petición que nunca iba a funcionar.
+      </p>
+      <p>
+        Ese fallo tiene una forma muy concreta y se repite en todas partes:
+        <strong>el artefacto se genera bien y el contenido está mal</strong>. La
+        colección se abre, el visor pinta, el JSON valida. Solo que describe una
+        API que ya no existe.
+      </p>
+      <div class="nota">
+        <p>
+          Es el mismo patrón que gobierna las pruebas de este proyecto: lo que
+          se vigila no es que algo <em>funcione</em>, sino que dos fuentes que
+          deberían decir lo mismo no se hayan separado.
+        </p>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Dónde se rompe la cadena</h2>
+      <div class="diagrama">
+        <is-flowchart open-on-click>
+          <script type="application/json">
+            {
+              "flowchart": {
+                "title": "El ciclo que se desincroniza",
+                "subtitle": "cada salto manual es una oportunidad de mentir",
+                "direction": "LR",
+                "groups": [
+                  { "id": "g-code", "name": "Código", "hue": 199 },
+                  { "id": "g-manual", "name": "Trabajo manual", "hue": 12 },
+                  { "id": "g-consumo", "name": "Quien consume", "hue": 160 }
+                ],
+                "nodes": [
+                  { "id": "api", "label": "Backend cambia", "shape": "stadium", "group": "g-code",
+                    "desc": "Se añade un parámetro, cambia un enum, se protege un endpoint." },
+                  { "id": "spec", "label": "Alguien actualiza la spec", "group": "g-manual",
+                    "desc": "Paso **manual**. Si se olvida, nada falla: la spec vieja sigue siendo JSON válido." },
+                  { "id": "col", "label": "Alguien reexporta la colección", "group": "g-manual",
+                    "desc": "Segundo paso manual. Ahora hay **dos** copias que pueden divergir." },
+                  { "id": "share", "label": "Alguien la comparte", "group": "g-manual",
+                    "desc": "Por chat, por correo, por un archivo en una carpeta compartida." },
+                  { "id": "dev", "label": "Otro dev la importa", "group": "g-consumo" },
+                  { "id": "bug", "label": "Depura una petición imposible", "shape": "hexagon", "group": "g-consumo",
+                    "desc": "El parámetro que envía ya no existe. El error no dice eso." }
+                ],
+                "edges": [
+                  { "from": "api", "to": "spec", "label": "¿se acuerda?" },
+                  { "from": "spec", "to": "col", "label": "¿se acuerda?" },
+                  { "from": "col", "to": "share" },
+                  { "from": "share", "to": "dev" },
+                  { "from": "dev", "to": "bug", "kind": "dashed", "label": "tarde o temprano" }
+                ]
+              }
+            }
+          </script>
+        </is-flowchart>
+        <p class="diagrama__pie">
+          Tres pasos manuales entre el cambio y quien lo consume. Cada uno se
+          puede olvidar sin que ningún proceso avise.
+        </p>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>La apuesta: una sola fuente, servida en vivo</h2>
+      <p>
+        El backend de InSoft ya publica su propia configuración en
+        <code>/system/swagger/config.json</code>: rutas, parámetros, catálogos,
+        documentación y hasta qué endpoints exigen sesión. Ese documento no es
+        una copia de nada — <strong>es lo que el servidor sabe de sí mismo</strong>.
+      </p>
+      <p>
+        IS-Swagger no mantiene un catálogo propio. Lee ese endpoint cada vez que
+        se abre. Si el backend cambió esta mañana, el visor lo enseña esta
+        mañana, sin que nadie exporte ni reimporte nada.
+      </p>
+      <div class="contraste">
+        <div class="contraste__lado contraste__lado--antes">
+          <h3 class="contraste__titulo">
+            <is-icon icon="mdi:close-circle-outline"></is-icon>
+            Catálogo mantenido a mano
+          </h3>
+          <ul>
+            <li>Dos artefactos que hay que sincronizar.</li>
+            <li>El desfase no da ningún error.</li>
+            <li>Se comparte por archivo: cada copia envejece por su lado.</li>
+            <li>Quien lo recibe necesita instalar el cliente.</li>
+          </ul>
+        </div>
+        <div class="contraste__lado contraste__lado--despues">
+          <h3 class="contraste__titulo">
+            <is-icon icon="mdi:check-circle-outline"></is-icon>
+            Servido por el propio backend
+          </h3>
+          <ul>
+            <li>Una sola fuente: la que el servidor ya publica.</li>
+            <li>No hay desfase posible porque no hay copia.</li>
+            <li>Se comparte por enlace: siempre trae lo último.</li>
+            <li>Quien lo recibe abre una URL.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Por qué no bastaba Swagger UI</h2>
+      <p>
+        Swagger UI resuelve la mitad: lee un OpenAPI y lo pinta. Pero el
+        documento de InSoft <strong>no es OpenAPI</strong> — trae catálogos de
+        valores, documentación en Markdown por endpoint, subgrupos con orden
+        propio y reglas de sesión que OpenAPI no sabe expresar.
+      </p>
+      <p>
+        Se podía traducir a OpenAPI y perder esa información, o leer el formato
+        real y aprovecharlo entero. IS-Swagger hace lo segundo: traduce el
+        documento InSoft a su propia estructura interna, y por eso puede pintar
+        un selector con los valores válidos donde Swagger UI solo pintaría una
+        caja de texto.
+      </p>
+      <div class="nota">
+        <p>
+          Consecuencia deliberada: <strong>la palabra «OpenAPI» no aparece en la
+          interfaz</strong>. Es un formato que el visor <em>acepta</em>, no lo que
+          el visor <em>es</em>. Hay una prueba que falla si se cuela en la UI.
+        </p>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Y por qué no bastaba el visor anterior</h2>
+      <p>
+        La primera versión era React + MUI + Babel en el navegador. Funcionaba,
+        pero para incrustarla había que arrastrar React, ReactDOM, MUI, Emotion y
+        un transpilador que compilaba en cada carga. Abrir el HTML suelto no
+        servía de nada.
+      </p>
+      <p>
+        Para una herramienta cuyo valor es <em>«te lo mando por enlace y lo
+        abres»</em>, ese peso era el defecto principal, no un detalle. El
+        <a data-ir-a="stack">stack actual</a> nació de quitarlo.
+      </p>
+      <div class="rejilla">
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="comparativa">
+          <is-icon class="tarjeta__icono" icon="mdi:compare-horizontal"></is-icon>
+          <h3 class="tarjeta__titulo">Comparativa completa</h3>
+          <p>Frente a Postman y frente a Swagger UI, criterio por criterio.</p>
+        </button>
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="estrategias">
+          <is-icon class="tarjeta__icono" icon="mdi:chess-knight"></is-icon>
+          <h3 class="tarjeta__titulo">Las decisiones</h3>
+          <p>Qué se eligió, qué se descartó y qué error enseñó cada regla.</p>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="../doc-kit.js"></script>
+</body>
+</html>

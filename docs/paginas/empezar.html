@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es" class="theme-dark" data-theme="dark" data-palette="contapyme">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Empezar · IS-Swagger</title>
+  <meta name="description" content="Conectar tu API con ?conn=, embeber el visor en un host o levantarlo en local.">
+  <script src="../preview-boot.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/is-base.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/palettes.min.css">
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/all.min.js"></script>
+  <link rel="stylesheet" href="../styles/doc.css">
+</head>
+<body>
+  <main class="doc">
+
+    <header class="doc__head">
+      <p class="doc__kicker">Empezar</p>
+      <h1 class="doc__title">Tres formas de usarlo</h1>
+      <p class="doc__lede">
+        Conectar una API por enlace, embeber el visor en tu propio host, o
+        levantarlo en local para desarrollar. En ese orden de esfuerzo.
+      </p>
+    </header>
+
+    <!-- ── 1 · Enlace ──────────────────────────────────────── -->
+    <section class="seccion">
+      <h2>1 · Conectar por enlace (<code>?conn=</code>)</h2>
+      <p>
+        La forma normal. <code>?conn=</code> lleva un JSON en base64url con la base
+        de la API y la marca. El visor lo decodifica y pide el documento antes del
+        primer pintado — quien abre el enlace no configura nada.
+      </p>
+      <ol class="pasos">
+        <li>
+          <div class="pasos__cuerpo">
+            <h3>Arma el JSON de conexión</h3>
+            <p>Solo <code>apiBase</code> es obligatorio. El resto tiene valores por defecto.</p>
+            <pre><code>{
+  "apiBase": "https://tu-host/api",
+  "title": "ISS PatyIA",
+  "icon": "mdi:robot-happy-outline",
+  "fixedServer": true
+}</code></pre>
+          </div>
+        </li>
+        <li>
+          <div class="pasos__cuerpo">
+            <h3>Codifícalo en base64url</h3>
+            <p>
+              Base64 estándar con <code>+/</code> → <code>-_</code> y sin
+              <code>=</code> de relleno. El visor tolera el padding si lo dejas.
+            </p>
+            <pre><code>// En el navegador
+const b64url = (obj) =&gt; btoa(
+  String.fromCharCode(...new TextEncoder().encode(JSON.stringify(obj)))
+).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');</code></pre>
+          </div>
+        </li>
+        <li>
+          <div class="pasos__cuerpo">
+            <h3>Pégalo en la URL del visor</h3>
+            <pre><code>https://tu-host/is-swagger/?conn=eyJhcGlCYXNlIjoi…</code></pre>
+            <p>Y ya está: ese enlace abre tu API documentada y probable.</p>
+          </div>
+        </li>
+      </ol>
+
+      <h3>Campos de <code>conn</code></h3>
+      <div class="tabla">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Campo</th>
+              <th scope="col">Por defecto</th>
+              <th scope="col">Qué hace</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><code>apiBase</code></th>
+              <td>—</td>
+              <td>Base <code>/api</code> del host. Obligatorio.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>auto</code></th>
+              <td><code>true</code></td>
+              <td>Conectar al cargar, sin pedir confirmación.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>embed</code></th>
+              <td><code>false</code></td>
+              <td>Modo iframe: quita el chrome que el host ya pone.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>fixedServer</code></th>
+              <td><code>false</code></td>
+              <td>Oculta el selector de servidor. Útil en producción.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>title</code> · <code>icon</code></th>
+              <td>Del documento</td>
+              <td>Marca en la barra superior.</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>paths</code></th>
+              <td>Rutas del ISS</td>
+              <td>Override si tu host expone la config en otra ruta.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Los <code>paths</code> por defecto son los que el ISS ya expone:
+        <code>/system/swagger/config.json</code>,
+        <code>/system/swagger/meta.json</code>,
+        <code>/system/swagger/paths.json</code> e <code>/info</code>. Si tus rutas
+        coinciden, no declares <code>paths</code>.
+      </p>
+    </section>
+
+    <!-- ── 2 · Embeber ─────────────────────────────────────── -->
+    <section class="seccion">
+      <h2>2 · Embeber el visor en tu host</h2>
+      <p>
+        El visor es HTML, módulos ES y hojas de estilo. No hay bundle que
+        registrar ni framework que inicializar: se cargan los módulos y se pone
+        el tag.
+      </p>
+      <pre><code>&lt;!-- Tokens del kit is-* --&gt;
+&lt;link rel="stylesheet" href="…/is-webcomponents@main/dist/cdn/is-base.min.css"&gt;
+&lt;link rel="stylesheet" href="…/is-webcomponents@main/dist/cdn/palettes.min.css"&gt;
+&lt;script type="module" src="…/is-webcomponents@main/dist/cdn/all.min.js"&gt;&lt;/script&gt;
+
+&lt;!-- Tema antes del primer pintado --&gt;
+&lt;script src="…/isc-swagger/dist/cdn/boot.js"&gt;&lt;/script&gt;
+&lt;link rel="stylesheet" href="…/isc-swagger/src/css/app.css"&gt;
+
+&lt;!-- Configuración --&gt;
+&lt;script type="application/json" id="sw-config"&gt;
+{ "apiBase": "https://tu-host/api", "brand": { "title": "Mi API" } }
+&lt;/script&gt;
+
+&lt;sw-app&gt;&lt;/sw-app&gt;
+&lt;is-toast placement="bottom-end"&gt;&lt;/is-toast&gt;
+
+&lt;!-- Los dieciséis componentes en un módulo --&gt;
+&lt;script type="module" src="…/isc-swagger/dist/cdn/sw.all.js"&gt;&lt;/script&gt;</code></pre>
+      <div class="nota">
+        <p>
+          <code>sw.all.js</code> trae el JavaScript de todos los componentes, pero
+          <strong>no el CSS</strong>: cada uno sigue pidiendo su
+          <code>dist/cdn/&lt;tag&gt;.css</code>. Ese directorio tiene que estar
+          publicado o el visor sale sin estilos.
+        </p>
+      </div>
+
+      <h3>Precedencia de la configuración</h3>
+      <ol>
+        <li><code>?conn=</code>, <code>?spec=</code>, <code>?api=</code> — el enlace manda.</li>
+        <li><code>window.__SWAGGER_CONFIG__</code> — lo inyecta el host.</li>
+        <li><code>&lt;script type="application/json" id="sw-config"&gt;</code> — la página.</li>
+      </ol>
+      <p>
+        Que el enlace gane es deliberado: tu host fija su API por defecto y aun
+        así alguien puede compartir un enlace a otra sin que tengas que tocar
+        nada.
+      </p>
+    </section>
+
+    <!-- ── 3 · Local ───────────────────────────────────────── -->
+    <section class="seccion">
+      <h2>3 · Levantarlo en local</h2>
+      <pre><code>npm install
+npm run build     # src/**.ts → dist/cdn/
+npm run serve     # http://localhost:4190</code></pre>
+      <p>
+        Sin argumentos, <code>index.html</code> arranca con una API de muestra que
+        responde de verdad, así que se puede pulsar «Ejecutar» desde el primer
+        momento. Para desarrollar, <code>npm run dev</code> deja el build en watch.
+      </p>
+      <div class="tabla">
+        <table>
+          <thead>
+            <tr><th scope="col">Comando</th><th scope="col">Qué hace</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row"><code>npm run build</code></th><td>Transpila y aplana a <code>dist/cdn/</code></td></tr>
+            <tr><th scope="row"><code>npm run dev</code></th><td>El mismo build, en watch</td></tr>
+            <tr><th scope="row"><code>npm run serve</code></th><td>Servidor estático en el 4190</td></tr>
+            <tr><th scope="row"><code>npm run typecheck</code></th><td><code>tsc --noEmit</code>, sin emitir nada</td></tr>
+            <tr><th scope="row"><code>npm test</code></th><td>Build + <code>node --test tests/*.test.mjs</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Añadir un componente ────────────────────────────── -->
+    <section class="seccion">
+      <h2>Añadir un componente <code>sw-*</code></h2>
+      <p>
+        Cuatro pasos, y los cuatro los verifica <code>tests/estructura.test.mjs</code>.
+        Hacer solo tres deja un bug mudo: un custom element que no se importa no
+        hace <em>upgrade</em>, así que el tag queda en el DOM sin shadow y la vista
+        sale vacía, sin ningún error en consola.
+      </p>
+      <ol class="pasos">
+        <li>
+          <div class="pasos__cuerpo">
+            <h3>El módulo y su hoja</h3>
+            <pre><code>src/components/sw/sw-x.ts
+src/components/sw/sw-x.css</code></pre>
+          </div>
+        </li>
+        <li>
+          <div class="pasos__cuerpo">
+            <h3>Cargarlo en <code>index.html</code></h3>
+            <pre><code>&lt;script type="module" src="./dist/cdn/sw-x.js"&gt;&lt;/script&gt;</code></pre>
+          </div>
+        </li>
+        <li>
+          <div class="pasos__cuerpo">
+            <h3>Importarlo en el barril</h3>
+            <pre><code>// src/components/sw/all.ts
+import './sw-x.js';</code></pre>
+          </div>
+        </li>
+        <li>
+          <div class="pasos__cuerpo">
+            <h3>Documentarlo aquí</h3>
+            <p>
+              Entrada en <code>docs/manifest.js</code> y su página en
+              <code>docs/previews/sw-x.html</code>.
+            </p>
+          </div>
+        </li>
+      </ol>
+      <p>Después, <code>npm test</code>.</p>
+    </section>
+
+    <section class="seccion">
+      <h2>Verlo funcionando</h2>
+      <div class="rejilla">
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="sw-app">
+          <is-icon class="tarjeta__icono" icon="mdi:application-outline"></is-icon>
+          <h3 class="tarjeta__titulo">El visor completo</h3>
+          <p>Con secciones, subgrupos y una API que responde.</p>
+        </button>
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="sw-try">
+          <is-icon class="tarjeta__icono" icon="mdi:play-circle-outline"></is-icon>
+          <h3 class="tarjeta__titulo">Probar un endpoint</h3>
+          <p>El panel de peticiones, disparando contra un eco público.</p>
+        </button>
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="estrategias">
+          <is-icon class="tarjeta__icono" icon="mdi:chess-knight"></is-icon>
+          <h3 class="tarjeta__titulo">Las reglas del proyecto</h3>
+          <p>Léelas antes de tocar código: son contrato, no sugerencia.</p>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="../doc-kit.js"></script>
+</body>
+</html>

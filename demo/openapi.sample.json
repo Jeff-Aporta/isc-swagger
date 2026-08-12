@@ -1,0 +1,219 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API de ejemplo · ContaPyme",
+    "version": "1.4.0",
+    "description": "Documento de muestra para abrir el visor sin backend.\n\nCubre los casos que el visor trata de forma especial:\n\n- parámetros de **ruta**, **query** y **cabecera**\n- `enum` (se pinta como `is-select` en vez de campo libre)\n- cuerpo JSON con varios ejemplos con nombre\n- subgrupos por `x-isa-subgroups`\n- operaciones que exigen `Authorization: Bearer`\n- una operación marcada como obsoleta\n\n> Los servidores apuntan a `httpbin.org`, así que «Ejecutar» funciona de verdad."
+  },
+  "servers": [
+    { "url": "https://httpbin.org", "description": "Eco público (para probar Ejecutar)" },
+    { "url": "http://localhost:5502/api", "description": "Desarrollo local" }
+  ],
+  "tags": [
+    {
+      "name": "Terceros",
+      "description": "Consulta y mantenimiento del maestro de terceros.",
+      "x-isa-subgroups": [
+        { "id": "consulta", "name": "Consulta", "icon": "mdi:magnify" },
+        { "id": "mantenimiento", "name": "Mantenimiento", "icon": "mdi:pencil-outline" }
+      ]
+    },
+    { "name": "Sistema", "description": "Salud del servicio y metadatos." }
+  ],
+  "components": {
+    "securitySchemes": {
+      "Bearer": { "type": "http", "scheme": "bearer" }
+    },
+    "parameters": {
+      "Itercero": {
+        "name": "itercero",
+        "in": "path",
+        "required": true,
+        "description": "Identificador interno del tercero.",
+        "schema": { "type": "integer" },
+        "example": 810000630
+      }
+    },
+    "schemas": {
+      "Tercero": {
+        "type": "object",
+        "required": ["itercero", "nombre"],
+        "properties": {
+          "itercero": { "type": "integer", "example": 810000630 },
+          "nombre": { "type": "string", "example": "InSoft S.A.S." },
+          "tipo": { "type": "string", "enum": ["natural", "juridica"], "example": "juridica" },
+          "activo": { "type": "boolean", "example": true }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/get": {
+      "get": {
+        "tags": ["Terceros"],
+        "x-isa-subgroup": "consulta",
+        "operationId": "listarTerceros",
+        "summary": "Listar terceros",
+        "description": "Devuelve la página solicitada del maestro de terceros.\n\nEl orden por defecto es alfabético por `nombre`.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Texto libre sobre nombre y documento.",
+            "schema": { "type": "string" },
+            "example": "insoft"
+          },
+          {
+            "name": "estado",
+            "in": "query",
+            "description": "Filtra por estado.",
+            "schema": { "type": "string", "enum": ["todos", "activos", "inactivos"], "default": "activos" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Máximo de filas.",
+            "schema": { "type": "integer", "default": 50 }
+          },
+          {
+            "name": "X-Request-Id",
+            "in": "header",
+            "description": "Correlación de la petición en los logs.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Página de resultados.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "encabezado": { "resultado": true, "mensaje": "OK" },
+                  "datos": [
+                    { "itercero": 810000630, "nombre": "InSoft S.A.S.", "tipo": "juridica", "activo": true }
+                  ],
+                  "total": 1
+                }
+              }
+            }
+          },
+          "400": { "description": "Parámetros inválidos." },
+          "500": { "description": "Error interno." }
+        }
+      }
+    },
+    "/status/200": {
+      "get": {
+        "tags": ["Terceros"],
+        "x-isa-subgroup": "consulta",
+        "operationId": "obtenerTercero",
+        "summary": "Obtener un tercero",
+        "parameters": [{ "$ref": "#/components/parameters/Itercero" }],
+        "responses": {
+          "200": {
+            "description": "El tercero solicitado.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Tercero" } } }
+          },
+          "404": { "description": "No existe." }
+        }
+      }
+    },
+    "/post": {
+      "post": {
+        "tags": ["Terceros"],
+        "x-isa-subgroup": "mantenimiento",
+        "operationId": "crearTercero",
+        "summary": "Crear un tercero",
+        "security": [{ "Bearer": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Tercero" },
+              "examples": {
+                "juridica": {
+                  "summary": "Persona jurídica",
+                  "value": { "itercero": 810000630, "nombre": "InSoft S.A.S.", "tipo": "juridica", "activo": true }
+                },
+                "natural": {
+                  "summary": "Persona natural",
+                  "value": { "itercero": 1020304050, "nombre": "Ana Ríos", "tipo": "natural", "activo": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Creado." },
+          "401": { "description": "Falta el JWT." },
+          "409": { "description": "Ya existe un tercero con ese identificador." }
+        }
+      }
+    },
+    "/put": {
+      "put": {
+        "tags": ["Terceros"],
+        "x-isa-subgroup": "mantenimiento",
+        "operationId": "actualizarTercero",
+        "summary": "Actualizar un tercero",
+        "security": [{ "Bearer": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Tercero" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "Actualizado." },
+          "401": { "description": "Falta el JWT." }
+        }
+      }
+    },
+    "/delete": {
+      "delete": {
+        "tags": ["Terceros"],
+        "x-isa-subgroup": "mantenimiento",
+        "operationId": "eliminarTercero",
+        "summary": "Eliminar un tercero",
+        "deprecated": true,
+        "security": [{ "Bearer": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/Itercero" }],
+        "responses": {
+          "204": { "description": "Eliminado." },
+          "401": { "description": "Falta el JWT." }
+        }
+      }
+    },
+    "/json": {
+      "get": {
+        "tags": ["Sistema"],
+        "operationId": "info",
+        "summary": "Información del servicio",
+        "description": "Versión, estado de la base de datos y tiempo de arranque.",
+        "x-iss-doc-md": "## Uso\n\nEste endpoint se consulta desde el monitor de salud cada 30 s.\n\n| Campo | Significado |\n|---|---|\n| `database.bconnected` | La API tiene conexión con la BD |\n| `uptime` | Segundos desde el arranque |\n\nUn `bconnected: false` mantiene el `200`: el servicio responde, pero degradado.",
+        "responses": {
+          "200": {
+            "description": "Estado actual.",
+            "content": {
+              "application/json": {
+                "example": { "version": "1.4.0", "database": { "bconnected": true }, "uptime": 84213 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status/503": {
+      "get": {
+        "tags": ["Sistema"],
+        "operationId": "ping",
+        "summary": "Ping (devuelve 503 a propósito)",
+        "description": "Sirve para ver cómo el visor presenta una respuesta de error.",
+        "responses": {
+          "200": { "description": "Vivo." },
+          "503": { "description": "No disponible." }
+        }
+      }
+    }
+  }
+}

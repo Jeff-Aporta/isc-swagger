@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es" class="theme-dark" data-theme="dark" data-palette="contapyme">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Frente a Postman · IS-Swagger</title>
+  <meta name="description" content="IS-Swagger comparado con Postman y con Swagger UI: qué gana, qué pierde y cuándo no usarlo.">
+  <script src="../preview-boot.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/is-base.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/palettes.min.css">
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/all.min.js"></script>
+  <link rel="stylesheet" href="../styles/doc.css">
+</head>
+<body>
+  <main class="doc">
+
+    <header class="doc__head">
+      <p class="doc__kicker">Comparativa</p>
+      <h1 class="doc__title">Frente a Postman y a Swagger UI</h1>
+      <p class="doc__lede">
+        Las tres herramientas hacen cosas parecidas y ninguna sustituye a las
+        otras del todo. Esto es dónde está la diferencia real, sin vender humo.
+      </p>
+    </header>
+
+    <section class="seccion">
+      <h2>La diferencia de fondo</h2>
+      <p>
+        Postman es un <strong>cliente</strong>: tú le describes la API y él la
+        llama. Swagger UI es un <strong>renderizador</strong>: le das un OpenAPI y
+        lo pinta. IS-Swagger es un <strong>consumidor del backend</strong>: le das
+        la base de la API y él le pregunta al servidor qué expone.
+      </p>
+      <p>
+        De ahí salen casi todas las demás diferencias. Quien mantiene el catálogo
+        es distinto en cada caso: tú, tu pipeline, o el propio servidor.
+      </p>
+      <div class="diagrama">
+        <is-block-diagram open-on-click>
+          <script type="application/json">
+            {
+              "blockDiagram": {
+                "title": "Quién es dueño del catálogo",
+                "subtitle": "el dueño decide qué puede desincronizarse",
+                "columns": 3,
+                "groups": [
+                  { "id": "g-pm", "name": "Postman", "hue": 12 },
+                  { "id": "g-su", "name": "Swagger UI", "hue": 38 },
+                  { "id": "g-is", "name": "IS-Swagger", "hue": 160 }
+                ],
+                "blocks": [
+                  { "id": "pm1", "label": "Tú mantienes la colección", "group": "g-pm", "icon": "mdi:account-edit-outline" },
+                  { "id": "pm2", "label": "Se exporta a archivo", "group": "g-pm", "icon": "mdi:file-export-outline" },
+                  { "id": "pm3", "label": "Cada copia envejece sola", "group": "g-pm", "icon": "mdi:clock-alert-outline" },
+
+                  { "id": "su1", "label": "El pipeline genera el OpenAPI", "group": "g-su", "icon": "mdi:cog-sync-outline" },
+                  { "id": "su2", "label": "Se publica como estático", "group": "g-su", "icon": "mdi:file-code-outline" },
+                  { "id": "su3", "label": "Envejece con el despliegue", "group": "g-su", "icon": "mdi:clock-outline" },
+
+                  { "id": "is1", "label": "El backend publica su config", "group": "g-is", "icon": "mdi:server-network-outline" },
+                  { "id": "is2", "label": "El visor la lee al abrirse", "group": "g-is", "icon": "mdi:cloud-download-outline" },
+                  { "id": "is3", "label": "No hay copia que envejezca", "group": "g-is", "icon": "mdi:check-decagram-outline" }
+                ],
+                "edges": [
+                  { "from": "pm1", "to": "pm2" }, { "from": "pm2", "to": "pm3" },
+                  { "from": "su1", "to": "su2" }, { "from": "su2", "to": "su3" },
+                  { "from": "is1", "to": "is2" }, { "from": "is2", "to": "is3" }
+                ]
+              }
+            }
+          </script>
+        </is-block-diagram>
+        <p class="diagrama__pie">
+          Postman y Swagger UI producen una copia. IS-Swagger no produce ninguna,
+          y por eso no tiene nada que sincronizar.
+        </p>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Criterio por criterio</h2>
+      <div class="tabla">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Criterio</th>
+              <th scope="col">Postman</th>
+              <th scope="col">Swagger UI</th>
+              <th scope="col">IS-Swagger</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Instalación para quien consume</th>
+              <td>App de escritorio o cuenta web</td>
+              <td>Ninguna (web)</td>
+              <td>Ninguna (web)</td>
+            </tr>
+            <tr>
+              <th scope="row">Cómo se comparte</th>
+              <td>Archivo o workspace de equipo (cuenta)</td>
+              <td>URL fija del despliegue</td>
+              <td>URL con la API dentro (<code>?conn=</code>)</td>
+            </tr>
+            <tr>
+              <th scope="row">Fuente del catálogo</th>
+              <td>Colección mantenida a mano</td>
+              <td>OpenAPI generado y publicado</td>
+              <td>El endpoint que el backend ya expone</td>
+            </tr>
+            <tr>
+              <th scope="row">Riesgo de desfase</th>
+              <td>Alto: dos artefactos manuales</td>
+              <td>Medio: depende del despliegue</td>
+              <td>Ninguno: no hay copia</td>
+            </tr>
+            <tr>
+              <th scope="row">Valores válidos de un parámetro</th>
+              <td>Los escribes tú</td>
+              <td>Solo si el OpenAPI trae <code>enum</code></td>
+              <td>Del catálogo del backend, como selector</td>
+            </tr>
+            <tr>
+              <th scope="row">Documentación por endpoint</th>
+              <td>Campo de descripción propio</td>
+              <td><code>description</code> del OpenAPI</td>
+              <td>Markdown que el backend publica</td>
+            </tr>
+            <tr>
+              <th scope="row">Sesión / JWT</th>
+              <td>Variables y scripts de pre-request</td>
+              <td>Botón «Authorize» genérico</td>
+              <td>Login contra el orquestador, o JWT pegado</td>
+            </tr>
+            <tr>
+              <th scope="row">Enlace a un endpoint concreto</th>
+              <td>No</td>
+              <td>Ancla por operación</td>
+              <td>Sección + endpoint + pestaña + búsqueda en la URL</td>
+            </tr>
+            <tr>
+              <th scope="row">Embebible en otra app</th>
+              <td>No</td>
+              <td>Sí, con su bundle</td>
+              <td>Sí: módulos ES planos, sin dependencias</td>
+            </tr>
+            <tr>
+              <th scope="row">Tests automatizados de la API</th>
+              <td><strong>Sí, es su punto fuerte</strong></td>
+              <td>No</td>
+              <td>No (aún)</td>
+            </tr>
+            <tr>
+              <th scope="row">Colecciones y entornos guardados</th>
+              <td><strong>Sí, muy completo</strong></td>
+              <td>No</td>
+              <td>No: el enlace hace de entorno</td>
+            </tr>
+            <tr>
+              <th scope="row">Trabajo sin conexión</th>
+              <td><strong>Sí</strong></td>
+              <td>Sí (estático)</td>
+              <td>No: necesita alcanzar el backend</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Lo que IS-Swagger hace mejor</h2>
+      <div class="rejilla">
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:link-variant"></is-icon>
+          <h3 class="tarjeta__titulo">Onboarding de un enlace</h3>
+          <p>
+            Mandas una URL y el otro ya está viendo tu API. Sin cuenta, sin
+            importar nada, sin «¿tienes Postman instalado?».
+          </p>
+        </article>
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:sync"></is-icon>
+          <h3 class="tarjeta__titulo">Imposible que mienta</h3>
+          <p>
+            No hay copia del catálogo. Lo que ves es lo que el servidor dijo
+            hace un segundo.
+          </p>
+        </article>
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:form-select"></is-icon>
+          <h3 class="tarjeta__titulo">Campos que saben sus valores</h3>
+          <p>
+            Un parámetro con catálogo se pinta como selector con las opciones
+            reales, no como una caja donde adivinar.
+          </p>
+        </article>
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:share-variant-outline"></is-icon>
+          <h3 class="tarjeta__titulo">«Mira este endpoint»</h3>
+          <p>
+            El estado entero está en la URL. Pegas el enlace y el otro abre
+            exactamente la misma vista.
+          </p>
+        </article>
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:feather"></is-icon>
+          <h3 class="tarjeta__titulo">Peso de una página</h3>
+          <p>
+            Web components y módulos ES. Sin framework, sin transpilador en
+            runtime, sin bundle de megas.
+          </p>
+        </article>
+        <article class="tarjeta">
+          <is-icon class="tarjeta__icono" icon="mdi:palette-outline"></is-icon>
+          <h3 class="tarjeta__titulo">Con la marca puesta</h3>
+          <p>
+            Tema y paleta del kit <code>is-*</code>: parece parte del producto,
+            no una herramienta de terceros incrustada.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Cuándo NO usarlo</h2>
+      <p>
+        Decirlo claro ahorra decepciones. Hay tres casos en los que la
+        herramienta correcta es otra:
+      </p>
+      <ul>
+        <li>
+          <strong>Suites de pruebas automatizadas.</strong> Postman con Newman en
+          CI hace eso y IS-Swagger no lo intenta. Aquí se prueba a mano, un
+          endpoint a la vez.
+        </li>
+        <li>
+          <strong>APIs de terceros que no controlas.</strong> Si el backend no
+          publica su configuración, no hay nada que leer. Funciona con un
+          OpenAPI suelto, pero pierdes catálogos y documentación embebida.
+        </li>
+        <li>
+          <strong>Trabajo sin conexión.</strong> El visor necesita alcanzar el
+          servidor. Si vas a estar sin red, una colección local es mejor.
+        </li>
+      </ul>
+      <div class="nota">
+        <p>
+          No es un reemplazo de Postman: es lo que se usa <em>antes</em> de
+          Postman. Para entender una API, enseñarla y probarla rápido. Cuando
+          toca automatizar cien peticiones en CI, ahí Postman sigue ganando.
+        </p>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Compatibilidad, no exclusividad</h2>
+      <p>
+        El visor exporta <strong>colección de Postman v2.1</strong>, el documento
+        en JSON y el paquete IS completo. Si alguien del equipo vive en Postman,
+        se lleva su colección en dos clics y sigue con su vida.
+      </p>
+      <div class="rejilla">
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="sw-export">
+          <is-icon class="tarjeta__icono" icon="mdi:download-outline"></is-icon>
+          <h3 class="tarjeta__titulo">Ver las descargas</h3>
+          <p>El componente de exportación, con las tres salidas funcionando.</p>
+        </button>
+        <button type="button" class="tarjeta tarjeta--enlace" data-ir-a="sw-app">
+          <is-icon class="tarjeta__icono" icon="mdi:application-outline"></is-icon>
+          <h3 class="tarjeta__titulo">Probar el visor</h3>
+          <p>Con una API de muestra que responde de verdad.</p>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="../doc-kit.js"></script>
+</body>
+</html>

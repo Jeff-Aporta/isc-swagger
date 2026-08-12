@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es" class="theme-dark" data-theme="dark" data-palette="contapyme">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IS-Swagger · Documentación</title>
+  <meta name="description" content="Documentación de IS-Swagger: el visor de APIs de InSoft. Stack, arquitectura, estrategias y catálogo de componentes.">
+
+  <!-- Tema antes del primer pintado: si no, parpadeo entre el default del HTML
+       estático y el valor guardado en localStorage. -->
+  <script src="preview-boot.js"></script>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/is-base.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/palettes.min.css">
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/all.min.js"></script>
+
+  <link rel="stylesheet" href="styles/shell.css">
+</head>
+<body>
+  <header class="shell-bar">
+    <is-button class="shell-bar__menu" id="btnMenu" color="neutral" variant="plain" pill type="button"
+               aria-label="Abrir el índice" aria-expanded="false" aria-controls="nav">
+      <is-icon slot="start" icon="mdi:menu"></is-icon>
+    </is-button>
+
+    <button type="button" class="marca" id="btnInicio" aria-label="IS-Swagger — volver al inicio">
+      <span>IS-Swagger</span><span class="marca__acento">2</span>
+      <small class="marca__sub">documentación</small>
+    </button>
+
+    <div class="shell-bar__fin">
+      <is-palette-selector id="paleta" aria-label="Elegir paleta" storage-key="is-palette"></is-palette-selector>
+      <is-button id="btnPantallaCompleta" color="neutral" variant="plain" pill type="button"
+                 aria-label="Abrir esta página en pantalla completa" title="Abrir en pantalla completa">
+        <is-icon slot="start" icon="mdi:open-in-new"></is-icon>
+      </is-button>
+      <is-theme-toggle id="tema" dark="true"></is-theme-toggle>
+    </div>
+  </header>
+
+  <div class="shell-cuerpo">
+    <nav class="shell-nav" id="nav" aria-label="Índice de la documentación"></nav>
+    <iframe class="doc-frame" id="marco" title="Contenido de la documentación"></iframe>
+  </div>
+
+  <!-- Fondo del nav en móvil, donde el nav se convierte en panel deslizante. -->
+  <div class="shell-fondo" id="fondoNav" hidden></div>
+
+  <script type="module">
+    import catalogo, { categorias } from './manifest.js';
+
+    const raiz = document.documentElement;
+    const nav = document.getElementById('nav');
+    const marco = document.getElementById('marco');
+    const fondoNav = document.getElementById('fondoNav');
+    const btnMenu = document.getElementById('btnMenu');
+    const btnInicio = document.getElementById('btnInicio');
+    const btnPantallaCompleta = document.getElementById('btnPantallaCompleta');
+    const toggleTema = document.getElementById('tema');
+    const selectorPaleta = document.getElementById('paleta');
+
+    const TEMAS = new Set(['light', 'dark']);
+    const PALETAS = new Set(['insoft', 'contapyme', 'agrowin']);
+    const INICIO = catalogo.find((c) => c.tag === 'inicio');
+
+    /* ── base64url (mismo patrón que el kit y que `?conn=`) ── */
+
+    const b64urlEncode = (input) => {
+      const bytes = new TextEncoder().encode(input);
+      let bin = '';
+      bytes.forEach((b) => { bin += String.fromCharCode(b); });
+      return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    };
+    const b64urlDecode = (input) => {
+      let pad = String(input).replace(/-/g, '+').replace(/_/g, '/');
+      while (pad.length % 4) pad += '=';
+      const bin = atob(pad);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bytes.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
+    };
+    const encodeState = (obj) => b64urlEncode(JSON.stringify(obj));
+
+    const estadoUrl = (() => {
+      const raw = new URLSearchParams(location.search).get('s');
+      if (!raw) return null;
+      try { return JSON.parse(b64urlDecode(raw)); } catch { return null; }
+    })();
+
+    /* ── Estado ─────────────────────────────────────────────── */
+
+    const guardadoTema = localStorage.getItem('is-theme');
+    const guardadaPaleta = localStorage.getItem('is-palette');
+
+    let tema = TEMAS.has(estadoUrl?.theme) ? estadoUrl.theme
+      : (TEMAS.has(guardadoTema) ? guardadoTema : 'dark');
+    let paleta = PALETAS.has(estadoUrl?.palette) ? estadoUrl.palette
+      : (PALETAS.has(guardadaPaleta) ? guardadaPaleta : 'contapyme');
+    let actual = catalogo.find((c) => c.tag === estadoUrl?.page) ?? INICIO;
+
+    /* ── Nav ────────────────────────────────────────────────── */
+
+    const item = (entrada) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'shell-nav__item';
+      btn.dataset.tag = entrada.tag;
+
+      if (entrada.icon) {
+        const icono = document.createElement('is-icon');
+        icono.className = 'shell-nav__icono';
+        icono.setAttribute('icon', entrada.icon);
+        btn.append(icono);
+      }
+
+      const texto = document.createElement('span');
+      texto.className = 'shell-nav__texto';
+
+      const nombre = document.createElement('span');
+      nombre.className = 'shell-nav__nombre';
+      nombre.textContent = entrada.title;
+      texto.append(nombre);
+
+      // Solo los componentes muestran su tag: en una página de prosa sobraría.
+      if (entrada.category !== 'documentacion') {
+        const tag = document.createElement('span');
+        tag.className = 'shell-nav__tag';
+        tag.textContent = `<${entrada.tag}>`;
+        texto.append(tag);
+      }
+
+      btn.append(texto);
+      btn.addEventListener('click', () => {
+        seleccionar(entrada.tag);
+        cerrarNav();
+      });
+      return btn;
+    };
+
+    for (const cat of categorias) {
+      const lista = catalogo.filter((c) => c.category === cat.id);
+      if (!lista.length) continue;
+      const grupo = document.createElement('div');
+      grupo.className = 'shell-nav__grupo';
+      grupo.setAttribute('role', 'group');
+      grupo.setAttribute('aria-label', cat.label);
+      const titulo = document.createElement('div');
+      titulo.className = 'shell-nav__titulo';
+      titulo.textContent = cat.label;
+      grupo.append(titulo, ...lista.map(item));
+      nav.append(grupo);
+    }
+
+    /* ── Render ─────────────────────────────────────────────── */
+
+    const srcPagina = (page) => `${page}?s=${encodeState({ embed: true, theme: tema, palette: paleta })}`;
+
+    const mandarContexto = () =>
+      marco.contentWindow?.postMessage({ type: 'is-context', theme: tema, palette: paleta }, location.origin);
+
+    function pintar() {
+      raiz.classList.toggle('theme-light', tema === 'light');
+      raiz.classList.toggle('theme-dark', tema === 'dark');
+      raiz.dataset.theme = tema;
+      raiz.dataset.palette = paleta;
+      toggleTema.dark = tema === 'dark';
+
+      for (const btn of nav.querySelectorAll('.shell-nav__item')) {
+        btn.setAttribute('aria-current', btn.dataset.tag === actual.tag ? 'true' : 'false');
+      }
+
+      document.title = actual.tag === 'inicio'
+        ? 'IS-Swagger · Documentación'
+        : `${actual.title} · IS-Swagger`;
+
+      localStorage.setItem('is-theme', tema);
+      localStorage.setItem('is-palette', paleta);
+
+      // Solo la página viaja en la URL: tema y paleta son preferencia local, y
+      // meterlas en el enlace las congelaría para quien lo reciba.
+      const url = new URL(location.href);
+      url.search = actual.tag === 'inicio' ? '' : `?s=${encodeState({ page: actual.tag })}`;
+      history.replaceState(null, '', url);
+
+      mandarContexto();
+      desplazarNavAlActivo();
+    }
+
+    function seleccionar(tag) {
+      const siguiente = catalogo.find((c) => c.tag === tag) ?? INICIO;
+      if (siguiente === actual) return;
+      actual = siguiente;
+      marco.src = srcPagina(actual.page);
+      pintar();
+    }
+
+    /** Centra el ítem activo cuando el nav tiene scroll (móvil: horizontal). */
+    function desplazarNavAlActivo() {
+      const activo = nav.querySelector('.shell-nav__item[aria-current="true"]');
+      if (!activo) return;
+      const horizontal = getComputedStyle(nav).flexDirection === 'row';
+      const cajaNav = nav.getBoundingClientRect();
+      const cajaItem = activo.getBoundingClientRect();
+      if (horizontal) {
+        const delta = cajaItem.left - cajaNav.left - (nav.clientWidth - activo.offsetWidth) / 2;
+        nav.scrollTo({ left: nav.scrollLeft + delta, behavior: 'smooth' });
+      } else {
+        const delta = cajaItem.top - cajaNav.top - (nav.clientHeight - activo.offsetHeight) / 2;
+        nav.scrollTo({ top: nav.scrollTop + delta, behavior: 'smooth' });
+      }
+    }
+
+    /* ── Nav deslizante (móvil) ─────────────────────────────── */
+
+    const navAbierto = () => document.body.classList.contains('nav-abierto');
+
+    function abrirNav() {
+      document.body.classList.add('nav-abierto');
+      fondoNav.hidden = false;
+      btnMenu.setAttribute('aria-expanded', 'true');
+      nav.querySelector('.shell-nav__item')?.focus();
+    }
+
+    function cerrarNav() {
+      if (!navAbierto()) return;
+      document.body.classList.remove('nav-abierto');
+      fondoNav.hidden = true;
+      btnMenu.setAttribute('aria-expanded', 'false');
+    }
+
+    btnMenu.addEventListener('click', () => (navAbierto() ? cerrarNav() : abrirNav()));
+    fondoNav.addEventListener('click', cerrarNav);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') cerrarNav();
+    });
+
+    /* ── Eventos ────────────────────────────────────────────── */
+
+    marco.addEventListener('load', mandarContexto);
+
+    btnInicio.addEventListener('click', () => seleccionar('inicio'));
+
+    toggleTema.addEventListener('theme-toggle', (e) => {
+      tema = e.detail?.theme === 'light' ? 'light' : 'dark';
+      pintar();
+    });
+
+    // <is-palette-selector> ya aplica data-palette y persiste; aquí solo se
+    // sincroniza el iframe, que no ve el <html> del shell.
+    selectorPaleta.addEventListener('is-palette-change', (e) => {
+      paleta = PALETAS.has(e.detail?.value) ? e.detail.value : 'contapyme';
+      pintar();
+    });
+
+    btnPantallaCompleta.addEventListener('click', () => {
+      window.open(`${actual.page}?s=${encodeState({ theme: tema, palette: paleta })}`, '_blank', 'noopener');
+    });
+
+    // Las páginas piden navegación con el mismo mensaje que usa el kit.
+    window.addEventListener('message', (e) => {
+      if (e.origin !== location.origin) return;
+      if (e.data?.type === 'is-select' && typeof e.data.tag === 'string') seleccionar(e.data.tag);
+    });
+
+    marco.src = srcPagina(actual.page);
+    pintar();
+  </script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es" class="theme-dark" data-theme="dark" data-palette="contapyme">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arquitectura · IS-Swagger</title>
+  <meta name="description" content="Capas, flujo de datos y jerarquía de componentes del visor IS-Swagger.">
+  <script src="../preview-boot.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/is-base.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/palettes.min.css">
+  <script type="module" src="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/all.min.js"></script>
+  <link rel="stylesheet" href="../styles/doc.css">
+</head>
+<body>
+  <main class="doc">
+
+    <header class="doc__head">
+      <p class="doc__kicker">Arquitectura</p>
+      <h1 class="doc__title">Tres capas y un solo dueño del estado</h1>
+      <p class="doc__lede">
+        El dominio no toca el DOM. Los componentes no toman decisiones de
+        negocio. Y solo una pieza escribe la URL. Todo lo demás sale de ahí.
+      </p>
+    </header>
+
+    <section class="seccion">
+      <h2>Las capas</h2>
+      <div class="diagrama">
+        <is-block-diagram open-on-click>
+          <script type="application/json">
+            {
+              "blockDiagram": {
+                "title": "Capas del proyecto",
+                "subtitle": "cada una prueba algo distinto",
+                "columns": 3,
+                "groups": [
+                  { "id": "g-dom", "name": "Dominio · src/js", "hue": 199 },
+                  { "id": "g-comp", "name": "Pintado · src/components/sw", "hue": 239 },
+                  { "id": "g-pub", "name": "Publicado · dist/cdn", "hue": 160 }
+                ],
+                "blocks": [
+                  { "id": "cfg", "label": "config · conn · insoft-config", "group": "g-dom", "span": 2, "icon": "mdi:cog-outline" },
+                  { "id": "api", "label": "api-fetch · auth", "group": "g-dom", "icon": "mdi:cloud-sync-outline" },
+                  { "id": "par", "label": "openapi · param-schema · tryit-body", "group": "g-dom", "span": 2, "icon": "mdi:code-braces" },
+                  { "id": "url", "label": "url-state · search-state", "group": "g-dom", "icon": "mdi:link-variant" },
+
+                  { "id": "shell", "label": "sw-app (dueño del estado)", "group": "g-comp", "span": 3, "shape": "round", "icon": "mdi:crown-outline" },
+                  { "id": "nav", "label": "sw-nav", "group": "g-comp", "icon": "mdi:page-layout-header" },
+                  { "id": "grp", "label": "sw-tag-group", "group": "g-comp", "icon": "mdi:folder-outline" },
+                  { "id": "op", "label": "sw-operation → sw-try", "group": "g-comp", "icon": "mdi:card-outline" },
+
+                  { "id": "js", "label": "*.js plano", "group": "g-pub", "icon": "mdi:language-javascript" },
+                  { "id": "css", "label": "*.css hermano", "group": "g-pub", "icon": "mdi:language-css3" },
+                  { "id": "all", "label": "sw.all.js", "group": "g-pub", "icon": "mdi:package-variant-closed" }
+                ],
+                "edges": [
+                  { "from": "cfg", "to": "shell", "label": "carga" },
+                  { "from": "par", "to": "shell", "label": "agrupa" },
+                  { "from": "url", "to": "shell", "label": "estado" },
+                  { "from": "shell", "to": "nav" },
+                  { "from": "shell", "to": "grp" },
+                  { "from": "grp", "to": "op" },
+                  { "from": "api", "to": "op", "label": "peticiones", "kind": "dashed" }
+                ]
+              }
+            }
+          </script>
+        </is-block-diagram>
+        <p class="diagrama__pie">
+          <code>src/js</code> es puro: se prueba sin navegador.
+          <code>src/components/sw</code> traduce esos datos a <code>is-*</code>.
+          <code>dist/cdn</code> es lo que se publica.
+        </p>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>Cómo arranca el visor</h2>
+      <div class="diagrama">
+        <is-sequence-diagram open-on-click>
+          <script type="application/json">
+            {
+              "sequence": {
+                "title": "Del enlace a la primera tarjeta",
+                "actors": [
+                  { "id": "u", "name": "Quien abre el enlace", "icon": "mdi:account-outline" },
+                  { "id": "boot", "name": "boot.js + hojas.js", "icon": "mdi:flash-outline" },
+                  { "id": "app", "name": "sw-app", "icon": "mdi:crown-outline" },
+                  { "id": "cfg", "name": "config.ts", "icon": "mdi:cog-outline" },
+                  { "id": "be", "name": "Backend InSoft", "icon": "mdi:server-network-outline" }
+                ],
+                "messages": [
+                  { "from": "u", "to": "boot", "text": "abre ?conn=…" },
+                  { "from": "boot", "to": "boot", "text": "aplica tema antes del primer pintado" },
+                  { "from": "boot", "to": "app", "text": "el módulo registra <sw-app>" },
+                  { "from": "app", "to": "cfg", "text": "resolveBootConfig()" },
+                  { "from": "cfg", "to": "cfg", "text": "?conn= gana sobre el <script> local" },
+                  { "from": "cfg", "to": "be", "text": "GET /system/swagger/config.json" },
+                  { "from": "be", "to": "cfg", "text": "documento InSoft", "kind": "return" },
+                  { "from": "cfg", "to": "cfg", "text": "parseInsoftConfig → estructura interna" },
+                  { "from": "cfg", "to": "app", "text": "{ config, spec }", "kind": "return" },
+                  { "from": "app", "to": "app", "text": "agrupa por tag y respeta el orden declarado" },
+                  { "from": "app", "to": "u", "text": "pinta nav, cabecera y tarjetas" }
+                ]
+              }
+            }
+          </script>
+        </is-sequence-diagram>
+        <p class="diagrama__pie">
+          Un fallo en cualquiera de esos pasos se enseña en pantalla con la URL
+          que falló, no en la consola.
+        </p>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>El estado tiene un solo dueño</h2>
+      <p>
+        <code>sw-app</code> guarda config, documento, grupos, sesión, servidor,
+        pestaña activa, endpoint abierto y búsqueda. Todos los demás componentes
+        son <strong>controlados</strong>: reciben <code>props</code> y, cuando
+        necesitan cambiar algo, <strong>emiten un evento</strong>.
+      </p>
+      <p>
+        Concentrarlo así es lo que hace imposible que la URL y la vista se
+        desincronicen: hay una sola escritura de <code>?tab</code>,
+        <code>?op</code>, <code>?opt</code> y <code>?server</code>, y una sola
+        lectura al arrancar.
+      </p>
+      <div class="diagrama">
+        <is-flowchart open-on-click>
+          <script type="application/json">
+            {
+              "flowchart": {
+                "title": "Props bajan, eventos suben",
+                "subtitle": "ningún hijo escribe la URL",
+                "direction": "TB",
+                "groups": [
+                  { "id": "g-arriba", "name": "Dueño", "hue": 239 },
+                  { "id": "g-abajo", "name": "Controlados", "hue": 199 }
+                ],
+                "nodes": [
+                  { "id": "app", "label": "sw-app", "shape": "round", "group": "g-arriba",
+                    "desc": "Único que llama a `mergeUrlState`." },
+                  { "id": "url", "label": "url-state.ts", "shape": "cylinder", "group": "g-arriba" },
+                  { "id": "nav", "label": "sw-nav", "group": "g-abajo",
+                    "desc": "Emite `sw-nav-tab`, `sw-search`, `sw-session-change`, `sw-reset`." },
+                  { "id": "grp", "label": "sw-tag-group", "group": "g-abajo",
+                    "desc": "Reemite sin interpretar: no puede saber qué hay abierto en otro grupo." },
+                  { "id": "op", "label": "sw-operation", "group": "g-abajo",
+                    "desc": "Emite `sw-op-toggle` y `sw-op-tab`." },
+                  { "id": "try", "label": "sw-try", "group": "g-abajo",
+                    "desc": "Emite `sw-need-login` cuando falta el JWT." }
+                ],
+                "edges": [
+                  { "from": "app", "to": "nav", "label": "props" },
+                  { "from": "app", "to": "grp", "label": "props" },
+                  { "from": "grp", "to": "op", "label": "props" },
+                  { "from": "op", "to": "try", "label": "props" },
+                  { "from": "try", "to": "op", "label": "evento", "kind": "dashed" },
+                  { "from": "op", "to": "grp", "label": "evento", "kind": "dashed" },
+                  { "from": "grp", "to": "app", "label": "evento", "kind": "dashed" },
+                  { "from": "nav", "to": "app", "label": "evento", "kind": "dashed" },
+                  { "from": "app", "to": "url", "label": "única escritura" }
+                ]
+              }
+            }
+          </script>
+        </is-flowchart>
+        <p class="diagrama__pie">
+          Las flechas continuas son <code>props</code>; las discontinuas,
+          eventos. Ninguna discontinua salta directo a <code>url-state</code>.
+        </p>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <h2>El coste se paga al abrir, no al listar</h2>
+      <p>
+        <code>sw-operation</code> monta su cuerpo <strong>cuando se
+        despliega</strong>, no cuando se pinta la lista. Una API con doscientos
+        endpoints crearía doscientos <code>sw-try</code> con sus campos, su
+        editor y su CSS antes de que nadie mire ninguno.
+      </p>
+      <p>
+        Es una decisión que no conviene «simplificar»: el ahorro es lo que hace
+        que un documento grande abra rápido.
+      </p>
+    </section>
+
+    <section class="seccion">
+      <h2>Qué pone cada componente</h2>
+      <div class="tabla">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Componente</th>
+              <th scope="col">Responsabilidad</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row"><code>sw-app</code></th><td>Shell y único dueño del estado</td></tr>
+            <tr><th scope="row"><code>sw-nav</code></th><td>Marca, secciones, búsqueda, descargas, sesión y tema</td></tr>
+            <tr><th scope="row"><code>sw-info</code></th><td>Título, versión y descripción del documento</td></tr>
+            <tr><th scope="row"><code>sw-server</code></th><td>Host contra el que se prueba</td></tr>
+            <tr><th scope="row"><code>sw-tag-group</code></th><td>Un tag con sus endpoints y subgrupos</td></tr>
+            <tr><th scope="row"><code>sw-operation</code></th><td>Tarjeta desplegable con pestañas Probar / Respuestas / Doc</td></tr>
+            <tr><th scope="row"><code>sw-try</code></th><td>Arma la petición, la ejecuta y enseña la respuesta</td></tr>
+            <tr><th scope="row"><code>sw-params</code> · <code>sw-body</code></th><td>Campos y editor JSON, ambos controlados</td></tr>
+            <tr><th scope="row"><code>sw-responses</code></th><td>Respuestas declaradas en el documento</td></tr>
+            <tr><th scope="row"><code>sw-auth</code></th><td>Login JWT y pegado de token</td></tr>
+            <tr><th scope="row"><code>sw-export</code></th><td>Documento JSON, colección Postman y paquete IS</td></tr>
+            <tr><th scope="row"><code>sw-method</code> · <code>sw-path</code> · <code>sw-json</code> · <code>sw-doc</code></th><td>Átomos de presentación</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Cada uno tiene su página en este sitio con casos en vivo. Empieza por el
+        <a data-ir-a="sw-app">visor completo</a> si prefieres verlo entero antes
+        de mirar las piezas.
+      </p>
+    </section>
+
+  </main>
+
+  <script type="module" src="../doc-kit.js"></script>
+</body>
+</html>
