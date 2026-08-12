@@ -3,8 +3,59 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>IS-Swagger · Visor de documentación</title>
-<meta name="description" content="Visor de documentación InSoft: explora, documenta y prueba endpoints.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0a0e14">
+
+<title>IS-Swagger · Visor de documentación de APIs</title>
+<meta name="description" content="Visor de documentación InSoft en web components: explora, documenta y prueba los endpoints de cualquier API documentada, sin salir del navegador.">
+<meta name="author" content="Jeff-Aporta">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://jeff-aporta.github.io/isc-swagger/">
+
+<!--
+  Icono de pestaña. El SVG lo entienden todos los navegadores vigentes y escala a cualquier
+  densidad; `mask-icon` cubre Safari fijado en la barra lateral.
+-->
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="mask-icon" href="./favicon.svg" color="#4ade80">
+<link rel="apple-touch-icon" href="./docs/video/is-swagger-promo.poster.jpg">
+
+<!--
+  Miniatura para redes. Las URL de og:image e og:url deben ser **absolutas**: Facebook,
+  LinkedIn, WhatsApp y Slack no resuelven rutas relativas y la tarjeta sale sin imagen.
+-->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="IS-Swagger">
+<meta property="og:locale" content="es_ES">
+<meta property="og:url" content="https://jeff-aporta.github.io/isc-swagger/">
+<meta property="og:title" content="IS-Swagger · Visor de documentación de APIs">
+<meta property="og:description" content="Visor de documentación InSoft en web components: explora, documenta y prueba los endpoints de cualquier API documentada, sin salir del navegador.">
+<meta property="og:image" content="https://jeff-aporta.github.io/isc-swagger/docs/video/is-swagger-promo.poster.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1920">
+<meta property="og:image:height" content="1080">
+<meta property="og:image:alt" content="Interfaz de IS-Swagger mostrando endpoints agrupados por sección">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="IS-Swagger · Visor de documentación de APIs">
+<meta name="twitter:description" content="Explora, documenta y prueba los endpoints de tu API desde el navegador. Web components, sin React ni bundler.">
+<meta name="twitter:image" content="https://jeff-aporta.github.io/isc-swagger/docs/video/is-swagger-promo.poster.jpg">
+<meta name="twitter:image:alt" content="Interfaz de IS-Swagger mostrando endpoints agrupados por sección">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "IS-Swagger",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Cualquiera con navegador moderno",
+  "url": "https://jeff-aporta.github.io/isc-swagger/",
+  "image": "https://jeff-aporta.github.io/isc-swagger/docs/video/is-swagger-promo.poster.jpg",
+  "description": "Visor de documentación de APIs en web components: explora, documenta y prueba los endpoints de tu API desde el navegador.",
+  "author": { "@type": "Person", "name": "Jeff-Aporta" },
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
 
 <!--
   Kit is-* por CDN, cargado con el loader y **solo los tags que el visor usa**.

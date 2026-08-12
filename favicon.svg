@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="IS-Swagger">
+  <!-- Marca del visor: llaves de JSON abrazando el punto de un endpoint.
+       Sin degradados ni trazos finos: a 16 px solo sobreviven las formas macizas. -->
+  <rect width="32" height="32" rx="7" fill="#0a0e14"/>
+  <g fill="none" stroke="#4ade80" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 8c-2.4 0-3.2 1.2-3.2 3.2v2c0 1.6-.8 2.4-2.2 2.8 1.4.4 2.2 1.2 2.2 2.8v2c0 2 .8 3.2 3.2 3.2"/>
+    <path d="M20 8c2.4 0 3.2 1.2 3.2 3.2v2c0 1.6.8 2.4 2.2 2.8-1.4.4-2.2 1.2-2.2 2.8v2c0 2-.8 3.2-3.2 3.2"/>
+  </g>
+  <circle cx="16" cy="16" r="2.8" fill="#4ade80"/>
+</svg>
