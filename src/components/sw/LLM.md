@@ -30,10 +30,14 @@ Cómo se escribe uno, cómo se adopta el CSS y qué está prohibido:
 | `<sw-path>` | `path` | — | Ruta con los `{parámetros}` resaltados |
 | `<sw-auth>` | `authEnabled`, `auth`, `session` | `sw-session-change` | Sesión JWT: chip, diálogo de login, pegado de token |
 | `<sw-export>` | `spec`, `config` | — | Descargas: documento JSON, Postman, IS |
+| `<sw-minidoc>` | `conn` (o atributo JSON) | — | **Driver 2.** Shell de vistas: índice, operación, código |
+| `<sw-minidoc-view>` | `op`, `spec`, `grupo`, `serverBase`, `authEnabled`, `docMd` | `sw-need-login` | La operación entera como página de manual |
+| `<sw-minidoc-code>` | `op`, `spec`, `serverBase`, `requiereBearer` | — | Columna derecha: cURL y respuesta por código de estado |
 
-### Los seis con `#render()` a mano
+### Los nueve con `#render()` a mano
 
-`sw-app`, `sw-nav`, `sw-auth`, `sw-operation`, `sw-tag-group`, `sw-try`. Los
+`sw-app`, `sw-nav`, `sw-auth`, `sw-operation`, `sw-tag-group`, `sw-try`,
+`sw-minidoc`, `sw-minidoc-view`, `sw-minidoc-code`. Los
 demás usan `crearComponente`. Cada uno de los seis debe llamar
 `adoptCss(this.#root, import.meta.url)` al final de **cada** salida del render y
 `precargarCss(import.meta.url)` junto al `define(...)`. Guardián:
@@ -55,6 +59,26 @@ sw-app
 
 Un asterisco marca lo que se repite por documento. `sw-operation` monta el
 bloque de abajo **al abrir**, no al pintar la lista.
+
+### Driver 2: `sw-minidoc`
+
+```
+sw-minidoc
+├── (cabecera) ── sw-auth · is-theme-toggle · is-input
+├── (índice) ── sw-method *
+├── sw-minidoc-view
+│   ├── sw-method · sw-path
+│   ├── (parámetros por sitio: path, query, header, cookie)
+│   └── sw-json | sw-try (en is-dialog, al pulsar «Probar»)
+└── sw-minidoc-code
+    └── sw-json  ← cURL arriba, respuesta del código activo abajo
+```
+
+Los dos drivers son alternativas completas, no modos: leen el mismo documento
+con el mismo dominio y no comparten estado. `sw-app` despliega en su sitio y
+sirve para barrer una API; `sw-minidoc` dedica la página a una operación y
+sirve para integrarla. Ninguno registra el tag del otro, así que montar los dos
+en la misma página funciona — solo duplicaría la carga del documento.
 
 ## Reusar antes de crear
 

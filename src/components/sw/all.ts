@@ -33,3 +33,9 @@ await import('./sw-auth.js');
 await import('./sw-export.js');
 await import('./sw-nav.js');
 await import('./sw-app.js');
+
+// Segundo driver: mismo documento, presentación por vistas. Se registra junto al de acordeones
+// para que una página pueda montar cualquiera de los dos sin pedir otro bundle.
+await import('./sw-minidoc-code.js');
+await import('./sw-minidoc-view.js');
+await import('./sw-minidoc.js');

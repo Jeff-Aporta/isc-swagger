@@ -43,6 +43,29 @@ Guardián de que esas páginas no mienten: `tests/docs.test.mjs`.
 | `auth.loginUrl` por defecto = `DEFAULT_AUTH_LOGIN_URL` (main-orchestrator) | Dejar `auth.enabled: false` cuando el visor trae `viewer.auth.enabled: true` |
 | `index.html` decide `data-modo` (hero vs app) **en `<head>`**, antes del primer pintado | Decidir el modo desde un módulo: el visor parpadea como hero antes de cambiar |
 
+## Dos drivers, un solo documento
+
+El visor tiene **dos presentaciones intercambiables** del mismo documento. No son modos de un
+componente: son dos custom elements, cada uno con su shell, su shadow y su hoja.
+
+| | `<sw-app>` | `<sw-minidoc>` |
+|---|---|---|
+| Presentación | Lista por tags, la operación se despliega en su sitio | Índice · una operación por página · código fijo a la derecha |
+| Para qué | Barrer una API entera, comparar endpoints vecinos | Integrar un endpoint concreto sin perder de vista la petición |
+| Inspiración | Swagger UI, corregido | Documentación de plataforma tipo MiniMax |
+| Probar | Pestaña dentro de la tarjeta | Botón que abre `sw-try` en un `is-dialog` |
+| Estado en URL | `?tab`, `?op`, `?opt`, `?server`, `?s` | `?op` |
+
+Comparten **todo** el dominio (`js/config`, `js/openapi`, `js/nav`, `js/auth`) y no comparten
+estado entre sí. Reglas para que sigan sin pisarse:
+
+- Ninguno registra el tag del otro. `all.ts` registra los dos; una página monta el que quiera.
+- Lo que sea lógica se añade en `src/js/`, nunca en el shell de uno solo — si no, el otro driver
+  se queda sin ello y las dos vistas empiezan a divergir.
+- Montar los dos a la vez funciona; solo duplica la carga del documento.
+
+Guardián: `tests/minidoc.test.mjs`.
+
 ## Arquitectura en tres frases
 
 1. `src/js/` es puro: sin DOM, sin red salvo `fetch` explícito. Es lo que se
@@ -125,7 +148,7 @@ de que nadie mire ninguno. No lo deshagas «para simplificar».
 **Commit del kit con el que está diseñado este visor:**
 
 ```
-Jeff-Aporta/is-webcomponents @ 1ce1d12227f2988877b81b8f35cba2507dc16bf1
+Jeff-Aporta/is-webcomponents @ 1b934c294fd7dda1e912dbde0ace25d760f5f638
 ```
 
 Ese sha está pinchado en `index.html` (los dos `<link>` de CSS y el `import` del loader) y en
@@ -143,7 +166,7 @@ tag con el loader — que además lleva registro anti-redundancia y no repite pe
 ```html
 <script type="module">
   import { ISWebComponentsLoader as L } from
-    'https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@1ce1d12227f2988877b81b8f35cba2507dc16bf1/dist/cdn/loader.min.js';
+    'https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@1b934c294fd7dda1e912dbde0ace25d760f5f638/dist/cdn/loader.min.js';
   L.pin( + SHA + );
   await L.load('is-button', 'is-icon', /* … */);
 </script>
@@ -427,6 +450,7 @@ parte del contrato.
 | `dominio.test.mjs` | Filtros, URLs, errores HTTP, markdown, Postman, sesión, búsqueda, conn |
 | `render.test.mjs` | Que el shadow se llene (jsdom, `is-*` sin registrar) |
 | `app.test.mjs` | El ciclo completo de `sw-app` con la spec de demo real |
+| `minidoc.test.mjs` | Driver 2: vistas, pestañas de estado, cURL y que los dos drivers convivan |
 | `estructura.test.mjs` | Inventario: cada componente ↔ `index.html` ↔ `all.ts` ↔ preview ↔ CSS hermano |
 | `conn.test.mjs` | `?conn=`: precedencia, override de paths, default ISS, conn > `<script>` |
 | `insoft-config.test.mjs` | Parser InSoft con fixture real + smoke contra la red |

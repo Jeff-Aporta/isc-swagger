@@ -77,7 +77,7 @@ Declara **datos**, no chrome:
 
 ```js
 import { crear, caso, montar } from '../preview-kit.js';
-import '../../dist/cdn/sw-method.js';
+import '../../dist/cdn/components/sw/sw-method.js';
 
 montar('sw-method', 'Chip del método HTTP.', [
   caso('Verbos', 'Ancho fijo para que las rutas se alineen',

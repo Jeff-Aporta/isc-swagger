@@ -40,8 +40,9 @@ de `adoptCss(shadow, import.meta.url)`: de `sw-x.js` deriva `sw-x.css`.
 del CSS (adopción y precarga).
 
 **`#render()` a mano** — solo cuando repintar entero rompería algo: el foco del
-usuario, una animación o el coste diferido. Son seis: `sw-app`, `sw-nav`,
-`sw-auth`, `sw-operation`, `sw-tag-group`, `sw-try`. Estos deben, además:
+usuario, una animación o el coste diferido. Son nueve: `sw-app`, `sw-nav`,
+`sw-auth`, `sw-operation`, `sw-tag-group`, `sw-try`, y los tres del driver de
+vistas — `sw-minidoc`, `sw-minidoc-view`, `sw-minidoc-code`. Estos deben, además:
 
 - `adoptCss(this.#root, import.meta.url)` al final de **cada** salida del render;
 - `precargarCss(import.meta.url)` junto al `define(...)`.

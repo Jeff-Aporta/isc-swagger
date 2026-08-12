@@ -46,6 +46,10 @@ export const componentes = [
   { tag: 'sw-auth', title: 'Sesión', page: 'previews/sw-auth.html', category: 'shell' },
   { tag: 'sw-export', title: 'Descargas', page: 'previews/sw-export.html', category: 'shell' },
   { tag: 'sw-nav', title: 'Barra superior', page: 'previews/sw-nav.html', category: 'shell' },
+
+  { tag: 'sw-minidoc', title: 'Visor por vistas', page: 'previews/sw-minidoc.html', category: 'minidoc' },
+  { tag: 'sw-minidoc-view', title: 'Ficha de operación', page: 'previews/sw-minidoc-view.html', category: 'minidoc' },
+  { tag: 'sw-minidoc-code', title: 'Petición y respuesta', page: 'previews/sw-minidoc-code.html', category: 'minidoc' },
 ];
 
 /** Orden y etiqueta de los grupos del nav. */
@@ -54,6 +58,7 @@ export const categorias = [
   { id: 'atomos', label: 'Átomos' },
   { id: 'operacion', label: 'Operación' },
   { id: 'shell', label: 'Shell' },
+  { id: 'minidoc', label: 'Driver minidoc' },
 ];
 
 export default [...paginas, ...componentes];

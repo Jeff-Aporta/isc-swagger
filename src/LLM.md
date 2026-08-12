@@ -62,6 +62,7 @@ funcione.
 | --- | --- | --- |
 | Barra de secciones de `sw-nav` | `<is-tab-group>` | Las pestañas no tienen panel: filtran una lista que pinta `sw-app`. Migrarlo obliga a paneles vacíos |
 | Pestañas de `sw-operation` | `<is-tab-group>` | El cuerpo se monta **al abrir** (ver «coste diferido» en `../LLM.md`); `is-tab-group` monta los tres paneles |
+| Códigos de estado de `sw-minidoc-code` | `<is-tab-group>` | Son etiquetas de un solo panel que se repinta (200/400/429…), no tres paneles vivos. Con `is-tab-group` habría un panel por código y el JSON se montaría N veces para enseñar uno |
 | `adoptCss` de `_shared.ts` | `IsUi.adoptCss` (`helpers/ui`) | Ver abajo |
 
 Ninguna es excusa para añadir más UI a mano. Si alguna se migra, se borra su

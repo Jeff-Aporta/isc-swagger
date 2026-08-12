@@ -116,14 +116,14 @@ test('_shared.ts no reimplementa formatos que ya trae el kit', () => {
 });
 
 test('la deuda documentada frente al kit sigue siendo la que dice el MD', () => {
-  // La tabla de `src/LLM.md` admite dos barras de pestañas a mano. Si aparece
-  // una tercera, o si alguna se migra a `<is-tab-group>`, la tabla miente.
+  // La tabla de `src/LLM.md` admite tres barras de pestañas a mano. Si aparece
+  // una cuarta, o si alguna se migra a `<is-tab-group>`, la tabla miente.
   const conTablist = componentes.filter((c) =>
     /role="tablist"/.test(readFileSync(join(SW, `${c}.ts`), 'utf8')),
   );
   assert.deepEqual(
     conTablist.sort(),
-    ['sw-nav', 'sw-operation'],
+    ['sw-minidoc-code', 'sw-nav', 'sw-operation'],
     'cambió qué componentes pintan pestañas a mano: actualiza la tabla de deuda en src/LLM.md',
   );
 
