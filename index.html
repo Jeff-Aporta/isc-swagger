@@ -71,19 +71,23 @@
 <!--
   Tipografía. `is-base.min.css` no declara `font-family`, así que sin esto el navegador cae a
   su serif por defecto (Times New Roman) y la documentación parece un documento de Word.
-  Inter para interfaz y JetBrains Mono para código: dos pesos de cada una, no la familia
-  entera, porque cada peso extra es una descarga que nadie mira.
+  IBM Plex Sans + IBM Plex Mono: una superfamilia diseñada para producto técnico, donde la
+  prosa y el código conviven en la misma pantalla. Importa que sean pareja de verdad —misma
+  altura de x, mismo ritmo— porque media vista es descripción y la otra media es JSON; con dos
+  familias sin relación el ojo nota el salto en cada bloque de código.
+
+  Dos pesos de cada una, no la familia entera: cada peso extra es una descarga que nadie mira.
 
   `preconnect` a los dos hosts: la hoja la sirve fonts.googleapis.com pero los .woff2 salen de
   fonts.gstatic.com, y sin el segundo el handshake se paga cuando ya es tarde.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
 <style>
   :root {
-    --is-font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    --is-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --is-font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --is-font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     --is-font-body: var(--is-font-sans);
   }
   html, body { font-family: var(--is-font-sans); }
