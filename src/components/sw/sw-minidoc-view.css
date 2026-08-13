@@ -1,10 +1,11 @@
-/* Columna central del driver sw-minidoc: una operación leída como página de manual.
-   Medida de línea limitada a ~68ch: la prosa de una descripción larga no debe cruzar
-   la pantalla entera aunque la columna dé de sí. */
+/* Columna central del driver sw-minidoc: ocupa el ancho del slot centro. */
 
 :host {
   display: block;
-  max-width: 44rem;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .vacio {
@@ -37,7 +38,12 @@
   font-size: 1rem;
   line-height: 1.65;
   color: var(--is-color-text-2, #9aa7b8);
-  max-width: 68ch;
+  max-width: min(100%, 80ch);
+}
+
+.doc {
+  width: 100%;
+  min-width: 0;
 }
 
 /* Barra del endpoint: método, ruta y la acción. Es el ancla visual de la página. */

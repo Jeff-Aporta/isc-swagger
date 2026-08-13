@@ -11,14 +11,15 @@
  * editor de cuerpo delante.
  */
 
-import { adoptCss, precargarCss, define, html, emitir, raw } from './_shared.js';
+import { adoptCss, precargarCss, define, html, emitir } from './_shared.js';
 import { ejemploDeParam } from '../../js/curl.js';
+import { openHostDialog } from '../../js/dialog-host.js';
 import { jsonPretty, operationRequiresBearer, resolveParams } from '../../js/openapi.js';
-import { renderMarkdown } from '../../js/markdown.js';
 import './sw-method.js';
 import './sw-path.js';
 import './sw-json.js';
 import './sw-try.js';
+import './sw-doc.js';
 
 interface Props {
   op: SwOp | null;
@@ -108,14 +109,12 @@ class SwMinidocView extends HTMLElement {
     (probar as HTMLElement & { props: unknown }).props = { op, spec, serverBase, authEnabled };
     probar.addEventListener('sw-need-login', (e) => emitir(this, 'sw-need-login', (e as CustomEvent).detail));
 
-    const dlg = document.createElement('is-dialog');
-    dlg.setAttribute('label', `${op.method.toUpperCase()} ${op.path}`);
-    dlg.append(probar);
-    // Vive fuera del shadow del componente: un diálogo modal debe apilarse sobre toda la página,
-    // y dentro de este shadow quedaría atrapado bajo la columna derecha.
-    document.body.append(dlg);
-    dlg.addEventListener('is-hide', () => dlg.remove());
-    (dlg as HTMLElement & { open?: boolean }).open = true;
+    openHostDialog({
+      label: `${op.method.toUpperCase()} ${op.path}`,
+      className: 'sw-dialog-try',
+      width: 'min(56rem, calc(100vw - 2rem))',
+      content: probar,
+    });
   }
 
   #render(): void {
@@ -145,6 +144,12 @@ class SwMinidocView extends HTMLElement {
     if (schemaCuerpo) {
       cuerpoJson = document.createElement('sw-json');
       (cuerpoJson as HTMLElement & { props: unknown }).props = { value: jsonPretty(schemaCuerpo), maxHeight: '24rem' };
+    }
+
+    let docEl: HTMLElement | null = null;
+    if (docMd) {
+      docEl = document.createElement('sw-doc');
+      (docEl as HTMLElement & { props: unknown }).props = { markdown: docMd };
     }
 
     this.#root.append(html`
@@ -189,11 +194,11 @@ class SwMinidocView extends HTMLElement {
           `
         : null}
 
-      ${docMd
+      ${docEl
         ? html`
             <section class="bloque">
               <h2 class="bloque-titulo">Notas</h2>
-              <div class="doc">${raw(renderMarkdown(docMd))}</div>
+              ${docEl}
             </section>
           `
         : null}

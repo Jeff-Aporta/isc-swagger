@@ -1,8 +1,8 @@
 /**
- * export.ts — descargas del visor: documento JSON, Postman y documento IS.
+ * export.ts — descargas del visor: IS-Swagger (config InSoft), OpenAPI 3 y Postman.
  *
- * Todo se genera en el navegador desde la spec ya cargada. No hay endpoint de
- * exportación: el visor es 100 % front y una descarga que dependiera del host
+ * Todo se genera en el navegador desde la spec / config ya cargada. No hay endpoint
+ * de exportación: el visor es 100 % front y una descarga que dependiera del host
  * dejaría de funcionar al abrir el HTML suelto.
  */
 
@@ -22,6 +22,22 @@ const slug = (s: unknown): string =>
     .toLowerCase()
     .replace(/[^\w.-]+/g, '-')
     .replace(/^-|-$/g, '') || 'documento';
+
+/** OpenAPI 3.0 portable a partir del SwSpec interno del visor. */
+export function toOpenApi30(spec: SwSpec): Record<string, unknown> {
+  return {
+    openapi: '3.0.3',
+    info: {
+      title: spec.info?.title ?? 'API',
+      version: spec.info?.version ?? '1.0.0',
+      ...(spec.info?.description ? { description: spec.info.description } : {}),
+    },
+    ...(spec.servers?.length ? { servers: spec.servers } : {}),
+    ...(spec.tags?.length ? { tags: spec.tags } : {}),
+    paths: spec.paths ?? {},
+    ...(spec.components ? { components: spec.components } : {}),
+  };
+}
 
 /* ── Postman ────────────────────────────────────────────────── */
 
@@ -95,30 +111,36 @@ export function toPostmanCollection(spec: SwSpec, nombre?: string): Record<strin
 
 export function buildExportFormats(spec: SwSpec | null, config: SwConfig): SwFormatoExport[] {
   if (!spec) return [];
-  const nombre = slug(spec.info?.title);
-  return [
+  const nombre = slug(config.exports?.openApiDownloadName || spec.info?.title);
+  const isName = slug(config.exports?.isDownloadName || `${nombre}-is-swagger`);
+  const postmanName = slug(config.exports?.postmanDownloadName || `${nombre}-postman`);
+  const openApiName = slug(config.exports?.openApiDownloadName || `${nombre}-openapi`);
+  const insoft = (config as SwConfig & { insoftSource?: unknown }).insoftSource;
+
+  const formatos: SwFormatoExport[] = [
     {
-      id: 'doc',
-      label: 'Documento (JSON)',
-      icon: 'mdi:code-json',
-      filename: `${nombre}.doc.json`,
-      build: () => jsonPretty(spec),
+      id: 'is-swagger',
+      label: 'IS-Swagger (config)',
+      icon: 'mdi:file-cog-outline',
+      filename: `${isName}.json`,
+      build: () => jsonPretty(insoft ?? buildIsDocument(config, spec)),
+    },
+    {
+      id: 'openapi',
+      label: 'OpenAPI 3',
+      icon: 'mdi:api',
+      filename: `${openApiName}.openapi.json`,
+      build: () => jsonPretty(toOpenApi30(spec)),
     },
     {
       id: 'postman',
       label: 'Colección Postman',
       icon: 'mdi:send-outline',
-      filename: `${nombre}.postman_collection.json`,
-      build: () => jsonPretty(toPostmanCollection(spec)),
-    },
-    {
-      id: 'is',
-      label: 'Documento IS',
-      icon: 'mdi:file-document-outline',
-      filename: `${nombre}.is.json`,
-      build: () => jsonPretty(buildIsDocument(config, spec)),
+      filename: `${postmanName}.postman_collection.json`,
+      build: () => jsonPretty(toPostmanCollection(spec, spec.info?.title)),
     },
   ];
+  return formatos;
 }
 
 /* ── Descarga ───────────────────────────────────────────────── */

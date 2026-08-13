@@ -260,7 +260,13 @@ function buildViewerConfig(raw: InsoftConfig, apiBase: string): SwConfig {
     serverSelect: false,
   };
 
-  if (exports.openApiDownloadName) config.exports = { openApiDownloadName: String(exports.openApiDownloadName) };
+  if (exports.openApiDownloadName || exports.postmanDownloadName || exports.isDownloadName) {
+    config.exports = {
+      ...(exports.openApiDownloadName ? { openApiDownloadName: String(exports.openApiDownloadName) } : {}),
+      ...(exports.postmanDownloadName ? { postmanDownloadName: String(exports.postmanDownloadName) } : {}),
+      ...(exports.isDownloadName ? { isDownloadName: String(exports.isDownloadName) } : {}),
+    };
+  }
   if (Array.isArray(v.nav) && v.nav.length) config.nav = v.nav as SwNavTab[];
 
   return config;

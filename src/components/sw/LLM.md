@@ -138,8 +138,9 @@ Los transversales están en [`../LLM.md`](../LLM.md). Los propios de esta capa:
 - **`sw-operation` montando todo al pintar la lista** — doscientos endpoints,
   doscientos `sw-try`. Monta al abrir.
 - **«OpenAPI» como marca en la UI** — el visor parsea **InSoft**. `sw-info` no
-  pinta badge de versión OpenAPI; `sw-export` dice «Documento (JSON)», no
-  «OpenAPI 3 (JSON)». Guardián: `tests/invariantes.test.mjs`.
+  pinta badge de versión OpenAPI; `sw-export` ofrece **IS-Swagger (config)**,
+  **OpenAPI 3** y **Postman** como descargas (conversión local). Guardián:
+  `tests/invariantes.test.mjs`.
 - **Barras de pestañas a mano** (`sw-nav` secciones, `sw-operation` pestañas) —
   deuda conocida frente a `<is-tab-group>`, con su motivo en
   [`../../LLM.md`](../../LLM.md). No es permiso para añadir una tercera.

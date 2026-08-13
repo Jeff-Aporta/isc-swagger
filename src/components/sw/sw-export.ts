@@ -1,5 +1,5 @@
 /**
- * <sw-export> — descargas del documento (JSON, Postman, IS).
+ * <sw-export> — descargas: IS-Swagger (config), OpenAPI 3 y Postman.
  *
  * Los formatos se generan al pulsar, no al pintar el menú: serializar la spec
  * tres veces en cada repintado de la barra sería trabajo tirado.

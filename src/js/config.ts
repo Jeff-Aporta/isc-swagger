@@ -163,7 +163,7 @@ export async function loadViewerDocument(config: SwConfig): Promise<{ config: Sw
   if (isInsoftConfig(data)) {
     const built = parseInsoftConfig(data, config.apiBase ?? '');
     return {
-      config: { ...config, ...built.config, specUrl: url },
+      config: { ...config, ...built.config, specUrl: url, insoftSource: data },
       spec: built.spec,
     };
   }

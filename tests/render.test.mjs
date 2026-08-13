@@ -75,10 +75,12 @@ test('sw-json no ejecuta HTML que venga en el cuerpo', () => {
   assert.match(root.textContent, /<img/);
 });
 
-test('sw-doc convierte el markdown a prosa', () => {
+test('sw-doc monta is-md-render con el markdown', () => {
   const root = montar('sw-doc', { markdown: '# Hola\n\nUn **párrafo**.' });
-  assert.ok(root.querySelector('.prosa h3'));
-  assert.ok(root.querySelector('.prosa strong'));
+  const md = root.querySelector('is-md-render.md');
+  assert.ok(md);
+  assert.equal(md.getAttribute('value'), '# Hola\n\nUn **párrafo**.');
+  assert.ok(md.hasAttribute('readonly'));
 });
 
 test('sw-params pinta un campo por parámetro y ninguno si la lista está vacía', () => {

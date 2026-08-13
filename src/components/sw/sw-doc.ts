@@ -1,12 +1,11 @@
 /**
- * <sw-doc> — prosa Markdown (descripción de la operación o `x-iss-doc-md`).
+ * <sw-doc> — prosa Markdown vía `<is-md-render>` (kit is-webcomponents).
  *
- * El markdown se convierte en `js/markdown.ts`, que escapa todo antes de
- * componer; aquí solo se inyecta el resultado y se le da forma de lectura.
+ * El host debe haber cargado el tag `is-md-render`. Si el kit no está listo
+ * todavía, el custom element queda inerte hasta el upgrade.
  */
 
-import { crearComponente, define, html, raw } from './_shared.js';
-import { renderMarkdown } from '../../js/markdown.js';
+import { crearComponente, define, html } from './_shared.js';
 
 interface Props {
   markdown: string;
@@ -24,7 +23,13 @@ const SwDoc = crearComponente<Props>(
       `);
       return;
     }
-    root.append(html`<div class="prosa">${raw(renderMarkdown(md))}</div>`);
+
+    const render = document.createElement('is-md-render');
+    render.className = 'md';
+    render.setAttribute('readonly', '');
+    render.setAttribute('value', md);
+
+    root.append(html`<div class="prosa">${render}</div>`);
   },
   { markdown: '', vacio: 'Esta operación no trae documentación en el documento.' },
   'sw-doc',

@@ -1,3 +1,3 @@
-import{crearComponente as e,define as c,html as n,raw as d}from"./_shared.js";import{renderMarkdown as m}from"../../js/markdown.js";const a=e(import.meta.url,(o,{markdown:i,vacio:t})=>{const r=String(i??"").trim();if(!r){o.append(n`
-        <is-callout color="neutral" variant="plain" icon="mdi:book-off-outline">${t}</is-callout>
-      `);return}o.append(n`<div class="prosa">${d(m(r))}</div>`)},{markdown:"",vacio:"Esta operaci\xF3n no trae documentaci\xF3n en el documento."},"sw-doc");c("sw-doc",a);export{a as SwDoc};
+import{crearComponente as c,define as s,html as n}from"./_shared.js";const r=c(import.meta.url,(t,{markdown:a,vacio:i})=>{const o=String(a??"").trim();if(!o){t.append(n`
+        <is-callout color="neutral" variant="plain" icon="mdi:book-off-outline">${i}</is-callout>
+      `);return}const e=document.createElement("is-md-render");e.className="md",e.setAttribute("readonly",""),e.setAttribute("value",o),t.append(n`<div class="prosa">${e}</div>`)},{markdown:"",vacio:"Esta operaci\xF3n no trae documentaci\xF3n en el documento."},"sw-doc");s("sw-doc",r);export{r as SwDoc};

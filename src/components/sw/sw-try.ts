@@ -19,6 +19,7 @@ import { joinApiUrl } from '../../js/server-base.js';
 import { fetchApiRaw, extractEnvelopeError } from '../../js/api-fetch.js';
 import { formatHttpError, extractApiError } from '../../js/http-error.js';
 import { getStoredJwt } from '../../js/auth.js';
+import { openHostDialog } from '../../js/dialog-host.js';
 import './sw-params.js';
 import './sw-body.js';
 import './sw-json.js';
@@ -143,20 +144,25 @@ class SwTry extends HTMLElement {
     const { op } = this.#props;
     if (!op) return;
 
-    const dlg = document.createElement('is-dialog');
-    dlg.setAttribute('label', 'Confirmar operación');
-    dlg.append(
-      html`
+    openHostDialog({
+      label: 'Confirmar operación',
+      className: 'sw-dialog-confirm',
+      width: 'min(32rem, calc(100vw - 2rem))',
+      content: html`
         <p class="sw-confirmar-texto">
           Vas a ejecutar <strong>${op.method.toUpperCase()}</strong> sobre un endpoint que modifica datos.
         </p>
         <code class="sw-confirmar-url">${this.#url()}</code>
         <div slot="footer" class="sw-confirmar-acciones">
-          <is-button variant="plain" color="neutral" onis-click=${() => dlg.remove()}>Cancelar</is-button>
+          <is-button variant="plain" color="neutral" onis-click=${(e: Event) => {
+            const dlg = (e.currentTarget as HTMLElement).closest('is-dialog');
+            dlg?.remove();
+          }}>Cancelar</is-button>
           <is-button
             color="danger"
-            onis-click=${() => {
-              dlg.remove();
+            onis-click=${(e: Event) => {
+              const dlg = (e.currentTarget as HTMLElement).closest('is-dialog');
+              dlg?.remove();
               void this.#ejecutar();
             }}
           >
@@ -164,10 +170,7 @@ class SwTry extends HTMLElement {
           </is-button>
         </div>
       `,
-    );
-    dlg.addEventListener('is-after-hide', () => dlg.remove());
-    document.body.appendChild(dlg);
-    (dlg as HTMLElement & { show(): void }).show();
+    });
   }
 
   async #ejecutar(): Promise<void> {
