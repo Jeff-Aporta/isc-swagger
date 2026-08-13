@@ -8,7 +8,9 @@
 
 import { extractJsonExample, jsonPretty } from './openapi.js';
 
-export const BODY_HTTP_METHODS = new Set(['post', 'put', 'patch']);
+/* QUERY lleva cuerpo por definición: es su razón de ser frente a GET —filtrar con un JSON que no
+   cabe en la query string—, así que «Probar» tiene que ofrecer el editor. */
+export const BODY_HTTP_METHODS = new Set(['post', 'put', 'patch', 'query']);
 export const EXT_REQUEST_BODY = 'x-iss-request-body';
 export const EXT_REQUEST_BODY_EXAMPLES = 'x-iss-request-body-examples';
 

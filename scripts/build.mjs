@@ -43,6 +43,16 @@ const listar = (dir, ext) => readdirSync(dir, { withFileTypes: true }).flatMap((
 
 const BARRIL = join(SRC, 'components', 'sw', 'all.ts');
 
+/**
+ * Sello del build, en UTC y al segundo.
+ *
+ * Lo consume `js/version.ts` y sirve para caducar la geometría guardada en `localStorage`: un
+ * ancho de panel escrito por una versión anterior no debe sobrevivir a un cambio de layout, y
+ * mucho menos a la corrección del fallo que lo escribió mal.
+ */
+const SELLO = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+const DEFINE = { __SW_BUILD__: JSON.stringify(SELLO) };
+
 function fuentes() {
   const ts = [
     ...listar(join(SRC, 'components'), '.ts'),
@@ -76,6 +86,7 @@ async function compilar() {
       format: 'esm',
       target: 'es2022',
       minify: true,
+      define: DEFINE,
       loader: { '.ts': 'ts' },
     });
     writeFileSync(destino(archivo, '.js'), resultado.outputFiles[0].text);
@@ -104,6 +115,7 @@ async function compilar() {
       format: 'esm',
       target: 'es2022',
       minify: true,
+      define: DEFINE,
       loader: { '.ts': 'ts' },
     });
     writeFileSync(join(OUT, 'all.min.js'), bundle.outputFiles[0].text);
@@ -118,7 +130,7 @@ async function compilar() {
 }
 
 const { ts, css, planos } = await compilar();
-console.log(`dist/cdn: ${ts} módulos + ${css} hojas + ${planos} scripts planos + all.min.js`);
+console.log(`dist/cdn: ${ts} módulos + ${css} hojas + ${planos} scripts planos + all.min.js · build ${SELLO}`);
 
 if (process.argv.includes('--watch')) {
   const { watch } = await import('node:fs');

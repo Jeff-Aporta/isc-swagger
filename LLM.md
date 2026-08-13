@@ -85,6 +85,31 @@ estado entre sí. Reglas para que sigan sin pisarse:
 
 Guardián: `tests/minidoc.test.mjs`.
 
+## Estado persistido y caducidad por build
+
+El visor guarda dos cosas en `localStorage`, y se tratan distinto **a propósito**:
+
+| Qué | Clave | Caduca al cambiar de build |
+|---|---|---|
+| Ancho de los paneles (geometría) | `is-components` → `is-split-panel` → `sw:split:*` | **Sí** |
+| Driver elegido | `sw:driver` | No |
+
+Cada build lleva un sello de fecha y hora (`__SW_BUILD__`, lo inyecta `scripts/build.mjs` y lo
+expone `js/version.ts`). Al cargar `sw-layout` se compara con el sello que escribió la geometría
+guardada; si no coinciden, la geometría se descarta.
+
+Existe por un caso real: una versión con un fallo guardó `0px` de ancho de panel, y a partir de
+ahí **cada** carga restauraba ese cero, incluso después de corregir el fallo. Un estado
+persistido que sobrevive al cambio del componente que lo escribió es una trampa: anula la
+corrección y el síntoma parece no arreglarse nunca.
+
+La geometría es barata de rehacer y el reparto por defecto siempre es razonable, así que
+descartarla no cuesta nada. El driver **no** caduca: es una elección deliberada del lector y
+cambiar de versión no debe cambiarle la vista. Por eso `js/prefs.ts` enumera las claves de
+geometría en vez de vaciar el almacén — también respeta lo que guarden otros componentes del kit.
+
+Al tocar el layout, añadir aquí la clave nueva. Guardián: `tests/minidoc.test.mjs`.
+
 ## Arquitectura en tres frases
 
 1. `src/js/` es puro: sin DOM, sin red salvo `fetch` explícito. Es lo que se

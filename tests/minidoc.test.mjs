@@ -412,3 +412,79 @@ test('sw-layout corrige un reparto degenerado de los splits', async () => {
   assert.match(ts, /requestAnimationFrame/, 'debe esperar a que el layout tenga ancho real');
   assert.match(ts, /MINIMO_PANEL_PX/, 'debe respetar el ancho que el usuario haya arrastrado');
 });
+
+/* ── Caducidad del estado persistido ────────────────────────── */
+
+test('la geometría guardada caduca al cambiar de build', async () => {
+  const { caducarPrefsSiCambioBuild, CLAVE_VERSION, CLAVE_KIT, SW_VERSION } =
+    await import('../dist/cdn/js/prefs.js?bust=' + Math.random());
+
+  // Estado escrito por una versión anterior, con el cero que rompía el layout.
+  globalThis.localStorage.setItem(CLAVE_KIT, JSON.stringify({
+    'is-split-panel': {
+      'sw:split:inicio': { positionInPixels: 0 },
+      'sw:split:fin': { positionInPixels: 0 },
+      'otra-app': { positionInPixels: 250 },
+    },
+    'is-otro-componente': { algo: 1 },
+  }));
+  globalThis.localStorage.setItem(CLAVE_VERSION, 'build-viejo');
+  globalThis.localStorage.setItem('sw:driver', 'sw-app');
+
+  assert.equal(caducarPrefsSiCambioBuild(), true, 'debió purgar: el sello no coincide');
+
+  const tras = JSON.parse(globalThis.localStorage.getItem(CLAVE_KIT));
+  assert.equal(tras['is-split-panel']['sw:split:inicio'], undefined, 'no borró la geometría propia');
+  assert.equal(tras['is-split-panel']['sw:split:fin'], undefined, 'no borró la geometría propia');
+  // Cirugía, no demolición: lo que no es nuestro se queda.
+  assert.deepEqual(tras['is-split-panel']['otra-app'], { positionInPixels: 250 }, 'tocó geometría ajena');
+  assert.deepEqual(tras['is-otro-componente'], { algo: 1 }, 'tocó otro componente del kit');
+  // El driver es una elección deliberada del lector: cambiar de versión no se la cambia.
+  assert.equal(globalThis.localStorage.getItem('sw:driver'), 'sw-app', 'borró una preferencia del usuario');
+  assert.equal(globalThis.localStorage.getItem(CLAVE_VERSION), SW_VERSION, 'no dejó sellado el build actual');
+});
+
+test('con el mismo build no se toca nada', async () => {
+  const { caducarPrefsSiCambioBuild, CLAVE_VERSION, CLAVE_KIT, SW_VERSION } =
+    await import('../dist/cdn/js/prefs.js?bust=' + Math.random());
+
+  globalThis.localStorage.setItem(CLAVE_VERSION, SW_VERSION);
+  const guardado = JSON.stringify({ 'is-split-panel': { 'sw:split:inicio': { positionInPixels: 320 } } });
+  globalThis.localStorage.setItem(CLAVE_KIT, guardado);
+
+  assert.equal(caducarPrefsSiCambioBuild(), false, 'purgó sin haber cambiado de build');
+  assert.equal(globalThis.localStorage.getItem(CLAVE_KIT), guardado, 'el ancho que arrastró el usuario debe sobrevivir');
+});
+
+test('sw-layout caduca las prefs antes de montar los splits', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const raiz = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
+  const ts = readFileSync(join(raiz, 'src', 'components', 'sw', 'sw-layout.ts'), 'utf8');
+  const llamada = ts.indexOf('caducarPrefsSiCambioBuild()');
+  const clase = ts.indexOf('class SwLayout');
+  assert.ok(llamada > 0, 'sw-layout no caduca las prefs');
+  assert.ok(llamada < clase, 'debe caducar al cargar el módulo: si no, los splits ya restauraron');
+});
+
+/* ── Método QUERY ───────────────────────────────────────────── */
+
+test('el visor lista las operaciones QUERY en vez de descartarlas', async () => {
+  const { listOperations } = await import('../dist/cdn/js/openapi.js');
+  const spec = {
+    paths: {
+      '/file/query': { query: { summary: 'Buscar archivos', responses: {} } },
+      '/conversaciones': { get: { summary: 'Listar', responses: {} }, query: { summary: 'Filtrar', responses: {} } },
+    },
+  };
+  const ops = listOperations(spec);
+  const query = ops.filter((o) => o.method === 'query');
+  assert.equal(query.length, 2, 'las operaciones QUERY no llegan al índice');
+  assert.ok(query.some((o) => o.path === '/file/query'), 'falta /file/query');
+});
+
+test('QUERY ofrece editor de cuerpo: es su razón de ser frente a GET', async () => {
+  const { opUsesRequestBody } = await import('../dist/cdn/js/tryit-body.js');
+  assert.equal(opUsesRequestBody('query'), true);
+  assert.equal(opUsesRequestBody('get'), false);
+});

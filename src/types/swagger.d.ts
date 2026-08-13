@@ -7,7 +7,9 @@
 
 /* ── OpenAPI (subconjunto que el visor realmente lee) ───────── */
 
-type SwMetodo = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'options' | 'head';
+/** `query` incluido: es método HTTP estándar (RFC 9110 + draft QUERY) y el API lo usa para
+ *  filtrar con cuerpo JSON donde una query string no da abasto. */
+type SwMetodo = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'query' | 'options' | 'head';
 
 interface SwSchema {
   type?: string;

@@ -23,6 +23,11 @@
  */
 
 import { adoptCss, precargarCss, define, html, emitir } from './_shared.js';
+import { caducarPrefsSiCambioBuild } from '../../js/prefs.js';
+
+// Al cargar el módulo, antes de que ningún `is-split-panel` se monte: su connectedCallback
+// restaura la posición de localStorage, así que purgar después no serviría de nada.
+caducarPrefsSiCambioBuild();
 
 /** Reparto inicial de cada split, en % del track inicial. Se reaplica tras el primer layout. */
 const PROPORCIONES: Array<{ sel: string; pct: number }> = [

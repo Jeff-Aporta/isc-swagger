@@ -12,7 +12,11 @@
  *   x-iss-lookup      en el parámetro → autocompletado remoto
  */
 
-const HTTP_METHODS: SwMetodo[] = ['get', 'post', 'put', 'patch', 'delete', 'options', 'head'];
+/* `query` va en la lista o las operaciones que lo usan no existen para el visor: `listOperations`
+   recorre exactamente estos métodos, así que las que quedaban fuera no se agrupaban, no salían en el
+   índice y no había forma de abrirlas. El API tiene tres (/conversaciones, /auditoria/terceros y
+   /file/query) y ninguna aparecía. */
+const HTTP_METHODS: SwMetodo[] = ['get', 'post', 'put', 'patch', 'delete', 'query', 'options', 'head'];
 
 const EXT_SUBGROUP = 'x-isa-subgroup';
 const EXT_SUBGROUPS = 'x-isa-subgroups';
