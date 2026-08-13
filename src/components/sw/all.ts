@@ -39,3 +39,6 @@ await import('./sw-app.js');
 await import('./sw-minidoc-code.js');
 await import('./sw-minidoc-view.js');
 await import('./sw-minidoc.js');
+
+// Envoltura que monta uno u otro y saca el selector de vista.
+await import('./sw-viewer.js');

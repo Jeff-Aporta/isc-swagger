@@ -18,7 +18,7 @@ const dom = new JSDOM('<!doctype html><html><body></body></html>', {
   pretendToBeVisual: true,
 });
 
-for (const k of ['window', 'document', 'HTMLElement', 'customElements', 'CustomEvent', 'Node', 'Event', 'Blob']) {
+for (const k of ['window', 'document', 'HTMLElement', 'customElements', 'CustomEvent', 'Node', 'Event', 'Blob', 'history', 'localStorage']) {
   globalThis[k] = dom.window[k];
 }
 globalThis.performance = dom.window.performance;
@@ -28,7 +28,9 @@ await import('../dist/cdn/components/sw/sw-minidoc-view.js');
 await import('../dist/cdn/components/sw/sw-minidoc-code.js');
 await import('../dist/cdn/components/sw/sw-app.js');
 await import('../dist/cdn/components/sw/sw-minidoc.js');
+await import('../dist/cdn/components/sw/sw-viewer.js');
 const { buildCurl, ejemploDeParam } = await import('../dist/cdn/js/curl.js');
+const { readDriver, writeDriver, esDriver, DRIVERS, DRIVER_DEFAULT } = await import('../dist/cdn/js/driver.js');
 
 function montar(tag, props) {
   const node = dom.window.document.createElement(tag);
@@ -190,4 +192,78 @@ test('sw-minidoc no revienta con un conn de JSON roto en el atributo', () => {
   dom.window.document.body.append(node);
   assert.ok(node.shadowRoot, 'un atributo corrupto no debe dejar la página en blanco');
   node.remove();
+});
+
+/* ── Selector de driver ─────────────────────────────────────── */
+
+test('driver: la URL manda sobre la preferencia guardada', () => {
+  // Quien comparte un enlace decide qué vista se abre, aunque el lector tenga otra guardada.
+  globalThis.localStorage?.setItem('sw:driver', 'sw-app');
+  dom.window.history.replaceState({}, '', '/?driver=sw-minidoc');
+  assert.equal(readDriver(), 'sw-minidoc');
+
+  dom.window.history.replaceState({}, '', '/');
+  assert.equal(readDriver(), 'sw-app', 'sin ?driver= vuelve a mandar lo guardado');
+});
+
+test('driver: un valor inventado no rompe, cae al de por defecto', () => {
+  dom.window.history.replaceState({}, '', '/?driver=inventado');
+  globalThis.localStorage?.removeItem('sw:driver');
+  assert.equal(readDriver(), DRIVER_DEFAULT);
+  assert.equal(esDriver('inventado'), false);
+  dom.window.history.replaceState({}, '', '/');
+});
+
+test('driver: writeDriver no ensucia la URL con el valor por defecto', () => {
+  writeDriver('sw-minidoc');
+  assert.match(dom.window.location.search, /driver=sw-minidoc/);
+  writeDriver(DRIVER_DEFAULT);
+  assert.doesNotMatch(
+    dom.window.location.search,
+    /driver=/,
+    'la URL compartible es la que no lleva el parámetro',
+  );
+});
+
+test('sw-viewer monta el driver activo y lo cambia en caliente', () => {
+  dom.window.history.replaceState({}, '', '/');
+  globalThis.localStorage?.removeItem('sw:driver');
+
+  const visor = dom.window.document.createElement('sw-viewer');
+  dom.window.document.body.append(visor);
+
+  const montado = () => visor.shadowRoot.querySelector('.montaje').firstElementChild?.tagName.toLowerCase();
+  assert.equal(montado(), DRIVER_DEFAULT, 'no montó el driver por defecto');
+
+  visor.driver = 'sw-minidoc';
+  assert.equal(montado(), 'sw-minidoc', 'no cambió el driver montado');
+  assert.equal(visor.shadowRoot.querySelectorAll('.montaje > *').length, 1, 'quedaron dos drivers vivos');
+
+  visor.remove();
+});
+
+test('sw-viewer ofrece una opción por driver registrado', () => {
+  const visor = dom.window.document.createElement('sw-viewer');
+  dom.window.document.body.append(visor);
+  const valores = [...visor.shadowRoot.querySelectorAll('is-option')].map((o) => o.getAttribute('value'));
+  assert.deepEqual(valores, DRIVERS.map((d) => d.id));
+  visor.remove();
+});
+
+test('sw-viewer reenvía el conn al driver que monta', () => {
+  const visor = dom.window.document.createElement('sw-viewer');
+  visor.conn = { apiBase: 'https://h/api' };
+  dom.window.document.body.append(visor);
+
+  const activo = visor.shadowRoot.querySelector('.montaje').firstElementChild;
+  assert.deepEqual(activo.conn, { apiBase: 'https://h/api' }, 'el driver montó sin conn');
+
+  // Y al siguiente también: si no, cambiar de vista perdería la conexión del anfitrión.
+  visor.driver = visor.driver === 'sw-app' ? 'sw-minidoc' : 'sw-app';
+  assert.deepEqual(
+    visor.shadowRoot.querySelector('.montaje').firstElementChild.conn,
+    { apiBase: 'https://h/api' },
+    'el conn se perdió al cambiar de driver',
+  );
+  visor.remove();
 });

@@ -23,7 +23,7 @@ Guardián de que esas páginas no mienten: `tests/docs.test.mjs`.
 | Reusar `is-*` del kit por CDN | Reinventar botones, diálogos, tablas, toasts o iconos |
 | **`<is-button>`** en vez de `<button>` | Botones nativos en el shadow (el kit ya da todo: variantes, colores, a11y) |
 | **`<is-input>`** en vez de `<input>` | Inputs nativos (excepto `type="color"`, `type="file"`, `type="range"` — sin equivalente) |
-| **`<is-select>` + `<is-select-option>`** en vez de `<select>` + `<option>` | Selects nativos (el kit los estiliza y los integra con el tema) |
+| **`<is-select>` + `<is-option>`** en vez de `<select>` + `<option>` | Selects nativos (el kit los estiliza y los integra con el tema) |
 | **`<is-checkbox>`** en vez de `<input type="checkbox">` | Checkboxes nativos en formularios |
 | Dominio sin DOM en `src/js/`, pintado en `src/components/` | Lógica de negocio dentro de un componente |
 | `sw-app` es el único dueño del estado; los hijos reciben `props` y emiten eventos | Que un hijo escriba la URL o el estado global |
@@ -56,13 +56,32 @@ componente: son dos custom elements, cada uno con su shell, su shadow y su hoja.
 | Probar | Pestaña dentro de la tarjeta | Botón que abre `sw-try` en un `is-dialog` |
 | Estado en URL | `?tab`, `?op`, `?opt`, `?server`, `?s` | `?op` |
 
+### Cambiar de driver en caliente
+
+La página no monta un driver a mano: monta **`<sw-viewer>`**, que resuelve cuál toca y saca un
+selector fijo abajo a la izquierda. Cambiarlo destruye y recrea el driver; no hay estado que
+migrar porque lo compartido (operación abierta, servidor, sesión) ya viaja por la URL y el
+almacenamiento, así que la vista nueva aterriza donde estaba la anterior.
+
+La elección vive en `js/driver.ts`, fuera de los dos drivers —es una preferencia del lector, no
+del documento— y se resuelve en este orden:
+
+1. `?driver=` en la URL, para que un enlace llegue con la vista que se quiso enseñar.
+2. `localStorage`, para que sobreviva a recargar.
+3. `sw-app`.
+
+El valor por defecto **no** se escribe en la URL: la que hay que poder compartir es la que no
+lleva el parámetro. Añadir un tercer driver es meterlo en `DRIVERS` y registrar su tag; el
+selector y la persistencia salen solos.
+
 Comparten **todo** el dominio (`js/config`, `js/openapi`, `js/nav`, `js/auth`) y no comparten
 estado entre sí. Reglas para que sigan sin pisarse:
 
 - Ninguno registra el tag del otro. `all.ts` registra los dos; una página monta el que quiera.
 - Lo que sea lógica se añade en `src/js/`, nunca en el shell de uno solo — si no, el otro driver
   se queda sin ello y las dos vistas empiezan a divergir.
-- Montar los dos a la vez funciona; solo duplica la carga del documento.
+- Montar los dos a la vez funciona; solo duplica la carga del documento. `sw-viewer`
+  mantiene uno solo vivo: al cambiar, reemplaza el nodo entero.
 
 Guardián: `tests/minidoc.test.mjs`.
 
@@ -207,7 +226,7 @@ adjuntos por form association, `<input type="range">` para sliders).
 | Acción (icono, texto, ambos) | `<is-button variant="…" pill? with-caret? color="…">` | `<button>` |
 | Campo de texto / búsqueda | `<is-input type="search\|text\|email\|…">` | `<input>` |
 | Menú desplegable | `<is-dropdown>` con `<is-dropdown-item>` | `<select>` |
-| Set finito de opciones | `<is-select>` con `<is-select-option>` | `<select><option>` |
+| Set finito de opciones | `<is-select>` con `<is-option>` | `<select><option>` |
 | Booleano | `<is-checkbox>` | `<input type="checkbox">` |
 | Icono | `<is-icon icon="mdi:nombre">` (MDI path) | `<svg>` inline, glifos manuales |
 | Diálogo modal | `<is-dialog label="…">` | `<dialog>` manual |

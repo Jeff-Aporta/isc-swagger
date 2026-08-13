@@ -172,7 +172,12 @@
     </figure>
   </section>
 
-  <sw-app hidden></sw-app>
+  <!--
+    `sw-viewer` en vez de `sw-app` a secas: envuelve los dos drivers y saca el selector de
+    vista, para que el lector cambie de presentación sin recargar. Recuerda la elección en
+    `?driver=` y en localStorage.
+  -->
+  <sw-viewer hidden></sw-viewer>
   <is-toast placement="bottom-end"></is-toast>
 
   <noscript>
@@ -203,7 +208,7 @@
     (function () {
       var modo = document.documentElement.dataset.modo || 'app';
       var hero = document.querySelector('.hero');
-      var app = document.querySelector('sw-app');
+      var app = document.querySelector('sw-viewer');
       if (modo === 'hero') {
         hero.hidden = false;
       } else {

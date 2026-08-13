@@ -30,14 +30,15 @@ Cómo se escribe uno, cómo se adopta el CSS y qué está prohibido:
 | `<sw-path>` | `path` | — | Ruta con los `{parámetros}` resaltados |
 | `<sw-auth>` | `authEnabled`, `auth`, `session` | `sw-session-change` | Sesión JWT: chip, diálogo de login, pegado de token |
 | `<sw-export>` | `spec`, `config` | — | Descargas: documento JSON, Postman, IS |
+| `<sw-viewer>` | `conn`, `driver` | — | Envoltura: monta el driver elegido y saca el selector de vista |
 | `<sw-minidoc>` | `conn` (o atributo JSON) | — | **Driver 2.** Shell de vistas: índice, operación, código |
 | `<sw-minidoc-view>` | `op`, `spec`, `grupo`, `serverBase`, `authEnabled`, `docMd` | `sw-need-login` | La operación entera como página de manual |
 | `<sw-minidoc-code>` | `op`, `spec`, `serverBase`, `requiereBearer` | — | Columna derecha: cURL y respuesta por código de estado |
 
-### Los nueve con `#render()` a mano
+### Los diez con `#render()` a mano
 
 `sw-app`, `sw-nav`, `sw-auth`, `sw-operation`, `sw-tag-group`, `sw-try`,
-`sw-minidoc`, `sw-minidoc-view`, `sw-minidoc-code`. Los
+`sw-viewer`, `sw-minidoc`, `sw-minidoc-view`, `sw-minidoc-code`. Los
 demás usan `crearComponente`. Cada uno de los seis debe llamar
 `adoptCss(this.#root, import.meta.url)` al final de **cada** salida del render y
 `precargarCss(import.meta.url)` junto al `define(...)`. Guardián:
