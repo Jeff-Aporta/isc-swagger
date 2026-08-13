@@ -56,6 +56,7 @@ export function buildCurl(
   spec: SwSpec | null | undefined,
   serverBase: string,
   requiereBearer = false,
+  cuerpoOverride?: unknown,
 ): MuestraCurl {
   if (!op) return { texto: '', lineas: [] };
 
@@ -79,7 +80,10 @@ export function buildCurl(
     lineas.push(`  --header ${comillar(`${p.name}: ${ejemploDeParam(p)}`)}`);
   }
 
-  const cuerpo = extractJsonExample(op.requestBody?.content?.['application/json']);
+  const cuerpo =
+    cuerpoOverride !== undefined
+      ? cuerpoOverride
+      : extractJsonExample(op.requestBody?.content?.['application/json']);
   if (cuerpo !== undefined && cuerpo !== null) {
     lineas.push(`  --header ${comillar('Content-Type: application/json')}`);
     lineas.push(`  --data ${comillar(JSON.stringify(cuerpo, null, 2))}`);

@@ -69,7 +69,18 @@
 }
 
 .hueco-inicio { padding-inline: var(--is-space-3, .75rem) var(--is-space-2, .5rem); }
-.hueco-fin { padding-inline: var(--is-space-2, .5rem) var(--is-space-3, .75rem); }
+
+.lateral.hueco-fin {
+  padding-inline: var(--is-space-2, .5rem) var(--is-space-3, .75rem);
+  /* Doc scroll = `.centro`. Este panel se ancla al viewport del split. */
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.lateral.hueco-fin ::slotted(*) {
+  display: block;
+  min-height: min-content;
+}
 
 .centro {
   padding: var(--is-space-6, 1.5rem) var(--is-space-8, 2rem) var(--is-space-10, 3rem);
@@ -90,7 +101,7 @@ is-drawer[data-lado='fin'] { --size: min(34rem, 92vw); }
 
 /* Al pasar a cajón, el hueco del split se queda vacío: sin esto dejaría una franja muerta. */
 @media (max-width: 87.5rem) {
-  .hueco-fin { padding: 0; background: none; }
+  .lateral.hueco-fin { padding: 0; background: none; }
 }
 
 @media (max-width: 60rem) {

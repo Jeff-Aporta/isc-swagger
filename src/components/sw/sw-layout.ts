@@ -29,10 +29,12 @@ import { caducarPrefsSiCambioBuild } from '../../js/prefs.js';
 // restaura la posición de localStorage, así que purgar después no serviría de nada.
 caducarPrefsSiCambioBuild();
 
-/** Reparto inicial de cada split, en % del track inicial. Se reaplica tras el primer layout. */
+/** Reparto inicial de cada split, en % del track primario. Se reaplica tras el primer layout.
+ *  En `.split-interno` el primario es el panel derecho (`primary="end"`): al redimensionar
+ *  el viewport ese ancho se mantiene y el centro es quien se ajusta. */
 const PROPORCIONES: Array<{ sel: string; pct: number }> = [
   { sel: '.split-externo', pct: 18 },
-  { sel: '.split-interno', pct: 62 },
+  { sel: '.split-interno', pct: 36 },
 ];
 
 /** Por debajo de esto un panel no es «estrecho», es un accidente: se recalcula el reparto. */
@@ -167,7 +169,15 @@ class SwLayout extends HTMLElement {
       <is-split-panel class="split-externo" data-zona="inicio" position="18" snap="14% 18% 24%" snap-threshold="16" storage-key="sw:split:inicio">
         <div slot="start" class="lateral hueco-inicio"><slot name="inicio"></slot></div>
         <div slot="end" class="resto">
-          <is-split-panel class="split-interno" data-zona="fin" position="62" snap="50% 62% 75%" snap-threshold="16" storage-key="sw:split:fin">
+          <is-split-panel
+            class="split-interno"
+            data-zona="fin"
+            primary="end"
+            position="36"
+            snap="28% 36% 44%"
+            snap-threshold="16"
+            storage-key="sw:split:fin:v2"
+          >
             <div slot="start" class="centro"><slot name="centro"></slot></div>
             <div slot="end" class="lateral hueco-fin"><slot name="fin"></slot></div>
           </is-split-panel>

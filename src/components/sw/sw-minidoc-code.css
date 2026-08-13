@@ -5,6 +5,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--is-space-4, 1rem);
+  min-height: 0;
 }
 
 .panel {
@@ -31,15 +32,16 @@
   margin-inline-end: auto;
 }
 
-/* Pestañas de código de estado. Scroll horizontal en vez de salto de línea: una API con
-   200/400/401/429/500 no debe empujar el JSON hacia abajo en pantallas estrechas. */
+.vistas,
 .estados {
   gap: var(--is-space-1, .25rem);
   overflow-x: auto;
   scrollbar-width: thin;
 }
 
-.estado {
+.vista,
+.estado,
+.ejemplo {
   flex: 0 0 auto;
   appearance: none;
   border: 0;
@@ -47,21 +49,27 @@
   color: var(--is-color-text-2, #9aa7b8);
   font: inherit;
   font-size: .8125rem;
-  font-variant-numeric: tabular-nums;
   padding: .25rem .5rem;
   border-radius: var(--is-radius-sm, 6px);
   cursor: pointer;
   position: relative;
 }
 
-.estado:hover { color: var(--is-color-text, #e6edf7); background: var(--is-color-surface-4, #1d2532); }
+.vista:hover,
+.estado:hover,
+.ejemplo:hover {
+  color: var(--is-color-text, #e6edf7);
+  background: var(--is-color-surface-4, #1d2532);
+}
 
-.estado[data-activo] {
+.vista[data-activo],
+.estado[data-activo],
+.ejemplo[data-activo] {
   color: var(--is-color-text, #e6edf7);
   font-weight: 600;
 }
 
-/* Subrayado del activo, no relleno: el color del chip ya lo lleva el tono del estado. */
+.vista[data-activo]::after,
 .estado[data-activo]::after {
   content: '';
   position: absolute;
@@ -72,12 +80,30 @@
   background: currentColor;
 }
 
+.estado {
+  font-variant-numeric: tabular-nums;
+}
+
 .estado[data-tono='success'][data-activo] { color: var(--is-color-success, #4ade80); }
 .estado[data-tono='warning'][data-activo] { color: var(--is-color-warning, #fbbf24); }
 .estado[data-tono='danger'][data-activo]  { color: var(--is-color-danger, #f87171); }
 
+.ejemplos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--is-space-1, .25rem);
+  padding: var(--is-space-2, .5rem) var(--is-space-3, .75rem);
+  border-bottom: 1px solid var(--is-color-border, #2a3240);
+}
+
+.ejemplo[data-activo] {
+  background: color-mix(in srgb, var(--is-color-brand, #1e90ff) 22%, transparent);
+  color: var(--is-color-text, #e6edf7);
+}
+
 .al-final { margin-inline-start: auto; }
 
+.peticion,
 .cuerpo { display: block; }
 
 sw-json { display: block; }
