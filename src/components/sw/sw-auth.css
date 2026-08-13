@@ -11,7 +11,8 @@
 }
 
 .dialogo {
-  --width: 26rem;
+  --is-dialog-width: min(28rem, calc(100vw - 2rem));
+  --spacing: var(--is-dialog-spacing, 1rem);
 }
 
 .formulario {

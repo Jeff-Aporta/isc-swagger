@@ -16,7 +16,7 @@ const CSS = /* css */ `
     display: block;
     margin: 0 0 0.25rem;
     padding: 0.65rem 0.75rem;
-    border: 1px solid var(--is-border-soft, #1f242b);
+    border: 1px solid var(--is-border-soft, var(--is-border, #1f242b));
     border-radius: 0.5rem;
     background: var(--is-code-bg, #0f1318);
     color: var(--is-text, #e6edf3);
@@ -30,10 +30,17 @@ const CSS = /* css */ `
     justify-content: flex-end;
     flex-wrap: wrap;
     gap: 0.5rem;
+    width: 100%;
   }
   is-dialog.sw-dialog-try,
   is-dialog.sw-dialog-confirm {
     --is-dialog-width: min(52rem, calc(100vw - 2rem));
+    --is-dialog-spacing: 1.1rem;
+    --spacing: var(--is-dialog-spacing);
+  }
+  is-dialog.sw-dialog-try sw-try {
+    display: block;
+    min-width: 0;
   }
 `;
 
@@ -56,8 +63,12 @@ export function openHostDialog(opts: {
   ensureDialogHostStyles();
   const dlg = document.createElement('is-dialog');
   dlg.setAttribute('label', opts.label);
+  dlg.setAttribute('light-dismiss', '');
   if (opts.className) dlg.classList.add(...opts.className.split(/\s+/).filter(Boolean));
-  if (opts.width) dlg.style.setProperty('--is-dialog-width', opts.width);
+  const width = opts.width || 'min(52rem, calc(100vw - 2rem))';
+  dlg.setAttribute('width', width);
+  dlg.style.setProperty('--is-dialog-width', width);
+  dlg.style.setProperty('--spacing', 'var(--is-dialog-spacing, 1.1rem)');
   dlg.append(opts.content);
   dlg.addEventListener('is-hide', () => dlg.remove());
   dlg.addEventListener('is-after-hide', () => dlg.remove());

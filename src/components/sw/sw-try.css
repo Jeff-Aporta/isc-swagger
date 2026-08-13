@@ -10,6 +10,15 @@
   display: grid;
   gap: 1rem;
   min-width: 0;
+  width: 100%;
+}
+
+sw-body,
+sw-params,
+sw-json {
+  display: block;
+  width: 100%;
+  min-width: 0;
 }
 
 /* ── Previsualización de la URL ─────────────────────────────── */

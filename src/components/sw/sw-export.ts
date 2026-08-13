@@ -35,8 +35,9 @@ const SwExport = crearComponente<Props>(
           }
         }}
       >
-        <is-button slot="trigger" variant="plain" color="neutral" pill aria-label="Descargar documento">
-          <is-icon icon="mdi:download-outline"></is-icon>
+        <is-button slot="trigger" variant="plain" color="neutral" aria-label="Descargar documento">
+          <is-icon slot="start" icon="mdi:download-outline"></is-icon>
+          Descargar
         </is-button>
         ${formatos.map(
           (f) => html`
