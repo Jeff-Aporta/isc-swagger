@@ -24,6 +24,15 @@
 
 import { adoptCss, precargarCss, define, html, emitir } from './_shared.js';
 
+/** Reparto inicial de cada split, en % del track inicial. Se reaplica tras el primer layout. */
+const PROPORCIONES: Array<{ sel: string; pct: number }> = [
+  { sel: '.split-externo', pct: 18 },
+  { sel: '.split-interno', pct: 62 },
+];
+
+/** Por debajo de esto un panel no es «estrecho», es un accidente: se recalcula el reparto. */
+const MINIMO_PANEL_PX = 40;
+
 /** Anchos donde cada lateral deja de caber al lado y pasa a cajón. Coinciden con el CSS. */
 const UMBRAL_FIN = '(max-width: 87.5rem)';
 const UMBRAL_INICIO = '(max-width: 60rem)';
@@ -50,12 +59,42 @@ class SwLayout extends HTMLElement {
       this.#mqInicio.addEventListener('change', this.#alCambiar);
     }
     this.#sincronizarModo();
+    this.#corregirProporciones();
   }
 
   disconnectedCallback(): void {
     this.#mqFin?.removeEventListener('change', this.#alCambiar);
     this.#mqInicio?.removeEventListener('change', this.#alCambiar);
     this.#mqFin = this.#mqInicio = null;
+  }
+
+  /**
+   * Fija el reparto de los splits en píxeles, ya con el layout medido.
+   *
+   * `is-split-panel` cachea su posición **en píxeles** al conectarse, y ese píxel es canónico:
+   * gana sobre el porcentaje y se reaplica en cada resize. Aquí el split se conecta dentro de un
+   * shadow recién construido, cuando el host todavía mide 0, así que cachea `0px` — el índice y
+   * el contenido colapsaban y el panel de código se quedaba con todo el ancho.
+   *
+   * Peor aún: con `storage-key` ese cero se persiste en `localStorage`, así que una sola carga
+   * mala envenenaba todas las siguientes aunque el bug ya no se diera.
+   *
+   * Por eso se escribe `positionInPixels` y no `position`: el porcentaje lo pisa el píxel
+   * canónico en el primer resize. Un píxel guardado plausible es del usuario y se respeta; uno
+   * degenerado (0 o casi) es el síntoma y se corrige.
+   */
+  #corregirProporciones(): void {
+    requestAnimationFrame(() => {
+      for (const { sel, pct } of PROPORCIONES) {
+        const sp = this.#root.querySelector(sel) as (HTMLElement & { positionInPixels?: number }) | null;
+        if (!sp) continue;
+        const ancho = sp.getBoundingClientRect().width;
+        if (ancho < 1) continue;
+        const guardado = Number(sp.getAttribute('position-in-pixels'));
+        if (Number.isFinite(guardado) && guardado > MINIMO_PANEL_PX) continue;
+        sp.positionInPixels = Math.round((ancho * pct) / 100);
+      }
+    });
   }
 
   /** `true` cuando ese lateral ya no cabe al lado y se sirve como cajón. */

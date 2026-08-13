@@ -32,6 +32,25 @@ class SwViewer extends HTMLElement {
     this.#root = this.attachShadow({ mode: 'open' });
   }
 
+  /**
+   * Lee el conn del atributo `conn` (JSON).
+   *
+   * Existe para que el anfitrión pueda entregarlo **antes** de que el elemento haga upgrade. Con
+   * la asignación por propiedad hay carrera: el driver se monta sin conn, falla con «falta
+   * specUrl o apiBase», pinta el error y solo entonces llega la propiedad y se re-monta. Ese
+   * parpadeo de error era visible en cada carga.
+   */
+  #connDesdeAtributo(): SwConn | null {
+    const rawAttr = this.getAttribute('conn');
+    if (!rawAttr?.trim()) return null;
+    try {
+      const parsed = JSON.parse(rawAttr) as unknown;
+      return parsed && typeof parsed === 'object' ? (parsed as SwConn) : null;
+    } catch {
+      return null;
+    }
+  }
+
   /** Conn del anfitrión. Se reenvía al driver activo y a los que vengan después. */
   get conn(): SwConn | null { return this.#conn; }
   set conn(v: SwConn | null) {
@@ -62,6 +81,7 @@ class SwViewer extends HTMLElement {
     const zona = this.#montajeNodo;
     if (!zona) return;
     const nodo = document.createElement(this.#driver) as HTMLElement & { conn?: SwConn | null };
+    this.#conn ??= this.#connDesdeAtributo();
     // El conn se asigna antes de insertarlo: si se hiciera después, el driver ya habría
     // arrancado su carga con la configuración de la URL y pediría el documento dos veces.
     if (this.#conn) nodo.conn = this.#conn;

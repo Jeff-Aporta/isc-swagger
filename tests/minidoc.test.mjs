@@ -379,3 +379,36 @@ test('todos los chips de método miden lo mismo', async () => {
   const host = css.slice(css.indexOf(':host'), css.indexOf('.metodo'));
   assert.match(host, /width:\s*[\d.]+rem/, 'el ancho fijo debe vivir en :host, no en el chip');
 });
+
+/* ── Regresiones de montaje ─────────────────────────────────── */
+
+test('sw-viewer entrega el conn ANTES de conectar el driver', () => {
+  // El parpadeo: si el driver se inserta primero y recibe el conn después, arranca sin
+  // configuración, pinta «falta specUrl o apiBase» y solo entonces se re-monta. El error se
+  // veía un instante en cada carga.
+  dom.window.history.replaceState({}, '', '/');
+  globalThis.localStorage?.removeItem('sw:driver');
+
+  const visor = dom.window.document.createElement('sw-viewer');
+  visor.setAttribute('conn', JSON.stringify({ apiBase: 'https://h/api' }));
+  dom.window.document.body.append(visor);
+
+  const drv = visor.shadowRoot.querySelector('.montaje').firstElementChild;
+  assert.ok(drv, 'no montó driver');
+  assert.deepEqual(drv.conn, { apiBase: 'https://h/api' }, 'el driver se conectó sin conn');
+  visor.remove();
+});
+
+test('sw-layout corrige un reparto degenerado de los splits', async () => {
+  // `is-split-panel` cachea su posición en píxeles al conectarse; dentro de un shadow recién
+  // construido el host mide 0, cachea 0px y —como el píxel es canónico— el índice y el
+  // contenido colapsan. Con storage-key ese cero además se persiste y envenena las siguientes
+  // cargas. La corrección debe escribir píxeles, no porcentaje.
+  const { readFileSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const raiz = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
+  const ts = readFileSync(join(raiz, 'src', 'components', 'sw', 'sw-layout.ts'), 'utf8');
+  assert.match(ts, /positionInPixels\s*=/, 'debe fijar píxeles: el porcentaje lo pisa el píxel canónico');
+  assert.match(ts, /requestAnimationFrame/, 'debe esperar a que el layout tenga ancho real');
+  assert.match(ts, /MINIMO_PANEL_PX/, 'debe respetar el ancho que el usuario haya arrastrado');
+});
