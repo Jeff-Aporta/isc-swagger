@@ -28,6 +28,8 @@ import { mergeUrlState, readUrlState, subscribeUrlState } from '../../js/url-sta
 import { getStoredJwt, resolveAuthConfig } from '../../js/auth.js';
 import './sw-method.js';
 import './sw-auth.js';
+import './sw-layout.js';
+import './sw-driver-switch.js';
 import './sw-minidoc-view.js';
 import './sw-minidoc-code.js';
 
@@ -109,8 +111,13 @@ class SwMinidoc extends HTMLElement {
       this.#docIndex = buildDocIndex(spec);
       this.#session = this.#auth.enabled ? getStoredJwt() : null;
       this.#serverBase = readServerFromUrl() || inferDefaultServerBase(spec, config);
-      // Sin operación en la URL se abre la primera: una página en blanco no dice qué es esto.
-      if (!this.#opAbierta) this.#opAbierta = this.#todas[0]?.operationId ?? '';
+      // Sin operación en la URL se abre la que declare el documento y, si no declara ninguna,
+      // la primera: una página en blanco no dice qué es esto.
+      if (!this.#opAbierta) {
+        const preferida = String(this.#config.defaultOp ?? '').trim();
+        const existe = preferida && this.#todas.some((o) => o.operationId === preferida);
+        this.#opAbierta = existe ? preferida : (this.#todas[0]?.operationId ?? '');
+      }
       this.#estado = 'listo';
     } catch (e) {
       this.#estado = 'error';
@@ -241,27 +248,33 @@ class SwMinidoc extends HTMLElement {
       this.#session = ((e as CustomEvent).detail as { session: SwSesion | null })?.session ?? null;
     });
 
-    this.#root.append(html`
-      <header class="cabecera">
-        <span class="marca">${titulo}</span>
-        <is-input
-          class="buscar"
-          type="search"
-          placeholder="Buscar endpoint…"
-          onis-input=${(e: Event) => {
-            this.#query = String((e.target as HTMLInputElement).value ?? '');
-            this.#pintarIndice();
-          }}
-        ></is-input>
-        ${autenticacion}
-        <is-theme-toggle></is-theme-toggle>
-      </header>
+    const iconoMarca = this.#config.brand?.icon || 'mdi:api';
 
-      <div class="cuerpo">
-        <nav class="indice" aria-label="Índice de endpoints"></nav>
-        <main class="contenido">${vista}</main>
-        <aside class="codigo">${codigo}</aside>
-      </div>
+    this.#root.append(html`
+      <sw-layout>
+        <div slot="cabecera" class="cabecera">
+          <span class="marca">
+            <is-icon class="marca-logo" icon="${iconoMarca}"></is-icon>
+            <span class="marca-texto">${titulo}</span>
+          </span>
+          <is-input
+            class="buscar"
+            type="search"
+            placeholder="Buscar endpoint…"
+            onis-input=${(e: Event) => {
+              this.#query = String((e.target as HTMLInputElement).value ?? '');
+              this.#pintarIndice();
+            }}
+          ></is-input>
+          ${autenticacion}
+          <sw-driver-switch></sw-driver-switch>
+          <is-theme-toggle></is-theme-toggle>
+        </div>
+
+        <nav slot="inicio" class="indice" aria-label="Índice de endpoints"></nav>
+        <div slot="centro">${vista}</div>
+        <div slot="fin">${codigo}</div>
+      </sw-layout>
     `);
 
     this.#indiceNodo = this.#root.querySelector('.indice');

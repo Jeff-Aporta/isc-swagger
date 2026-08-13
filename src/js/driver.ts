@@ -29,7 +29,7 @@ export const DRIVERS: readonly SwDriver[] = [
   { id: 'sw-minidoc', label: 'Documento', detalle: 'Índice lateral, una operación por página y el código a la derecha' },
 ] as const;
 
-export const DRIVER_DEFAULT: SwDriver['id'] = 'sw-app';
+export const DRIVER_DEFAULT: SwDriver['id'] = 'sw-minidoc';
 
 /** `true` si el valor es uno de los drivers registrados. */
 export function esDriver(v: unknown): v is SwDriver['id'] {

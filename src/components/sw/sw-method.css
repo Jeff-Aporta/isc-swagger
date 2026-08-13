@@ -3,11 +3,14 @@
 :host {
   display: inline-flex;
   flex-shrink: 0;
+  /* El ancho vive en el host y no en el chip: `is-tag` impone su propio tamaño a partir del
+     texto y del padding, así que fijarlo dentro no servía — DELETE salía más ancho que GET y
+     la columna de rutas dejaba de leerse como columna. */
+  width: 5.25rem;
 }
 
 .metodo {
-  /* Ancho fijo: alinea las rutas de la lista aunque el método cambie. */
-  width: 4.75rem;
+  width: 100%;
   justify-content: center;
   font-family: var(--is-font-mono, ui-monospace, "Cascadia Code", Menlo, monospace);
   font-size: 0.6875rem;

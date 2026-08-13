@@ -1,14 +1,8 @@
-/* Shell del driver sw-minidoc: cabecera fija + tres columnas (índice · contenido · código).
-
-   Las tres columnas son una rejilla y no flex con anchos fijos: el índice y el panel de código
-   tienen medida propia y solo el contenido debe estirarse. Con flex habría que repartir a mano
-   los `flex-basis` y el JSON de la derecha se comprimiría antes que la prosa. */
+/* Driver de vistas. El armazón de tres zonas lo pone `sw-layout`; aquí solo van la cabecera
+   y el índice, que son lo propio de este driver. */
 
 :host {
   display: block;
-  min-height: 100vh;
-  background: var(--is-color-surface, #0a0e14);
-  color: var(--is-color-text, #e6edf7);
 }
 
 .centrado {
@@ -21,54 +15,43 @@
 /* ── Cabecera ─────────────────────────────────────────────── */
 
 .cabecera {
-  position: sticky;
-  top: 0;
-  z-index: 3;
   display: flex;
   align-items: center;
   gap: var(--is-space-3, .75rem);
-  padding: var(--is-space-3, .75rem) var(--is-space-5, 1.25rem);
-  border-bottom: 1px solid var(--is-color-border, #2a3240);
-  background: color-mix(in srgb, var(--is-color-surface, #0a0e14) 88%, transparent);
-  backdrop-filter: blur(8px);
 }
 
 .marca {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--is-space-2, .5rem);
   font-weight: 700;
   font-size: 1rem;
   white-space: nowrap;
 }
 
+/* Azul de marca ContaPyme: el logo es lo único con color saturado en la barra, para que ancle
+   la vista sin competir con los chips de método, que sí codifican información. */
+.marca-logo {
+  font-size: 1.375rem;
+  color: var(--is-color-brand, #1e90ff);
+}
+
 .buscar {
   flex: 1 1 12rem;
-  max-width: 24rem;
-  margin-inline-start: var(--is-space-4, 1rem);
+  max-width: 26rem;
+  margin-inline-end: auto;
 }
 
-/* ── Rejilla ──────────────────────────────────────────────── */
-
-.cuerpo {
-  display: grid;
-  grid-template-columns: 17rem minmax(0, 1fr) 30rem;
-  align-items: start;
-  gap: var(--is-space-8, 2rem);
-  padding: var(--is-space-6, 1.5rem) var(--is-space-5, 1.25rem) var(--is-space-10, 3rem);
-  max-width: 100rem;
-  margin-inline: auto;
+/* Por debajo de este ancho la cabecera no cabe en una línea: el nombre y la búsqueda se
+   reparten arriba y los controles quedan accesibles sin que nada se salga. */
+@media (max-width: 60rem) {
+  .cabecera { flex-wrap: wrap; row-gap: var(--is-space-2, .5rem); }
+  .buscar { order: 9; flex-basis: 100%; max-width: none; margin-inline-end: 0; }
 }
 
-/* Índice y código quedan pegados mientras la columna central hace el scroll:
-   es lo que permite leer un endpoint largo sin perder de vista la petición. */
-.indice,
-.codigo {
-  position: sticky;
-  top: 4.5rem;
-  max-height: calc(100vh - 6rem);
-  overflow-y: auto;
-  scrollbar-width: thin;
+@media (max-width: 30rem) {
+  .marca-texto { display: none; }
 }
-
-.contenido { min-width: 0; }
 
 /* ── Índice ───────────────────────────────────────────────── */
 
@@ -76,6 +59,7 @@
 
 .grupo-titulo {
   margin: 0 0 var(--is-space-2, .5rem);
+  padding-inline-start: var(--is-space-2, .5rem);
   font-size: .6875rem;
   font-weight: 700;
   letter-spacing: .08em;
@@ -94,23 +78,42 @@
   color: var(--is-color-text-2, #9aa7b8);
   font: inherit;
   font-size: .875rem;
+  line-height: 1.35;
   text-align: start;
-  padding: .3rem .5rem;
+  padding: .35rem .5rem;
   border-radius: var(--is-radius-md, 8px);
   cursor: pointer;
 }
 
-.op:hover { background: var(--is-color-surface-2, #11161f); color: var(--is-color-text, #e6edf7); }
+.op:hover { background: var(--is-color-surface-3, #161c27); color: var(--is-color-text, #e6edf7); }
 
+.op:focus-visible {
+  outline: 2px solid var(--is-color-brand, #1e90ff);
+  outline-offset: -2px;
+}
+
+/* El activo se marca con una barra a la izquierda además del fondo: en una lista larga el
+   cambio de fondo solo se ve si ya estás mirando la fila. */
 .op[data-activo] {
+  position: relative;
   background: var(--is-color-surface-3, #161c27);
   color: var(--is-color-text, #e6edf7);
   font-weight: 600;
 }
 
+.op[data-activo]::before {
+  content: '';
+  position: absolute;
+  inset-block: .25rem;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--is-color-brand, #1e90ff);
+}
+
 .op sw-method { flex: 0 0 auto; }
 
-/* Dos líneas como máximo: los summary largos no deben empujar el índice a lo ancho. */
+/* Dos líneas como máximo: un summary largo no debe ensanchar el índice. */
 .op-nombre {
   min-width: 0;
   display: -webkit-box;
@@ -121,34 +124,7 @@
 
 .sin-resultados {
   margin: 0;
+  padding-inline-start: var(--is-space-2, .5rem);
   font-size: .875rem;
   color: var(--is-color-text-3, #6b7a8d);
-}
-
-/* ── Adaptación ───────────────────────────────────────────── */
-
-/* Por debajo de ~1400 px el panel de código deja de caber al lado sin estrangular la prosa:
-   baja bajo el contenido y deja de ser pegajoso, que si no tapa media pantalla. */
-@media (max-width: 87.5rem) {
-  .cuerpo { grid-template-columns: 16rem minmax(0, 1fr); }
-  .codigo {
-    grid-column: 2;
-    position: static;
-    max-height: none;
-    overflow: visible;
-  }
-}
-
-@media (max-width: 60rem) {
-  .cuerpo { grid-template-columns: minmax(0, 1fr); gap: var(--is-space-6, 1.5rem); }
-  .indice {
-    grid-column: 1;
-    position: static;
-    max-height: 14rem;
-    border-bottom: 1px solid var(--is-color-border, #2a3240);
-    padding-bottom: var(--is-space-4, 1rem);
-  }
-  .codigo { grid-column: 1; }
-  .cabecera { flex-wrap: wrap; }
-  .buscar { margin-inline-start: 0; order: 3; flex-basis: 100%; max-width: none; }
 }

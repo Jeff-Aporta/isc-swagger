@@ -28,6 +28,8 @@ await import('../dist/cdn/components/sw/sw-minidoc-view.js');
 await import('../dist/cdn/components/sw/sw-minidoc-code.js');
 await import('../dist/cdn/components/sw/sw-app.js');
 await import('../dist/cdn/components/sw/sw-minidoc.js');
+await import('../dist/cdn/components/sw/sw-driver-switch.js');
+await import('../dist/cdn/components/sw/sw-layout.js');
 await import('../dist/cdn/components/sw/sw-viewer.js');
 const { buildCurl, ejemploDeParam } = await import('../dist/cdn/js/curl.js');
 const { readDriver, writeDriver, esDriver, DRIVERS, DRIVER_DEFAULT } = await import('../dist/cdn/js/driver.js');
@@ -215,8 +217,9 @@ test('driver: un valor inventado no rompe, cae al de por defecto', () => {
 });
 
 test('driver: writeDriver no ensucia la URL con el valor por defecto', () => {
-  writeDriver('sw-minidoc');
-  assert.match(dom.window.location.search, /driver=sw-minidoc/);
+  const otro = DRIVERS.find((d) => d.id !== DRIVER_DEFAULT).id;
+  writeDriver(otro);
+  assert.match(dom.window.location.search, new RegExp('driver=' + otro));
   writeDriver(DRIVER_DEFAULT);
   assert.doesNotMatch(
     dom.window.location.search,
@@ -242,11 +245,45 @@ test('sw-viewer monta el driver activo y lo cambia en caliente', () => {
   visor.remove();
 });
 
-test('sw-viewer ofrece una opción por driver registrado', () => {
+test('sw-driver-switch ofrece una opción por driver registrado', () => {
+  const sel = dom.window.document.createElement('sw-driver-switch');
+  dom.window.document.body.append(sel);
+  const valores = [...sel.shadowRoot.querySelectorAll('is-option')].map((o) => o.getAttribute('value'));
+  assert.deepEqual(valores, DRIVERS.map((d) => d.id));
+  sel.remove();
+});
+
+test('sw-driver-switch no monta drivers: solo emite el cambio', () => {
+  // Reparto de responsabilidades: el selector escribe la preferencia y avisa; quien sabe
+  // dónde está montado el driver —y por tanto quien lo reemplaza— es sw-viewer.
+  const sel = dom.window.document.createElement('sw-driver-switch');
+  dom.window.document.body.append(sel);
+  let recibido = null;
+  sel.addEventListener('sw-driver-change', (e) => { recibido = e.detail?.driver; });
+
+  const otro = DRIVERS.find((d) => d.id !== readDriver()).id;
+  const select = sel.shadowRoot.querySelector('is-select');
+  select.value = otro;
+  select.dispatchEvent(new dom.window.CustomEvent('is-change', { bubbles: true }));
+
+  assert.equal(recibido, otro, 'no emitió sw-driver-change');
+  assert.equal(readDriver(), otro, 'no persistió la elección');
+  sel.remove();
+  dom.window.history.replaceState({}, '', '/');
+  globalThis.localStorage?.removeItem('sw:driver');
+});
+
+test('sw-viewer cambia de driver al recibir sw-driver-change desde la cabecera', () => {
+  dom.window.history.replaceState({}, '', '/');
+  globalThis.localStorage?.removeItem('sw:driver');
   const visor = dom.window.document.createElement('sw-viewer');
   dom.window.document.body.append(visor);
-  const valores = [...visor.shadowRoot.querySelectorAll('is-option')].map((o) => o.getAttribute('value'));
-  assert.deepEqual(valores, DRIVERS.map((d) => d.id));
+
+  const otro = DRIVERS.find((d) => d.id !== visor.driver).id;
+  visor.dispatchEvent(new dom.window.CustomEvent('sw-driver-change', { detail: { driver: otro } }));
+
+  const montado = visor.shadowRoot.querySelector('.montaje').firstElementChild?.tagName.toLowerCase();
+  assert.equal(montado, otro, 'el evento de la cabecera no cambió el driver montado');
   visor.remove();
 });
 
@@ -266,4 +303,79 @@ test('sw-viewer reenvía el conn al driver que monta', () => {
     'el conn se perdió al cambiar de driver',
   );
   visor.remove();
+});
+
+/* ── Armazón de tres zonas ──────────────────────────────────── */
+
+test('sw-layout expone las cuatro zonas por slot', () => {
+  const l = dom.window.document.createElement('sw-layout');
+  dom.window.document.body.append(l);
+  const nombres = [...l.shadowRoot.querySelectorAll('slot')].map((s) => s.getAttribute('name')).sort();
+  assert.deepEqual(nombres, ['cabecera', 'centro', 'fin', 'inicio']);
+  l.remove();
+});
+
+test('sw-layout anida dos splits, uno por divisor arrastrable', () => {
+  const l = dom.window.document.createElement('sw-layout');
+  dom.window.document.body.append(l);
+  const splits = l.shadowRoot.querySelectorAll('is-split-panel');
+  assert.equal(splits.length, 2, 'hacen falta dos: índice|resto y centro|código');
+  // storage-key: el ancho que el usuario elige tiene que sobrevivir a recargar.
+  for (const sp of splits) assert.ok(sp.getAttribute('storage-key'), 'split sin storage-key');
+  l.remove();
+});
+
+test('sw-layout trae un cajón y una hamburguesa por lateral', () => {
+  const l = dom.window.document.createElement('sw-layout');
+  dom.window.document.body.append(l);
+  for (const lado of ['inicio', 'fin']) {
+    assert.ok(l.shadowRoot.querySelector(`is-drawer[data-lado="${lado}"]`), `sin cajón ${lado}`);
+    assert.ok(l.shadowRoot.querySelector(`.hamburguesa-${lado}`), `sin hamburguesa ${lado}`);
+  }
+  l.remove();
+});
+
+test('sw-layout esconde las hamburguesas mientras los paneles caben', () => {
+  // jsdom no implementa matchMedia con umbrales reales: sin coincidencia, ambos laterales
+  // están al lado y ninguna hamburguesa debe verse. Es el caso de escritorio.
+  const l = dom.window.document.createElement('sw-layout');
+  dom.window.document.body.append(l);
+  for (const lado of ['inicio', 'fin']) {
+    assert.equal(l.shadowRoot.querySelector(`.hamburguesa-${lado}`).hidden, true, `hamburguesa ${lado} visible de más`);
+  }
+  l.remove();
+});
+
+test('los umbrales del CSS y los del JS son los mismos', async () => {
+  // Están duplicados por fuerza: el CSS decide cómo se ve y el JS dónde vive cada nodo, y
+  // ninguno puede leer al otro. Si se separan, un lateral se oculta pero su nodo sigue en el
+  // split, o al revés — y no se ve hasta que alguien estrecha la ventana.
+  const { readFileSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const raiz = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
+  const ts = readFileSync(join(raiz, 'src', 'components', 'sw', 'sw-layout.ts'), 'utf8');
+  const css = readFileSync(join(raiz, 'src', 'components', 'sw', 'sw-layout.css'), 'utf8');
+  for (const umbral of ['87.5rem', '60rem']) {
+    assert.ok(ts.includes(umbral), `sw-layout.ts perdió el umbral ${umbral}`);
+    assert.ok(css.includes(umbral), `sw-layout.css perdió el umbral ${umbral}`);
+  }
+});
+
+/* ── Método QUERY ───────────────────────────────────────────── */
+
+test('QUERY tiene color propio: el API lo usa para filtrar', async () => {
+  const { METHOD_COLOR } = await import('../dist/cdn/js/openapi.js');
+  assert.ok(METHOD_COLOR.query, 'QUERY sin entrada: saldría gris como un OPTIONS');
+  assert.notEqual(METHOD_COLOR.query, 'neutral');
+});
+
+test('todos los chips de método miden lo mismo', async () => {
+  // El ancho fijo iba en el is-tag interior, que impone su propio tamaño a partir del texto:
+  // DELETE salía más ancho que GET y la columna de rutas dejaba de leerse como columna.
+  const { readFileSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const raiz = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
+  const css = readFileSync(join(raiz, 'src', 'components', 'sw', 'sw-method.css'), 'utf8');
+  const host = css.slice(css.indexOf(':host'), css.indexOf('.metodo'));
+  assert.match(host, /width:\s*[\d.]+rem/, 'el ancho fijo debe vivir en :host, no en el chip');
 });

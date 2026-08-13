@@ -1,4 +1,4 @@
-import{adoptCss as m,precargarCss as v,define as g,html as i,emitir as t,esc as w}from"./_shared.js";import"./sw-auth.js";import"./sw-export.js";class u extends HTMLElement{#e;#s={brand:{},tabs:[],activeTab:"",query:"",spec:null,config:{},authEnabled:!1,auth:{},session:null};#i=null;constructor(){super(),this.#e=this.attachShadow({mode:"open"})}connectedCallback(){this.#t()}get props(){return this.#s}set props(s){const a={...this.#s};this.#s={...this.#s,...s??{}},this.isConnected&&(a.query!==this.#s.query&&Object.keys(s??{}).length===1||this.#t())}abrirLogin(s){this.#i?.abrirLogin(s)}#t(){const{brand:s,tabs:a,activeTab:r,query:o,spec:l,config:p,authEnabled:d,auth:h,session:b}=this.#s;this.#e.replaceChildren();const n=document.createElement("sw-auth");n.props={authEnabled:d,auth:h,session:b},n.addEventListener("sw-session-change",e=>t(this,"sw-session-change",e.detail)),this.#i=n;const c=document.createElement("sw-export");c.props={spec:l,config:p},this.#e.append(i`
+import{adoptCss as m,precargarCss as v,define as g,html as i,emitir as t,esc as w}from"./_shared.js";import"./sw-auth.js";import"./sw-driver-switch.js";import"./sw-export.js";class u extends HTMLElement{#e;#s={brand:{},tabs:[],activeTab:"",query:"",spec:null,config:{},authEnabled:!1,auth:{},session:null};#i=null;constructor(){super(),this.#e=this.attachShadow({mode:"open"})}connectedCallback(){this.#t()}get props(){return this.#s}set props(s){const a={...this.#s};this.#s={...this.#s,...s??{}},this.isConnected&&(a.query!==this.#s.query&&Object.keys(s??{}).length===1||this.#t())}abrirLogin(s){this.#i?.abrirLogin(s)}#t(){const{brand:s,tabs:a,activeTab:r,query:o,spec:l,config:p,authEnabled:d,auth:h,session:b}=this.#s;this.#e.replaceChildren();const n=document.createElement("sw-auth");n.props={authEnabled:d,auth:h,session:b},n.addEventListener("sw-session-change",e=>t(this,"sw-session-change",e.detail)),this.#i=n;const c=document.createElement("sw-export");c.props={spec:l,config:p},this.#e.append(i`
       <header class="barra">
         <button
           type="button"
@@ -29,6 +29,7 @@ import{adoptCss as m,precargarCss as v,define as g,html as i,emitir as t,esc as 
         <div class="acciones">
           ${c}
           ${n}
+          <sw-driver-switch></sw-driver-switch>
           <is-theme-toggle></is-theme-toggle>
         </div>
       </header>

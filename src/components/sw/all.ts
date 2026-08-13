@@ -40,5 +40,9 @@ await import('./sw-minidoc-code.js');
 await import('./sw-minidoc-view.js');
 await import('./sw-minidoc.js');
 
-// Envoltura que monta uno u otro y saca el selector de vista.
+// Armazon de tres zonas y selector de presentacion, compartidos por los dos drivers.
+await import('./sw-layout.js');
+await import('./sw-driver-switch.js');
+
+// Envoltura que monta uno u otro.
 await import('./sw-viewer.js');

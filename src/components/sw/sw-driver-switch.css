@@ -1,0 +1,15 @@
+/* Selector de presentación en la cabecera. Discreto: es un ajuste de lectura, no una acción. */
+
+:host {
+  display: inline-flex;
+  align-items: center;
+}
+
+.selector {
+  min-width: 8.5rem;
+}
+
+/* En móvil la cabecera va justa y la etiqueta del driver ya se entiende sola. */
+@media (max-width: 40rem) {
+  .selector { min-width: 6.5rem; }
+}

@@ -47,7 +47,9 @@ export const componentes = [
   { tag: 'sw-export', title: 'Descargas', page: 'previews/sw-export.html', category: 'shell' },
   { tag: 'sw-nav', title: 'Barra superior', page: 'previews/sw-nav.html', category: 'shell' },
 
-  { tag: 'sw-viewer', title: 'Selector de vista', page: 'previews/sw-viewer.html', category: 'shell' },
+  { tag: 'sw-viewer', title: 'Envoltura de drivers', page: 'previews/sw-viewer.html', category: 'shell' },
+  { tag: 'sw-driver-switch', title: 'Selector de vista', page: 'previews/sw-driver-switch.html', category: 'shell' },
+  { tag: 'sw-layout', title: 'Armazón de 3 zonas', page: 'previews/sw-layout.html', category: 'shell' },
 
   { tag: 'sw-minidoc', title: 'Visor por vistas', page: 'previews/sw-minidoc.html', category: 'minidoc' },
   { tag: 'sw-minidoc-view', title: 'Ficha de operación', page: 'previews/sw-minidoc-view.html', category: 'minidoc' },

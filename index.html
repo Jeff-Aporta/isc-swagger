@@ -68,6 +68,27 @@
   `@main` un componente recién publicado tarda días en llegar, y el pin hace reproducible el
   despliegue de gh-pages. Ese mismo sha está anotado en LLM.md.
 -->
+<!--
+  Tipografía. `is-base.min.css` no declara `font-family`, así que sin esto el navegador cae a
+  su serif por defecto (Times New Roman) y la documentación parece un documento de Word.
+  Inter para interfaz y JetBrains Mono para código: dos pesos de cada una, no la familia
+  entera, porque cada peso extra es una descarga que nadie mira.
+
+  `preconnect` a los dos hosts: la hoja la sirve fonts.googleapis.com pero los .woff2 salen de
+  fonts.gstatic.com, y sin el segundo el handshake se paga cuando ya es tarde.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --is-font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --is-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --is-font-body: var(--is-font-sans);
+  }
+  html, body { font-family: var(--is-font-sans); }
+</style>
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@1b934c294fd7dda1e912dbde0ace25d760f5f638/dist/cdn/is-base.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@1b934c294fd7dda1e912dbde0ace25d760f5f638/dist/cdn/palettes.min.css">
 <script type="module">
@@ -80,7 +101,7 @@
     'is-checkbox', 'is-input', 'is-option', 'is-select', 'is-textarea',
     'is-spinner', 'is-tag', 'is-theme-toggle', 'is-toast',
     'is-format-bytes', 'is-format-date', 'is-format-number', 'is-relative-time',
-    'is-callout', 'is-details', 'is-dialog', 'is-divider',
+    'is-callout', 'is-details', 'is-dialog', 'is-divider', 'is-drawer', 'is-split-panel',
     'is-icon',
   );
 </script>

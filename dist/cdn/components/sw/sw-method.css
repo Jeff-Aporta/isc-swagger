@@ -1,1 +1,1 @@
-:host{display:inline-flex;flex-shrink:0}.metodo{width:4.75rem;justify-content:center;font-family:var(--is-font-mono, ui-monospace, "Cascadia Code", Menlo, monospace);font-size:.6875rem;font-weight:700;letter-spacing:.045em;box-sizing:border-box}
+:host{display:inline-flex;flex-shrink:0;width:5.25rem}.metodo{width:100%;justify-content:center;font-family:var(--is-font-mono, ui-monospace, "Cascadia Code", Menlo, monospace);font-size:.6875rem;font-weight:700;letter-spacing:.045em;box-sizing:border-box}

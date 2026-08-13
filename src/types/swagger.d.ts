@@ -159,6 +159,8 @@ interface SwConfig {
   /** `false` oculta el selector de servidor. */
   serverSelect?: boolean;
   exports?: Record<string, string>;
+  /** operationId con el que abre el driver de vistas cuando la URL no trae `?op=`. */
+  defaultOp?: string;
   [k: string]: unknown;
 }
 

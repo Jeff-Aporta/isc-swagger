@@ -282,6 +282,10 @@ export const METHOD_COLOR: Record<string, string> = {
   put: 'warning',
   patch: 'brand',
   delete: 'danger',
+  // QUERY es un metodo HTTP real (draft IETF) y el API lo usa para filtrar conversaciones y
+  // archivos con cuerpo JSON. Sin entrada aqui salia gris, como si fuera un OPTIONS.
+  query: 'brand',
   options: 'neutral',
   head: 'neutral',
+  trace: 'neutral',
 };
