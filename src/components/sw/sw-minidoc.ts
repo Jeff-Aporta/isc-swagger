@@ -200,8 +200,10 @@ class SwMinidoc extends HTMLElement {
       >
         ${candado}
         ${metodo}
-        <span class="op-nombre">${o.summary || o.operationId}</span>
-        <span class="op-path" aria-hidden="true">${ruta}</span>
+        <span class="op-texto">
+          <span class="op-nombre">${o.summary || o.operationId}</span>
+          <span class="op-path">${ruta}</span>
+        </span>
       </button>
     `;
   }

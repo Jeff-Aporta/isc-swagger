@@ -243,7 +243,10 @@ test('el índice de minidoc expone el path en title y caption', async () => {
   const ts = readFileSync(join(raiz, 'src', 'components', 'sw', 'sw-minidoc.ts'), 'utf8');
   const css = readFileSync(join(raiz, 'src', 'components', 'sw', 'sw-minidoc.css'), 'utf8');
   assert.match(ts, /title="\$\{ruta\}"/, 'falta title con el endpoint');
+  assert.match(ts, /class="op-texto"/, 'falta columna título+path');
   assert.match(ts, /class="op-path"/, 'falta caption del path');
+  assert.match(css, /\.op-texto/, 'falta stack del texto');
+  assert.match(css, /flex-direction:\s*column/, 'el path debe ir debajo del título');
   assert.match(css, /\.op-path/, 'falta estilo del caption');
   assert.match(ts, /mdi:lock/, 'falta candado JWT en el índice');
   assert.match(ts, /entidad-titulo/, 'falta agrupación por entidad');

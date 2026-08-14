@@ -9,8 +9,10 @@ import{adoptCss as l,precargarCss as d,define as h,html as n}from"./_shared.js";
       >
         ${e}
         ${i}
-        <span class="op-nombre">${t.summary||t.operationId}</span>
-        <span class="op-path" aria-hidden="true">${s}</span>
+        <span class="op-texto">
+          <span class="op-nombre">${t.summary||t.operationId}</span>
+          <span class="op-path">${s}</span>
+        </span>
       </button>
     `}#E(){const t=this.#d;if(!t)return;const i=this.#C.map(s=>{const o=s.subgroups.length?s.subgroups.map(e=>n`
               <section class="entidad">
