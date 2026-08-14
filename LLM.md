@@ -498,6 +498,7 @@ parte del contrato.
 | `estructura.test.mjs` | Inventario: cada componente ↔ `index.html` ↔ `all.ts` ↔ preview ↔ CSS hermano |
 | `conn.test.mjs` | `?conn=`: precedencia, override de paths, default ISS, conn > `<script>` |
 | `insoft-config.test.mjs` | Parser InSoft con fixture real + smoke contra la red |
+| `json-cache.test.mjs` | Cache local ≥24 h de los JSON del documento; fallback si la API cae |
 | `css-adopcion.test.mjs` | `adoptCss`: hoja síncrona desde caché, una descarga por href, repintar no la pierde |
 | `docs.test.mjs` | Que los `LLM.md` no mienten: catálogo completo, enlaces vivos, reglas que el código sigue cumpliendo |
 | `hojas.test.mjs` | El parche de `js/hojas.js` sobre los shadow roots del kit y el caché compartido |

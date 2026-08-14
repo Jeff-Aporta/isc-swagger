@@ -16,6 +16,7 @@ import { parseIsDocument } from './is-document.js';
 import { joinConnUrl, normalizeConn, resolveConnConfig } from './conn.js';
 import type { SwConn } from './conn.js';
 import { isInsoftConfig, parseInsoftConfig } from './insoft-config.js';
+import { fetchJsonCached } from './json-cache.js';
 
 export const DEFAULT_NS = 'ISA';
 
@@ -102,7 +103,7 @@ export function resolveBootConfig(connDirecto?: SwConn | null): SwConfig {
   return config;
 }
 
-async function fetchJson(url: string): Promise<unknown> {
+async function fetchJsonNetwork(url: string): Promise<unknown> {
   let res: Response;
   try {
     res = await fetch(url, { cache: 'no-store', headers: { Accept: 'application/json' } });
@@ -116,10 +117,16 @@ async function fetchJson(url: string): Promise<unknown> {
     return JSON.parse(text) as unknown;
   } catch {
     // Un HTML de error devuelto con 200 es el caso real más frecuente: mostrar
-    // el principio del cuerpo ahorra abrir devtools para entender qué pasó.
+    // el principio del cuerpo ahorra abrir DevTools para entender qué pasó.
     const preview = text.slice(0, 120).replace(/\s+/g, ' ');
     throw new Error(`GET ${url} → JSON inválido (${res.status}): ${preview}`);
   }
+}
+
+/** GET JSON con cache ≥24 h; si la API falla tras caducar, reutiliza el cache. */
+async function fetchJson(url: string): Promise<unknown> {
+  const { data } = await fetchJsonCached(url, fetchJsonNetwork);
+  return data;
 }
 
 /**
