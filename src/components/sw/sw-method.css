@@ -3,18 +3,27 @@
 :host {
   display: inline-flex;
   flex-shrink: 0;
-  /* El ancho vive en el host y no en el chip: `is-tag` impone su propio tamaño a partir del
-     texto y del padding, así que fijarlo dentro no servía — DELETE salía más ancho que GET y
-     la columna de rutas dejaba de leerse como columna. */
-  width: 5.25rem;
+  /* Ancho fijo en el host: GET y DELETE deben alinear la columna de rutas.
+     El pill visual vive dentro de is-tag (::part tag); sin estirarlo, DELETE
+     se ve más ancho aunque el host mida igual. */
+  width: 5.5rem;
 }
 
 .metodo {
+  display: flex !important;
   width: 100%;
-  justify-content: center;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   font-family: var(--is-font-mono, ui-monospace, "Cascadia Code", Menlo, monospace);
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.045em;
+}
+
+/* El color/padding del badge está en el part interno: hay que estirarlo. */
+.metodo::part(tag) {
+  width: 100%;
+  justify-content: center;
   box-sizing: border-box;
 }

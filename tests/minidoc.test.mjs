@@ -372,12 +372,16 @@ test('QUERY tiene color propio: el API lo usa para filtrar', async () => {
 test('todos los chips de método miden lo mismo', async () => {
   // El ancho fijo iba en el is-tag interior, que impone su propio tamaño a partir del texto:
   // DELETE salía más ancho que GET y la columna de rutas dejaba de leerse como columna.
+  // Además el pill (::part tag) debe estirarse: si solo el host mide igual, el badge coloreado
+  // sigue viéndose distinto.
   const { readFileSync } = await import('node:fs');
   const { join } = await import('node:path');
   const raiz = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
   const css = readFileSync(join(raiz, 'src', 'components', 'sw', 'sw-method.css'), 'utf8');
   const host = css.slice(css.indexOf(':host'), css.indexOf('.metodo'));
   assert.match(host, /width:\s*[\d.]+rem/, 'el ancho fijo debe vivir en :host, no en el chip');
+  assert.match(css, /\.metodo::part\(tag\)/, 'el pill de is-tag debe estirarse al ancho del host');
+  assert.match(css, /::part\(tag\)[\s\S]*width:\s*100%/, '::part(tag) width 100%');
 });
 
 /* ── Regresiones de montaje ─────────────────────────────────── */
