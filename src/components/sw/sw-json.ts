@@ -34,6 +34,9 @@ const SwJson = crearComponente<Props>(
     code.setAttribute('wrap', '');
     code.setAttribute('line-numbers', 'false');
     code.setAttribute('lang', idioma);
+    // Atributo + prop: si el CE aún no hizo upgrade, el attr sobrevive; si ya,
+    // el setter deja el valor en #pendingValue antes del bootstrap.
+    code.setAttribute('value', texto);
     code.lang = idioma;
     code.value = texto;
 

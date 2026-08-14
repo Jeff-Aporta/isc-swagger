@@ -170,3 +170,10 @@ test('index.html referencia solo assets que el build produce', () => {
     assert.ok(generados.has(m[1]), `index.html pide dist/cdn/${m[1]}, que el build no genera`);
   }
 });
+
+test('index.html carga is-code e is-md-render en el kit (cURL/docs)', () => {
+  // Sin estos tags en L.load, sw-json/sw-doc montan elementos sin upgrade → cajas vacías.
+  const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
+  assert.match(html, /['"]is-code['"]/, 'falta is-code en L.load');
+  assert.match(html, /['"]is-md-render['"]/, 'falta is-md-render en L.load');
+});

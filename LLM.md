@@ -212,10 +212,11 @@ tag con el loader — que además lleva registro anti-redundancia y no repite pe
 El CSS de cada componente lo trae su propio `.min.js` con `adoptCss`; del documento solo hacen
 falta `is-base.min.css` y `palettes.min.css`, que van por `<link>` para no bloquear el pintado.
 
-### Inventario: los 22 tags que usa el visor
+### Inventario: los tags que usa el visor
 
-Si un `sw-*` empieza a usar otro tag del kit, hay que añadirlo **aquí y en `index.html`**; si no,
-el custom element no hace upgrade y el tag queda en el DOM sin shadow — sin error en consola.
+Si un `sw-*` empieza a usar otro tag del kit, hay que añadirlo **aquí, en `index.html` y en
+`isSwaggerKitTags` del host**; si no, el custom element no hace upgrade y el tag queda en el DOM
+sin shadow — sin error en consola. Caso real: sin `is-code`, cURL y respuestas salían cajas vacías.
 
 | Categoría | Tags que se usan | Fichero en el CDN |
 |---|---|---|
@@ -223,8 +224,10 @@ el custom element no hace upgrade y el tag queda en el DOM sin shadow — sin er
 | `forms` | `is-checkbox`, `is-input`, `is-option`, `is-select`, `is-textarea` | `forms/<nombre>.min.js` |
 | `feedback` | `is-spinner`, `is-tag`, `is-theme-toggle`, `is-toast` | `feedback/<nombre>.min.js` |
 | `helpers` | `is-format-bytes`, `is-format-date`, `is-format-number`, `is-relative-time` | `helpers/<nombre>.min.js` |
-| `layout` | `is-callout`, `is-details`, `is-dialog`, `is-divider` | `layout/<nombre>.min.js` |
+| `layout` | `is-callout`, `is-details`, `is-dialog`, `is-divider`, `is-drawer`, `is-split-panel` | `layout/<nombre>.min.js` |
 | `media` | `is-icon` | `media/icon.min.js` |
+| `code` | `is-code` | `code/code.min.js` |
+| `content` | `is-md-render` | `content/md-render.min.js` |
 
 El nombre del fichero va **sin** el prefijo `is-`: `is-copy-button` vive en
 `actions/copy-button.min.js`. El loader hace esa traducción; solo importa al depurar un 404.
