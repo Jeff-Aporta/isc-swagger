@@ -89,12 +89,17 @@ test('respeta el orden de spec.tags, no el de paths', () => {
   assert.deepEqual(nombres, ['Terceros', 'Sistema']);
 });
 
-test('los subgrupos declarados por el tag se pintan en su orden', () => {
+test('los subgrupos del tag ordenan operaciones sin pintar divisores', () => {
   const terceros = root.querySelector('sw-tag-group').shadowRoot;
-  const subs = [...terceros.querySelectorAll('.subgrupo-titulo')].map((h) =>
-    h.textContent.trim().split(/\s+/)[0],
-  );
-  assert.deepEqual(subs, ['Consulta', 'Mantenimiento']);
+  assert.equal(terceros.querySelectorAll('.subgrupo').length, 0, 'no debe haber divisores de entidad');
+  const ids = [...terceros.querySelectorAll('sw-operation')].map((o) => o.props.op.operationId);
+  assert.deepEqual(ids, [
+    'listarTerceros',
+    'obtenerTercero',
+    'crearTercero',
+    'actualizarTercero',
+    'eliminarTercero',
+  ]);
 });
 
 test('la base del servidor sale del primer `servers` de la spec', () => {

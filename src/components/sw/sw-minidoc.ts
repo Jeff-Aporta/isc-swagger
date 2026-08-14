@@ -213,21 +213,15 @@ class SwMinidoc extends HTMLElement {
     if (!zona) return;
 
     const grupos = this.#gruposVisibles.map((g) => {
-      const bloques = g.subgroups.length
-        ? g.subgroups.map(
-            (sub) => html`
-              <section class="entidad">
-                <h4 class="entidad-titulo">${sub.name || sub.id}</h4>
-                ${sub.operations.map((o) => this.#filaOp(o))}
-              </section>
-            `,
-          )
-        : g.operations.map((o) => this.#filaOp(o));
+      // Subgrupos solo ordenan (entidad en el summary); sin divisores en el índice.
+      const ops = g.subgroups.length
+        ? g.subgroups.flatMap((sub) => sub.operations)
+        : g.operations;
 
       return html`
         <section class="grupo">
           <h3 class="grupo-titulo">${g.name}</h3>
-          ${bloques}
+          ${ops.map((o) => this.#filaOp(o))}
         </section>
       `;
     });

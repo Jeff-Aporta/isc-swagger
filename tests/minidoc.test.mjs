@@ -249,9 +249,10 @@ test('el índice de minidoc expone el path en title y caption', async () => {
   assert.match(css, /flex-direction:\s*column/, 'el path debe ir debajo del título');
   assert.match(css, /\.op-path/, 'falta estilo del caption');
   assert.match(ts, /mdi:lock/, 'falta candado JWT en el índice');
-  assert.match(ts, /entidad-titulo/, 'falta agrupación por entidad');
+  assert.match(ts, /flatMap/, 'los subgrupos deben aplanar sin divisores de entidad');
+  assert.doesNotMatch(ts, /entidad-titulo/, 'no debe haber divisor por entidad en el índice');
   assert.match(css, /\.op-lock/, 'falta columna alineada del candado');
-  assert.match(css, /\.entidad-titulo/, 'falta estilo de entidad');
+  assert.doesNotMatch(css, /\.entidad-titulo/, 'no debe quedar estilo de divisor de entidad');
 });
 
 test('sw-viewer monta el driver activo y lo cambia en caliente', () => {
@@ -405,7 +406,7 @@ test('todos los chips de método miden lo mismo', async () => {
   const raiz = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
   const css = readFileSync(join(raiz, 'src', 'components', 'sw', 'sw-method.css'), 'utf8');
   const host = css.slice(css.indexOf(':host'), css.indexOf('.metodo'));
-  assert.match(host, /width:\s*[\d.]+rem/, 'el ancho fijo debe vivir en :host, no en el chip');
+  assert.match(host, /width:\s*calc\(6ch/, 'el ancho debe basarse en DELETE (6ch) + padding');
   assert.match(css, /\.metodo::part\(tag\)/, 'el pill de is-tag debe estirarse al ancho del host');
   assert.match(css, /::part\(tag\)[\s\S]*width:\s*100%/, '::part(tag) width 100%');
 });

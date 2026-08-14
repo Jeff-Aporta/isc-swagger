@@ -1,9 +1,8 @@
 /**
  * <sw-method> — chip del método HTTP.
  *
- * Ancho fijo para que las rutas de una lista queden alineadas por su primer
- * carácter: con el chip ajustado al texto, `GET` y `DELETE` desplazan la ruta
- * y la columna deja de leerse como columna.
+ * Ancho fijo ≈ `DELETE` (verbo más largo) para alinear la columna de títulos
+ * sin el sobrante de un rem arbitrario grande.
  */
 
 import { crearComponente, define, html } from './_shared.js';

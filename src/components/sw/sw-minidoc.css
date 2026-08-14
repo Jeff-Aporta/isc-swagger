@@ -67,22 +67,6 @@
   color: var(--is-color-text-3, #6b7a8d);
 }
 
-/* Entidad dentro del tag: mismo ritmo tipográfico, un escalón más suave. */
-.entidad { margin-bottom: var(--is-space-3, .75rem); }
-
-.entidad:last-child { margin-bottom: 0; }
-
-.entidad-titulo {
-  margin: 0 0 .2rem;
-  padding-inline-start: calc(var(--is-space-2, .5rem) + 1.125rem);
-  font-size: .625rem;
-  font-weight: 600;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  color: var(--is-color-text-3, #6b7a8d);
-  opacity: .9;
-}
-
 .op {
   display: flex;
   align-items: flex-start;

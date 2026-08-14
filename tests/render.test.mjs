@@ -155,7 +155,7 @@ test('sw-operation marca con candado lo que exige JWT', () => {
   assert.equal(sinAuth.querySelector('.candado'), null);
 });
 
-test('sw-tag-group pinta subgrupos cuando el tag los declara', () => {
+test('sw-tag-group aplana subgrupos en orden sin divisores', () => {
   const a = op({ operationId: 'a' });
   const b = op({ operationId: 'b', method: 'post' });
   const root = montar('sw-tag-group', {
@@ -164,15 +164,16 @@ test('sw-tag-group pinta subgrupos cuando el tag los declara', () => {
       name: 'Terceros',
       description: 'Maestro.',
       meta: {},
-      operations: [a, b],
+      operations: [b, a],
       subgroups: [
         { id: 'c', name: 'Consulta', operations: [a] },
         { id: 'm', name: 'Mantenimiento', operations: [b] },
       ],
     },
   });
-  assert.equal(root.querySelectorAll('.subgrupo').length, 2);
-  assert.equal(root.querySelectorAll('sw-operation').length, 2);
+  assert.equal(root.querySelectorAll('.subgrupo').length, 0);
+  const ids = [...root.querySelectorAll('sw-operation')].map((o) => o.props.op.operationId);
+  assert.deepEqual(ids, ['a', 'b'], 'debe respetar el orden de subgrupos, no el de operations');
   assert.match(root.querySelector('.titulo').textContent, /Terceros/);
 });
 

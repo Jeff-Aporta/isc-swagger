@@ -1,9 +1,8 @@
 /**
  * <sw-tag-group> — un tag de la spec con sus operaciones.
  *
- * Si el tag declara `x-isa-subgroups`, las operaciones se reparten en
- * subcarpetas con su orden; si no, se listan planas. La decisión ya la tomó
- * `groupOperationsByTag`: aquí solo se pinta lo que venga.
+ * Si hay `subgroups`, solo se usan para ordenar (la entidad va en el summary).
+ * No se pintan divisores/subcarpetas: la lista queda plana bajo el tag.
  */
 
 import { adoptCss, precargarCss, define, html, emitir } from './_shared.js';
@@ -107,24 +106,11 @@ class SwTagGroup extends HTMLElement {
       return;
     }
 
-    const cuerpo = group.subgroups.length
-      ? html`
-          <div class="subgrupos">
-            ${group.subgroups.map(
-              (sub) => html`
-                <section class="subgrupo">
-                  <h3 class="subgrupo-titulo">
-                    <is-icon icon="${sub.icon ?? 'mdi:folder-outline'}"></is-icon>
-                    ${sub.name ?? sub.id}
-                    <span class="contador">${sub.operations.length}</span>
-                  </h3>
-                  <div class="operaciones">${sub.operations.map((op) => this.#tarjeta(op))}</div>
-                </section>
-              `,
-            )}
-          </div>
-        `
-      : html`<div class="operaciones">${group.operations.map((op) => this.#tarjeta(op))}</div>`;
+    // Subgrupos solo definen orden; la entidad va en el summary, no como divisor.
+    const ops = group.subgroups.length
+      ? group.subgroups.flatMap((sub) => sub.operations)
+      : group.operations;
+    const cuerpo = html`<div class="operaciones">${ops.map((op) => this.#tarjeta(op))}</div>`;
 
     this.#root.append(html`
       <section class="grupo">

@@ -3,10 +3,14 @@
 :host {
   display: inline-flex;
   flex-shrink: 0;
-  /* Ancho fijo en el host: GET y DELETE deben alinear la columna de rutas.
-     El pill visual vive dentro de is-tag (::part tag); sin estirarlo, DELETE
-     se ve más ancho aunque el host mida igual. */
-  width: 5.5rem;
+  /* Ancho ≈ «DELETE» (método más largo): 6ch mono + padding horizontal del pill.
+     Así GET/POST alinean la columna sin sobrar espacio. */
+  box-sizing: border-box;
+  font-family: var(--is-font-mono, ui-monospace, "Cascadia Code", Menlo, monospace);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  width: calc(6ch + 0.85rem);
 }
 
 .metodo {
@@ -15,10 +19,10 @@
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
-  font-family: var(--is-font-mono, ui-monospace, "Cascadia Code", Menlo, monospace);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.045em;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
 }
 
 /* El color/padding del badge está en el part interno: hay que estirarlo. */
