@@ -189,16 +189,19 @@ class SwMinidoc extends HTMLElement {
       const ops = g.operations.map((o) => {
         const metodo = document.createElement('sw-method');
         (metodo as HTMLElement & { props: unknown }).props = { method: o.method };
+        const ruta = String(o.path || '');
         return html`
           <button
             type="button"
             class="op"
             data-op="${o.operationId}"
+            title="${ruta}"
             ${o.operationId === this.#opAbierta ? 'data-activo' : ''}
             onclick=${() => this.#seleccionar(o.operationId)}
           >
             ${metodo}
             <span class="op-nombre">${o.summary || o.operationId}</span>
+            <span class="op-path" aria-hidden="true">${ruta}</span>
           </button>
         `;
       });

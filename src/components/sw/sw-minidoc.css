@@ -113,13 +113,40 @@
 
 .op sw-method { flex: 0 0 auto; }
 
-/* Dos líneas como máximo: un summary largo no debe ensanchar el índice. */
+/* Summary a la izquierda; el path actúa de caption y no empuja el layout. */
 .op-nombre {
+  flex: 1 1 auto;
   min-width: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.op-path {
+  flex: 0 1 42%;
+  max-width: 12rem;
+  margin-inline-start: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--is-font-mono, ui-monospace, "Cascadia Code", Menlo, monospace);
+  font-size: .6875rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--is-color-text-3, #6b7a8d);
+  opacity: .85;
+}
+
+.op:hover .op-path,
+.op[data-activo] .op-path {
+  color: var(--is-color-text-2, #9aa7b8);
+  opacity: 1;
+}
+
+@media (max-width: 22rem) {
+  .op-path { display: none; }
 }
 
 .sin-resultados {

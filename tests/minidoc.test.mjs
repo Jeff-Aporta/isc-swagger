@@ -236,6 +236,17 @@ test('driver: writeDriver no ensucia la URL con el valor por defecto', () => {
   }
 });
 
+test('el índice de minidoc expone el path en title y caption', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const raiz = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
+  const ts = readFileSync(join(raiz, 'src', 'components', 'sw', 'sw-minidoc.ts'), 'utf8');
+  const css = readFileSync(join(raiz, 'src', 'components', 'sw', 'sw-minidoc.css'), 'utf8');
+  assert.match(ts, /title="\$\{ruta\}"/, 'falta title con el endpoint');
+  assert.match(ts, /class="op-path"/, 'falta caption del path');
+  assert.match(css, /\.op-path/, 'falta estilo del caption');
+});
+
 test('sw-viewer monta el driver activo y lo cambia en caliente', () => {
   dom.window.history.replaceState({}, '', '/');
   globalThis.localStorage?.removeItem('sw:driver');
