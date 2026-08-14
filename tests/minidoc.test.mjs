@@ -245,6 +245,10 @@ test('el índice de minidoc expone el path en title y caption', async () => {
   assert.match(ts, /title="\$\{ruta\}"/, 'falta title con el endpoint');
   assert.match(ts, /class="op-path"/, 'falta caption del path');
   assert.match(css, /\.op-path/, 'falta estilo del caption');
+  assert.match(ts, /mdi:lock/, 'falta candado JWT en el índice');
+  assert.match(ts, /entidad-titulo/, 'falta agrupación por entidad');
+  assert.match(css, /\.op-lock/, 'falta columna alineada del candado');
+  assert.match(css, /\.entidad-titulo/, 'falta estilo de entidad');
 });
 
 test('sw-viewer monta el driver activo y lo cambia en caliente', () => {

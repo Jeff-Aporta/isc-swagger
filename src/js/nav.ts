@@ -38,8 +38,8 @@ export function filterGroupsByQuery(groups: SwGrupo[], query: string): SwGrupo[]
   const q = String(query ?? '').trim().toLowerCase();
   if (!q) return groups;
 
-  const coincide = (op: SwOp, grupo: string): boolean =>
-    [op.path, op.method, op.summary, op.description, op.operationId, grupo]
+  const coincide = (op: SwOp, grupo: string, entidad = ''): boolean =>
+    [op.path, op.method, op.summary, op.description, op.operationId, grupo, entidad]
       .filter(Boolean)
       .some((v) => String(v).toLowerCase().includes(q));
 
@@ -47,7 +47,10 @@ export function filterGroupsByQuery(groups: SwGrupo[], query: string): SwGrupo[]
     .map((g) => {
       const operations = g.operations.filter((op) => coincide(op, g.name));
       const subgroups = g.subgroups
-        .map((s) => ({ ...s, operations: s.operations.filter((op) => coincide(op, g.name)) }))
+        .map((s) => ({
+          ...s,
+          operations: s.operations.filter((op) => coincide(op, g.name, s.name || s.id)),
+        }))
         .filter((s) => s.operations.length);
       return { ...g, operations, subgroups };
     })

@@ -67,6 +67,22 @@
   color: var(--is-color-text-3, #6b7a8d);
 }
 
+/* Entidad dentro del tag: mismo ritmo tipográfico, un escalón más suave. */
+.entidad { margin-bottom: var(--is-space-3, .75rem); }
+
+.entidad:last-child { margin-bottom: 0; }
+
+.entidad-titulo {
+  margin: 0 0 .2rem;
+  padding-inline-start: calc(var(--is-space-2, .5rem) + 1.125rem);
+  font-size: .625rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--is-color-text-3, #6b7a8d);
+  opacity: .9;
+}
+
 .op {
   display: flex;
   align-items: center;
@@ -83,6 +99,22 @@
   padding: .35rem .5rem;
   border-radius: var(--is-radius-md, 8px);
   cursor: pointer;
+}
+
+/* Columna fija antes del método: JWT y no-JWT alinean el badge. */
+.op-lock {
+  flex: 0 0 1rem;
+  width: 1rem;
+  height: 1rem;
+  font-size: .875rem;
+  line-height: 1;
+  color: var(--is-color-warning, #e6a23c);
+  opacity: .95;
+}
+
+.op-lock--vacio {
+  display: inline-block;
+  visibility: hidden;
 }
 
 .op:hover { background: var(--is-color-surface-3, #161c27); color: var(--is-color-text, #e6edf7); }

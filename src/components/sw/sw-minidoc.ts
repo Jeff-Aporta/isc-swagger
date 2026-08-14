@@ -181,34 +181,51 @@ class SwMinidoc extends HTMLElement {
     this.#vistaNodo?.scrollIntoView({ block: 'start' });
   }
 
+  #filaOp(o: SwOp): HTMLElement {
+    const metodo = document.createElement('sw-method');
+    (metodo as HTMLElement & { props: unknown }).props = { method: o.method };
+    const ruta = String(o.path || '');
+    const requiereJwt = this.#auth.enabled && operationRequiresBearer(o, this.#spec);
+    const candado = requiereJwt
+      ? html`<is-icon class="op-lock" icon="mdi:lock" title="Requiere JWT" aria-label="Requiere JWT"></is-icon>`
+      : html`<span class="op-lock op-lock--vacio" aria-hidden="true"></span>`;
+    return html`
+      <button
+        type="button"
+        class="op"
+        data-op="${o.operationId}"
+        title="${ruta}"
+        ${o.operationId === this.#opAbierta ? 'data-activo' : ''}
+        onclick=${() => this.#seleccionar(o.operationId)}
+      >
+        ${candado}
+        ${metodo}
+        <span class="op-nombre">${o.summary || o.operationId}</span>
+        <span class="op-path" aria-hidden="true">${ruta}</span>
+      </button>
+    `;
+  }
+
   #pintarIndice(): void {
     const zona = this.#indiceNodo;
     if (!zona) return;
 
     const grupos = this.#gruposVisibles.map((g) => {
-      const ops = g.operations.map((o) => {
-        const metodo = document.createElement('sw-method');
-        (metodo as HTMLElement & { props: unknown }).props = { method: o.method };
-        const ruta = String(o.path || '');
-        return html`
-          <button
-            type="button"
-            class="op"
-            data-op="${o.operationId}"
-            title="${ruta}"
-            ${o.operationId === this.#opAbierta ? 'data-activo' : ''}
-            onclick=${() => this.#seleccionar(o.operationId)}
-          >
-            ${metodo}
-            <span class="op-nombre">${o.summary || o.operationId}</span>
-            <span class="op-path" aria-hidden="true">${ruta}</span>
-          </button>
-        `;
-      });
+      const bloques = g.subgroups.length
+        ? g.subgroups.map(
+            (sub) => html`
+              <section class="entidad">
+                <h4 class="entidad-titulo">${sub.name || sub.id}</h4>
+                ${sub.operations.map((o) => this.#filaOp(o))}
+              </section>
+            `,
+          )
+        : g.operations.map((o) => this.#filaOp(o));
+
       return html`
         <section class="grupo">
           <h3 class="grupo-titulo">${g.name}</h3>
-          ${ops}
+          ${bloques}
         </section>
       `;
     });
