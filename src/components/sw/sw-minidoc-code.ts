@@ -38,6 +38,7 @@ class SwMinidocCode extends HTMLElement {
   #cuerpoNodo: HTMLElement | null = null;
   #peticionNodo: HTMLElement | null = null;
   #copiarPeticion: (HTMLElement & { value?: string }) | null = null;
+  #copiarRespuesta: (HTMLElement & { value?: string }) | null = null;
 
   constructor() {
     super();
@@ -122,6 +123,7 @@ class SwMinidocCode extends HTMLElement {
     const json = document.createElement('sw-json');
     (json as HTMLElement & { props: unknown }).props = {
       value: this.#peticionTexto,
+      lang: this.#vista === 'body' ? 'json' : 'shell',
       maxHeight: this.#vista === 'body' ? '22rem' : '18rem',
     };
     zona.replaceChildren(json);
@@ -134,9 +136,15 @@ class SwMinidocCode extends HTMLElement {
     for (const t of this.#root.querySelectorAll('.estado')) {
       t.toggleAttribute('data-activo', (t as HTMLElement).dataset.code === this.#estado);
     }
+    const texto = this.#cuerpoDeEstado(this.#estado);
     const json = document.createElement('sw-json');
-    (json as HTMLElement & { props: unknown }).props = { value: this.#cuerpoDeEstado(this.#estado), maxHeight: '26rem' };
+    (json as HTMLElement & { props: unknown }).props = {
+      value: texto,
+      lang: 'json',
+      maxHeight: '26rem',
+    };
     zona.replaceChildren(json);
+    if (this.#copiarRespuesta) this.#copiarRespuesta.value = texto;
   }
 
   #elegirEjemplo(id: string): void {
@@ -155,6 +163,7 @@ class SwMinidocCode extends HTMLElement {
     this.#cuerpoNodo = null;
     this.#peticionNodo = null;
     this.#copiarPeticion = null;
+    this.#copiarRespuesta = null;
 
     if (!op) {
       adoptCss(this.#root, import.meta.url, 'sw-minidoc-code');
@@ -225,7 +234,7 @@ class SwMinidocCode extends HTMLElement {
       <section class="panel">
         <header class="panel-cab estados" role="tablist">
           ${pestanasEstado}
-          <is-copy-button class="al-final" value="${this.#cuerpoDeEstado(this.#estado)}" copy-label="Copiar respuesta"></is-copy-button>
+          <is-copy-button class="al-final" copy-label="Copiar respuesta"></is-copy-button>
         </header>
         <div class="cuerpo"></div>
       </section>
@@ -233,7 +242,8 @@ class SwMinidocCode extends HTMLElement {
 
     this.#peticionNodo = this.#root.querySelector('.peticion');
     this.#cuerpoNodo = this.#root.querySelector('.cuerpo');
-    this.#copiarPeticion = this.#root.querySelector('.vistas is-copy-button, .panel-cab is-copy-button');
+    this.#copiarPeticion = this.#root.querySelector('.vistas is-copy-button');
+    this.#copiarRespuesta = this.#root.querySelector('.estados is-copy-button');
     this.#pintarPeticion();
     this.#pintarCuerpo();
     adoptCss(this.#root, import.meta.url, 'sw-minidoc-code');

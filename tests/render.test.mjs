@@ -62,17 +62,27 @@ test('sw-path marca los {parámetros} en un span aparte', () => {
   assert.equal(root.querySelector('.param')?.textContent, '{id}');
 });
 
-test('sw-json resalta claves y valores sin perder el texto', () => {
-  const root = montar('sw-json', { value: '{\n  "a": 1,\n  "b": "x"\n}' });
-  assert.ok(root.querySelector('.k'), 'sin clave resaltada');
-  assert.ok(root.querySelector('.n'), 'sin número resaltado');
-  assert.match(root.textContent, /"a"/);
+test('sw-json monta is-code sin botón de copiar interno', () => {
+  const root = montar('sw-json', { value: '{\n  "a": 1,\n  "b": "x"\n}', lang: 'json' });
+  const code = root.querySelector('is-code');
+  assert.ok(code, 'falta is-code');
+  assert.equal(code.getAttribute('lang'), 'json');
+  assert.equal(code.getAttribute('readonly'), '');
+  assert.equal(root.querySelector('is-copy-button'), null);
+  assert.equal(code.value ?? code.getAttribute('value'), '{\n  "a": 1,\n  "b": "x"\n}');
 });
 
 test('sw-json no ejecuta HTML que venga en el cuerpo', () => {
-  const root = montar('sw-json', { value: '<img src=x onerror=alert(1)>' });
+  const root = montar('sw-json', { value: '<img src=x onerror=alert(1)>', lang: 'plaintext' });
   assert.equal(root.querySelector('img'), null);
-  assert.match(root.textContent, /<img/);
+  const code = root.querySelector('is-code');
+  assert.equal(code?.value ?? code?.getAttribute('value'), '<img src=x onerror=alert(1)>');
+});
+
+test('sw-json acepta lang shell para cURL', () => {
+  const curl = 'curl -X PUT \'https://x/api\' \\\n  -H \'Content-Type: application/json\'';
+  const root = montar('sw-json', { value: curl, lang: 'shell' });
+  assert.equal(root.querySelector('is-code')?.getAttribute('lang'), 'shell');
 });
 
 test('sw-doc monta is-md-render con el markdown', () => {
