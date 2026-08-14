@@ -24,7 +24,9 @@ const { parseIsDocument, buildIsDocument, IS_DOCUMENT_KIND } = await import('../
 const { normalizeJwt, formatSessionChipLabel, stripContapymeEmail } = await import('../dist/cdn/js/auth.js');
 const { parseConnParam, encodeConnParam, resolveConnConfig, joinConnUrl, DEFAULT_CONN_PATHS } =
   await import('../dist/cdn/js/conn.js');
-const { getQuery, setQuery, readSState, writeSState, clearSState } = await import('../dist/cdn/js/search-state.js');
+const { getQuery, setQuery, readSState, writeSState, clearSState, migrateLegacyNavToS } =
+  await import('../dist/cdn/js/search-state.js');
+const { mergeUrlState, readUrlState } = await import('../dist/cdn/js/url-state.js');
 
 /* ── nav ────────────────────────────────────────────────────── */
 
@@ -373,6 +375,34 @@ test('clearSState borra `?s=` entero aunque tenga theme/palette/q', () => {
   );
   clearSState();
   assert.equal(new URLSearchParams(dom.window.location.search).get('s'), null);
+});
+
+test('mergeUrlState escribe op/tab/opt dentro de `?s=` sin params planos', () => {
+  const dom = mountLocation('');
+  mergeUrlState({ op: 'put_system_prompts_operativos', tab: 'sistema', opTab: 'doc' });
+  const sp = new URLSearchParams(dom.window.location.search);
+  assert.equal(sp.get('op'), null);
+  assert.equal(sp.get('tab'), null);
+  assert.equal(sp.get('opt'), null);
+  const raw = sp.get('s');
+  assert.ok(raw);
+  const dec = JSON.parse(atob(raw.replace(/-/g, '+').replace(/_/g, '/')));
+  assert.equal(dec.op, 'put_system_prompts_operativos');
+  assert.equal(dec.tab, 'sistema');
+  assert.equal(dec.opt, 'doc');
+  assert.equal(readUrlState().op, 'put_system_prompts_operativos');
+  assert.equal(readUrlState().opTab, 'doc');
+});
+
+test('migrateLegacyNavToS pasa `?op=` plano a la bolsa `?s=`', () => {
+  const dom = mountLocation('?op=put_system_prompts_operativos&tab=sistema');
+  assert.equal(migrateLegacyNavToS(), true);
+  const sp = new URLSearchParams(dom.window.location.search);
+  assert.equal(sp.get('op'), null);
+  assert.equal(sp.get('tab'), null);
+  const dec = JSON.parse(atob(sp.get('s').replace(/-/g, '+').replace(/_/g, '/')));
+  assert.equal(dec.op, 'put_system_prompts_operativos');
+  assert.equal(dec.tab, 'sistema');
 });
 
 test('la búsqueda filtra aunque el tag esté en otra pestaña', () => {

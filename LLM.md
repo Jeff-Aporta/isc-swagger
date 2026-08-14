@@ -35,7 +35,7 @@ Guardián de que esas páginas no mienten: `tests/docs.test.mjs`.
 | `?conn=<base64url>` anula el `specUrl` del `<script>` | Dejar que el demo local gane al server real |
 | Buscar por query **siempre** ignora la pestaña activa | Filtrar por tab cuando hay query (esconde lo que el usuario pidió) |
 | `?s=<base64url(JSON)>` lleva tema+paleta+q | Parámetros sueltos para el mismo fin (rompe el estado compartido con `boot.js`) |
-| Click en la marca = reset (`?s=`, `?tab=`, `?op=`, `?opt=`); la `?conn=` se queda | Reiniciar vía location.reload() (rompe el shell sin redibujar) |
+| Click en la marca = reset (`?s=`); la `?conn=` se queda | Reiniciar vía location.reload() (rompe el shell sin redibujar) |
 | Botón descargar: `variant="plain"` con solo icono | Texto + borde en una acción que ya tiene el icono claro |
 | Registrar el componente en `index.html`, `all.ts` y `docs/manifest.js` | Dejarlo en uno solo (parcial = bug mudo) |
 | Tests en `tests/*.test.mjs` contra `dist/cdn/` | `.test.ts`: no hay pipeline TS para tests |
@@ -66,7 +66,7 @@ almacenamiento, así que la vista nueva aterriza donde estaba la anterior.
 La elección vive en `js/driver.ts`, fuera de los dos drivers —es una preferencia del lector, no
 del documento— y se resuelve en este orden:
 
-1. `?driver=` en la URL, para que un enlace llegue con la vista que se quiso enseñar.
+1. `driver` dentro de `?s=`, para que un enlace llegue con la vista que se quiso enseñar.
 2. `localStorage`, para que sobreviva a recargar.
 3. `sw-app`.
 

@@ -205,7 +205,7 @@ class SwApp extends HTMLElement {
     this.#pintarLista();
   }
 
-  /** Reset: limpia `?s=`, `?tab=`, `?op=`, `?opt=`. La `?conn=` se queda. */
+  /** Reset: limpia `?s=` (tema, query, op, tab…). La `?conn=` se queda. */
   #reiniciar(): void {
     this.#query = '';
     this.#opAbierta = '';

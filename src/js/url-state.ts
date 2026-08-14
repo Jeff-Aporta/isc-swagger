@@ -1,15 +1,16 @@
 /**
- * url-state.ts — estado de navegación del visor en la query string.
+ * url-state.ts — navegación del visor dentro de `?s=<base64url>`.
  *
- * Un enlace tiene que reabrir exactamente lo mismo: la pestaña de nav, la
- * operación desplegada y su sub-pestaña. Todo eso son tres parámetros planos,
- * no un blob codificado, para que se puedan editar a mano.
+ * Un enlace tiene que reabrir exactamente lo mismo: pestaña de nav, operación
+ * y sub-pestaña. Eso vive en la bolsa estándar `?s=` junto a tema/paleta/q:
  *
- *   ?tab=<nav>&op=<operationId>&opt=<try|examples|doc>
+ *   ?s=<base64url({ op, tab, opt, theme, … })>
  *
- * Las escrituras usan `replaceState`: desplegar una tarjeta no debe llenar el
- * historial de entradas que el botón «atrás» tenga que deshacer una a una.
+ * No se escriben `?op=` / `?tab=` / `?opt=` planos (legado: se migran al leer).
+ * Las escrituras usan `replaceState` vía `writeSState`.
  */
+
+import { migrateLegacyNavToS, readSState, writeSState } from './search-state.js';
 
 export const PARAM_TAB = 'tab';
 export const PARAM_OP = 'op';
@@ -25,38 +26,35 @@ export interface SwUrlState {
   opTab: SwOpTab;
 }
 
-const leerParams = (): URLSearchParams => {
-  try {
-    return new URLSearchParams(typeof location !== 'undefined' ? location.search : '');
-  } catch {
-    return new URLSearchParams();
-  }
-};
+function strField(bag: Record<string, unknown>, key: string): string {
+  const v = bag[key];
+  return typeof v === 'string' ? v.trim() : '';
+}
 
 export function readUrlState(): SwUrlState {
-  const sp = leerParams();
-  const opTab = String(sp.get(PARAM_OP_TAB) ?? '').trim() as SwOpTab;
+  migrateLegacyNavToS();
+  const bag = readSState();
+  const opTabRaw = strField(bag, PARAM_OP_TAB) as SwOpTab;
   return {
-    tab: String(sp.get(PARAM_TAB) ?? '').trim(),
-    op: String(sp.get(PARAM_OP) ?? '').trim(),
-    opTab: OP_TABS.includes(opTab) ? opTab : OP_TAB_DEFAULT,
+    tab: strField(bag, PARAM_TAB),
+    op: strField(bag, PARAM_OP),
+    opTab: OP_TABS.includes(opTabRaw) ? opTabRaw : OP_TAB_DEFAULT,
   };
 }
 
-/** Fusiona solo las claves presentes; `''` borra el parámetro. */
+/** Fusiona solo las claves presentes; `''` borra el campo en `?s=`. */
 export function mergeUrlState(patch: Partial<SwUrlState>): void {
   if (typeof location === 'undefined') return;
   try {
-    const url = new URL(location.href);
-    const set = (k: string, v: string | undefined): void => {
-      if (v === undefined) return;
-      if (v) url.searchParams.set(k, v);
-      else url.searchParams.delete(k);
-    };
-    set(PARAM_TAB, patch.tab);
-    set(PARAM_OP, patch.op);
-    set(PARAM_OP_TAB, patch.opTab === OP_TAB_DEFAULT ? '' : patch.opTab);
-    history.replaceState(history.state, '', url);
+    migrateLegacyNavToS();
+    /** @type {Record<string, unknown>} */
+    const next: Record<string, unknown> = {};
+    if (patch.tab !== undefined) next[PARAM_TAB] = patch.tab;
+    if (patch.op !== undefined) next[PARAM_OP] = patch.op;
+    if (patch.opTab !== undefined) {
+      next[PARAM_OP_TAB] = patch.opTab === OP_TAB_DEFAULT ? '' : patch.opTab;
+    }
+    writeSState(next);
     notificar();
   } catch {
     /* URL no manipulable (file://) */

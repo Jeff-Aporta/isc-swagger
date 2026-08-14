@@ -1,17 +1,19 @@
 /**
- * search-state.ts — `?s=<base64url>` como bolsa compartida de estado visual.
+ * search-state.ts — `?s=<base64url>` como bolsa compartida de estado.
  *
- * El visor ya usa `?s=` para tema y paleta (lo escribe `boot.js` antes del
- * primer pintado, sin parpadeo). El query de búsqueda se suma a esa misma
- * bolsa: `?s=<base64url(JSON)>` con `{theme, palette, q}`. Así, un F5 deja
- * al visor exactamente como estaba: tema, paleta y query.
+ * Contrato estándar de los SPA InSoft: toda la navegación y preferencias de
+ * vista van en `?s=` (JSON → base64url), no en params planos. La bolsa mezcla
+ * tema/paleta (`boot.js`), query de búsqueda y navegación del visor
+ * (`op`, `tab`, `opt`, `driver`, `server`).
  *
- * ¿Por qué no un `?q=` aparte? Porque la `?s=` ya existe con un contrato
- * estable (la entiende `boot.js` y el preview kit del visor); multiplicar
- * parámetros para el mismo fin separa lo que el usuario ve como «un estado».
+ * Los params planos legacy (`?op=`, `?tab=`, `?opt=`, `?driver=`, `?server=`)
+ * se leen una vez como fallback y se migran a `?s=` al escribir.
  */
 
 const S_KEY = 's';
+
+/** Params planos que ya no se escriben; se borran al tocar `?s=`. */
+export const LEGACY_NAV_PARAMS = ['op', 'tab', 'opt', 'driver', 'server'] as const;
 
 const b64 = {
   encode(s: string): string {
@@ -29,6 +31,10 @@ const b64 = {
   },
 };
 
+function scrubLegacy(url: URL): void {
+  for (const k of LEGACY_NAV_PARAMS) url.searchParams.delete(k);
+}
+
 /** Lee la bolsa completa desde la URL. Vacía si no hay `?s=` o está corrupto. */
 export function readSState(): Record<string, unknown> {
   if (typeof location === 'undefined') return {};
@@ -42,7 +48,10 @@ export function readSState(): Record<string, unknown> {
   }
 }
 
-/** Escribe la bolsa en la URL, fusionando con lo que ya estuviera. */
+/**
+ * Escribe la bolsa en la URL, fusionando con lo que ya estuviera.
+ * Siempre limpia los params planos de navegación legacy.
+ */
 export function writeSState(patch: Record<string, unknown>): void {
   if (typeof location === 'undefined') return;
   const actual = readSState();
@@ -53,6 +62,7 @@ export function writeSState(patch: Record<string, unknown>): void {
     limpio[k] = v;
   }
   const url = new URL(location.href);
+  scrubLegacy(url);
   if (Object.keys(limpio).length) {
     url.searchParams.set(S_KEY, b64.encode(JSON.stringify(limpio)));
   } else {
@@ -72,10 +82,44 @@ export function setQuery(q: string): void {
   writeSState({ q });
 }
 
-/** Borra toda la bolsa `?s=` (tema, paleta y query). El visor arranca «limpio». */
+/** Borra toda la bolsa `?s=` (tema, paleta, query y navegación). */
 export function clearSState(): void {
   if (typeof location === 'undefined') return;
   const url = new URL(location.href);
   url.searchParams.delete(S_KEY);
+  scrubLegacy(url);
   history.replaceState(history.state, '', url);
+}
+
+/**
+ * Si la URL aún trae params planos de navegación, los mete en `?s=` y los borra.
+ * Idempotente. Devuelve `true` si migró algo.
+ */
+export function migrateLegacyNavToS(): boolean {
+  if (typeof location === 'undefined') return false;
+  let sp: URLSearchParams;
+  try {
+    sp = new URLSearchParams(location.search);
+  } catch {
+    return false;
+  }
+  const actual = readSState();
+  /** @type {Record<string, unknown>} */
+  const patch: Record<string, unknown> = {};
+  let hay = false;
+  for (const k of LEGACY_NAV_PARAMS) {
+    const plano = String(sp.get(k) ?? '').trim();
+    if (!plano) continue;
+    hay = true;
+    const enS = actual[k];
+    if (enS == null || (typeof enS === 'string' && !enS.trim())) patch[k] = plano;
+  }
+  if (!hay) return false;
+  if (Object.keys(patch).length) writeSState(patch);
+  else {
+    const url = new URL(location.href);
+    scrubLegacy(url);
+    history.replaceState(history.state, '', url);
+  }
+  return true;
 }

@@ -2,11 +2,14 @@
  * server-base.ts — a qué host apunta «Probar».
  *
  * La base se elige una vez y la comparten todas las operaciones. Se persiste
- * en `?server=` para que un enlace compartido apunte al mismo entorno; sin
+ * en `?s=.server` para que un enlace compartido apunte al mismo entorno; sin
  * eso, quien recibe el enlace prueba contra otro servidor sin enterarse.
+ *
+ * El param plano `?server=` es legado y se migra a la bolsa `?s=`.
  */
 
 import { resolveServerUrl } from './openapi.js';
+import { migrateLegacyNavToS, readSState, writeSState } from './search-state.js';
 
 export const SERVER_URL_PARAM = 'server';
 
@@ -54,7 +57,8 @@ export function joinApiUrl(serverBase: unknown, apiPath: unknown): string {
 export function readServerFromUrl(): string {
   if (typeof location === 'undefined') return '';
   try {
-    return normalizeServerBase(new URLSearchParams(location.search).get(SERVER_URL_PARAM) ?? '');
+    migrateLegacyNavToS();
+    return normalizeServerBase(readSState()[SERVER_URL_PARAM]);
   } catch {
     return '';
   }
@@ -63,11 +67,7 @@ export function readServerFromUrl(): string {
 export function writeServerToUrl(base: string): void {
   if (typeof location === 'undefined') return;
   try {
-    const url = new URL(location.href);
-    const s = normalizeServerBase(base);
-    if (s) url.searchParams.set(SERVER_URL_PARAM, s);
-    else url.searchParams.delete(SERVER_URL_PARAM);
-    history.replaceState(history.state, '', url);
+    writeSState({ [SERVER_URL_PARAM]: normalizeServerBase(base) });
   } catch {
     /* URL no manipulable (file://) */
   }

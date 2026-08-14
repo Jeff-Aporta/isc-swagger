@@ -19,8 +19,8 @@ módulo. Están al final de esta página.
 | `openapi.ts` | Agrupa por tag, ordena, resuelve `$ref`, deduce seguridad. `METHOD_COLOR` |
 | `is-document.ts` | Forma normalizada del documento |
 | `nav.ts` | Pestañas visibles, filtro por tab y por query, conteo |
-| `url-state.ts` | Lee y escribe `?tab`, `?op`, `?opt`. Suscripción al «atrás» |
-| `search-state.ts` | `?s=` — bolsa base64url con tema, paleta y query |
+| `url-state.ts` | Navegación `op`/`tab`/`opt` dentro de `?s=`. Suscripción al «atrás» |
+| `search-state.ts` | `?s=` — bolsa base64url (tema, paleta, query, navegación) |
 | `server-base.ts` | Base del servidor: opciones, `?server=`, deducción |
 | `auth.ts` | Sesión JWT, credenciales guardadas, `wrapPassword` |
 | `api-fetch.ts` | Ejecuta la petición del «Probar» |

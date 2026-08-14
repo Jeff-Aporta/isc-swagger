@@ -14,7 +14,7 @@
  * y ninguno registra el tag del otro. Una página monta el que quiera; montar los dos a la vez
  * funciona, solo que se duplicaría la carga del documento.
  *
- * El estado vive aquí, igual que en `sw-app`: la operación abierta se refleja en `?op=` para que
+ * El estado vive aquí, igual que en `sw-app`: la operación abierta se refleja en `?s=.op` para que
  * un enlace lleve a la página exacta que alguien quiere enseñar.
  */
 

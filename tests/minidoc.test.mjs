@@ -201,15 +201,17 @@ test('sw-minidoc no revienta con un conn de JSON roto en el atributo', () => {
 test('driver: la URL manda sobre la preferencia guardada', () => {
   // Quien comparte un enlace decide qué vista se abre, aunque el lector tenga otra guardada.
   globalThis.localStorage?.setItem('sw:driver', 'sw-app');
-  dom.window.history.replaceState({}, '', '/?driver=sw-minidoc');
+  const s = btoa(JSON.stringify({ driver: 'sw-minidoc' })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  dom.window.history.replaceState({}, '', `/?s=${s}`);
   assert.equal(readDriver(), 'sw-minidoc');
 
   dom.window.history.replaceState({}, '', '/');
-  assert.equal(readDriver(), 'sw-app', 'sin ?driver= vuelve a mandar lo guardado');
+  assert.equal(readDriver(), 'sw-app', 'sin driver en `?s=` vuelve a mandar lo guardado');
 });
 
 test('driver: un valor inventado no rompe, cae al de por defecto', () => {
-  dom.window.history.replaceState({}, '', '/?driver=inventado');
+  const s = btoa(JSON.stringify({ driver: 'inventado' })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  dom.window.history.replaceState({}, '', `/?s=${s}`);
   globalThis.localStorage?.removeItem('sw:driver');
   assert.equal(readDriver(), DRIVER_DEFAULT);
   assert.equal(esDriver('inventado'), false);
@@ -219,13 +221,19 @@ test('driver: un valor inventado no rompe, cae al de por defecto', () => {
 test('driver: writeDriver no ensucia la URL con el valor por defecto', () => {
   const otro = DRIVERS.find((d) => d.id !== DRIVER_DEFAULT).id;
   writeDriver(otro);
-  assert.match(dom.window.location.search, new RegExp('driver=' + otro));
+  const raw = new URLSearchParams(dom.window.location.search).get('s');
+  assert.ok(raw, 'debe quedar `?s=`');
+  const dec = JSON.parse(atob(raw.replace(/-/g, '+').replace(/_/g, '/')));
+  assert.equal(dec.driver, otro);
+  assert.equal(new URLSearchParams(dom.window.location.search).get('driver'), null);
+
   writeDriver(DRIVER_DEFAULT);
-  assert.doesNotMatch(
-    dom.window.location.search,
-    /driver=/,
-    'la URL compartible es la que no lleva el parámetro',
-  );
+  assert.equal(new URLSearchParams(dom.window.location.search).get('driver'), null);
+  const raw2 = new URLSearchParams(dom.window.location.search).get('s');
+  if (raw2) {
+    const dec2 = JSON.parse(atob(raw2.replace(/-/g, '+').replace(/_/g, '/')));
+    assert.equal(dec2.driver, undefined, 'la URL compartible no lleva driver=default');
+  }
 });
 
 test('sw-viewer monta el driver activo y lo cambia en caliente', () => {

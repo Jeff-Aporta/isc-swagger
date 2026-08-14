@@ -50,7 +50,7 @@ export interface SwConn {
   paths?: SwConnPaths;
   title?: string;
   icon?: string;
-  /** operationId que se abre cuando la URL no trae `?op=`. Lo decide el API, no el visor: cuál
+  /** operationId que se abre cuando la URL no trae `op` en `?s=`. Lo decide el API, no el visor: cuál
    *  es el endpoint por el que conviene empezar depende de cada documento. */
   defaultOp?: string;
   [k: string]: unknown;

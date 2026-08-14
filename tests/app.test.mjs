@@ -147,7 +147,12 @@ test('abrir una operación la escribe en la URL y monta su cuerpo', () => {
     new dom.window.CustomEvent('sw-op-toggle', { detail: { operationId: id, abierto: true }, bubbles: true }),
   );
 
-  assert.equal(new dom.window.URLSearchParams(dom.window.location.search).get('op'), id);
+  const sp = new dom.window.URLSearchParams(dom.window.location.search);
+  assert.equal(sp.get('op'), null, 'no debe quedar `?op=` plano');
+  const raw = sp.get('s');
+  assert.ok(raw, 'debe escribir `?s=`');
+  const dec = JSON.parse(atob(raw.replace(/-/g, '+').replace(/_/g, '/')));
+  assert.equal(dec.op, id);
   const abierta = grupo.shadowRoot.querySelector('sw-operation');
   assert.ok(abierta.shadowRoot.querySelector('.cuerpo'), 'no montó el cuerpo al abrir');
   assert.ok(abierta.shadowRoot.querySelector('sw-try'), 'la pestaña por defecto debe ser Probar');
