@@ -189,18 +189,11 @@ de que nadie mire ninguno. No lo deshagas «para simplificar».
 
 ## Kit `is-*` por CDN: qué se carga y por qué tan poco
 
-**Commit del kit con el que está diseñado este visor:**
+**Por defecto: `@main`, sin pin.** Las apps no fijan SHA salvo un caso explícito
+(reproducibilidad de un host concreto). Sin `L.pin()`, el loader resuelve el tip de `main`.
 
-```
-Jeff-Aporta/is-webcomponents @ 1b934c294fd7dda1e912dbde0ace25d760f5f638
-```
-
-Ese sha está pinchado en `index.html` (los dos `<link>` de CSS y el `import` del loader) y en
-el HTML que sirve la API en `/api/is-swagger`. Si un componente del kit cambia de contrato y el
-visor se rompe, **ese es el sha contra el que se escribió**: comparar el componente en ese
-commit con el de `main` dice exactamente qué cambió, y desde ahí se decide si se adapta el
-visor o se re-pincha a un commit anterior. No usar `@main`: jsDelivr cachea la rama hasta 7
-días, así que una publicación reciente tarda en llegar y el despliegue deja de ser reproducible.
+`L.pin('<sha>')` solo cuando el host lo declara a propósito (p. ej. `isWebComponentsRef` no
+vacío en un ISS). No es el camino normal de `index.html` ni de previews/docs.
 
 ### Importación mínima con el loader
 
@@ -210,8 +203,8 @@ tag con el loader — que además lleva registro anti-redundancia y no repite pe
 ```html
 <script type="module">
   import { ISWebComponentsLoader as L } from
-    'https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@1b934c294fd7dda1e912dbde0ace25d760f5f638/dist/cdn/loader.min.js';
-  L.pin( + SHA + );
+    'https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/loader.min.js';
+  // L.pin('abcdef…');  // opcional y explícito; sin esto → tip de main
   await L.load('is-button', 'is-icon', /* … */);
 </script>
 ```
