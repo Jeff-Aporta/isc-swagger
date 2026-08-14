@@ -182,7 +182,8 @@ function buildOperation(catalog: InsoftCatalog, def: Record<string, unknown>): R
 
   if (typeof def.doc === 'string') {
     const md = catalog.docs?.[def.doc];
-    if (typeof md === 'string') op[ISS_DOC_MD] = md;
+    // Docs IS a veces llegan con backticks escapados (`\`\`\`http`); el MD renderer los pinta literales.
+    if (typeof md === 'string') op[ISS_DOC_MD] = md.replace(/\\+`/g, '`');
   }
 
   if (Array.isArray(def.parameters) && def.parameters.length) {

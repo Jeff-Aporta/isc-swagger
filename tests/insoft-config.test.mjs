@@ -52,6 +52,15 @@ test('las operaciones exponen x-iss-doc-md desde catalog.docs', () => {
   assert.match(op['x-iss-doc-md'], /SYS_VALUES/);
 });
 
+test('x-iss-doc-md quita backticks sobre-escapados del catalog IS', () => {
+  const raw = structuredClone(SAMPLE);
+  raw.catalog.docs.systemOpenai = '## Doc\n\n\\`\\`\\`http\nGET /api/x\n\\`\\`\\`\n';
+  const { spec } = parseInsoftConfig(raw, 'https://h/api');
+  const md = spec.paths['/system/openai'].get['x-iss-doc-md'];
+  assert.match(md, /```http\nGET \/api\/x\n```/);
+  assert.equal(md.includes('\\`'), false, 'no debe quedar barra delante del backtick');
+});
+
 test('el template "ok" genera respuestas 200 con el envelope InSoft', () => {
   const { spec } = parseInsoftConfig(SAMPLE, 'https://h/api');
   const op = spec.paths['/system/openai'].get;
