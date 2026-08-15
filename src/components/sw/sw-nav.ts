@@ -12,6 +12,7 @@ import { adoptCss, precargarCss, define, html, emitir, esc } from './_shared.js'
 import './sw-auth.js';
 import './sw-driver-switch.js';
 import './sw-export.js';
+import './sw-doc-reload.js';
 
 interface Props {
   brand: SwBrand;
@@ -113,6 +114,7 @@ class SwNav extends HTMLElement {
 
         <div class="acciones">
           ${exportar}
+          <sw-doc-reload></sw-doc-reload>
           ${autenticacion}
           <sw-driver-switch></sw-driver-switch>
           <is-theme-toggle></is-theme-toggle>

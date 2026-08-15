@@ -78,13 +78,32 @@ test('si la API falla tras caducar, se queda con el cache', async () => {
   assert.deepEqual(r.data, { v: 'stale' });
 });
 
-test('sin cache y sin red, propaga el error', async () => {
+test('force: true ignora cache fresco y pide red', async () => {
   localStorage.clear();
-  await assert.rejects(
-    () =>
-      fetchJsonCached(URL, async () => {
-        throw new Error('sin red');
-      }),
-    /sin red/,
+  const now = 1_700_000_000_000;
+  writeJsonCache(URL, { v: 1 }, now);
+  let hits = 0;
+  const r = await fetchJsonCached(
+    URL,
+    async () => {
+      hits += 1;
+      return { v: 2 };
+    },
+    { now: now + 60_000, force: true },
   );
+  assert.equal(hits, 1);
+  assert.equal(r.source, 'network');
+  assert.deepEqual(r.data, { v: 2 });
+});
+
+test('clearJsonCache borra una URL o todo el prefijo', async () => {
+  const { clearJsonCache } = await import('../dist/cdn/js/json-cache.js');
+  localStorage.clear();
+  writeJsonCache(URL, { a: 1 }, 1);
+  writeJsonCache(`${URL}?b=1`, { b: 1 }, 1);
+  clearJsonCache(URL);
+  assert.equal(readJsonCache(URL), null);
+  assert.ok(readJsonCache(`${URL}?b=1`));
+  clearJsonCache();
+  assert.equal(readJsonCache(`${URL}?b=1`), null);
 });

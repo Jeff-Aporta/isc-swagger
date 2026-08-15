@@ -29,7 +29,8 @@ Cómo se escribe uno, cómo se adopta el CSS y qué está prohibido:
 | `<sw-method>` | `method` | — | Chip del verbo HTTP. Delega en `<is-tag>` |
 | `<sw-path>` | `path` | — | Ruta con los `{parámetros}` resaltados |
 | `<sw-auth>` | `authEnabled`, `auth`, `session` | `sw-session-change` | Sesión JWT: chip, diálogo de login, pegado de token |
-| `<sw-export>` | `spec`, `config` | — | Descargas: documento JSON, Postman, IS |
+| `<sw-export>` | `spec`, `config` | — | Descargas: documento JSON, Postman, IS (trigger solo icono) |
+| `<sw-doc-reload>` | — | `sw-doc-reload` | Actualiza config desde API (invalida cache 24 h); solo icono |
 | `<sw-viewer>` | `conn`, `driver` | — | Envoltura: monta el driver elegido y escucha `sw-driver-change` |
 | `<sw-driver-switch>` | `value` | `sw-driver-change` | Selector de presentación, en la cabecera junto al tema |
 | `<sw-layout>` | — (slots) | `sw-layout-modo` | Armazón de 3 zonas: splits arrastrables y colapso a cajón |

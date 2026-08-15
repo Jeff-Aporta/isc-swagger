@@ -18,7 +18,7 @@
  * un enlace lleve a la página exacta que alguien quiere enseñar.
  */
 
-import { adoptCss, precargarCss, define, html } from './_shared.js';
+import { adoptCss, precargarCss, define, html, avisar } from './_shared.js';
 import { loadViewerDocument, resolveBootConfig } from '../../js/config.js';
 import type { SwConn } from '../../js/conn.js';
 import { buildDocIndex, groupOperationsByTag, operationRequiresBearer, sortGroupsBySpecOrder } from '../../js/openapi.js';
@@ -31,6 +31,7 @@ import './sw-auth.js';
 import './sw-layout.js';
 import './sw-driver-switch.js';
 import './sw-export.js';
+import './sw-doc-reload.js';
 import './sw-minidoc-view.js';
 import './sw-minidoc-code.js';
 
@@ -50,6 +51,7 @@ class SwMinidoc extends HTMLElement {
 
   #estado: 'cargando' | 'listo' | 'error' = 'cargando';
   #error = '';
+  #recargando = false;
 
   #indiceNodo: HTMLElement | null = null;
   #vistaNodo: HTMLElement | null = null;
@@ -58,6 +60,10 @@ class SwMinidoc extends HTMLElement {
 
   /** Conn entregado por el anfitrión. Mismo contrato que `sw-app`. */
   #conn: SwConn | null = null;
+
+  #onDocReload = (): void => {
+    void this.#cargar({ force: true });
+  };
 
   constructor() {
     super();
@@ -91,19 +97,26 @@ class SwMinidoc extends HTMLElement {
       this.#sincronizarSeleccion();
     });
 
+    this.addEventListener('sw-doc-reload', this.#onDocReload);
     this.#render();
     void this.#cargar();
   }
 
   disconnectedCallback(): void {
+    this.removeEventListener('sw-doc-reload', this.#onDocReload);
     this.#desuscribir?.();
     this.#desuscribir = null;
   }
 
-  async #cargar(): Promise<void> {
+  async #cargar(opts: { force?: boolean } = {}): Promise<void> {
+    if (opts.force && this.#recargando) return;
+    if (opts.force) {
+      this.#recargando = true;
+      avisar('Actualizando documentación…', 'brand');
+    }
     try {
       const boot = resolveBootConfig(this.#conn ?? this.#connDesdeAtributo());
-      const { config, spec } = await loadViewerDocument(boot);
+      const { config, spec } = await loadViewerDocument(boot, { force: opts.force });
 
       this.#config = config;
       this.#auth = resolveAuthConfig(config);
@@ -120,9 +133,13 @@ class SwMinidoc extends HTMLElement {
         this.#opAbierta = existe ? preferida : (this.#todas[0]?.operationId ?? '');
       }
       this.#estado = 'listo';
+      if (opts.force) avisar('Documentación actualizada', 'success');
     } catch (e) {
       this.#estado = 'error';
       this.#error = (e as Error)?.message ?? String(e);
+      if (opts.force) avisar(this.#error, 'danger');
+    } finally {
+      this.#recargando = false;
     }
     this.#render();
   }
@@ -288,6 +305,7 @@ class SwMinidoc extends HTMLElement {
           ></is-input>
           ${autenticacion}
           ${exportar}
+          <sw-doc-reload></sw-doc-reload>
           <sw-driver-switch></sw-driver-switch>
           <is-theme-toggle></is-theme-toggle>
         </div>

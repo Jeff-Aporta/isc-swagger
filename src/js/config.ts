@@ -16,7 +16,7 @@ import { parseIsDocument } from './is-document.js';
 import { joinConnUrl, normalizeConn, resolveConnConfig } from './conn.js';
 import type { SwConn } from './conn.js';
 import { isInsoftConfig, parseInsoftConfig } from './insoft-config.js';
-import { fetchJsonCached } from './json-cache.js';
+import { clearJsonCache, fetchJsonCached } from './json-cache.js';
 
 export const DEFAULT_NS = 'ISA';
 
@@ -124,8 +124,8 @@ async function fetchJsonNetwork(url: string): Promise<unknown> {
 }
 
 /** GET JSON con cache ≥24 h; si la API falla tras caducar, reutiliza el cache. */
-async function fetchJson(url: string): Promise<unknown> {
-  const { data } = await fetchJsonCached(url, fetchJsonNetwork);
+async function fetchJson(url: string, opts: { force?: boolean } = {}): Promise<unknown> {
+  const { data } = await fetchJsonCached(url, fetchJsonNetwork, { force: opts.force });
   return data;
 }
 
@@ -135,8 +135,13 @@ async function fetchJson(url: string): Promise<unknown> {
  * Devuelve siempre el par completo: un documento IS puede traer marca, nav y
  * auth propios, y la vista tiene que usarlos sin que la llamada sepa de antemano
  * si el JSON era OpenAPI suelto o documento IS.
+ *
+ * @param opts.force  Bypass cache 24 h (botón actualizar de la cabecera).
  */
-export async function loadViewerDocument(config: SwConfig): Promise<{ config: SwConfig; spec: SwSpec }> {
+export async function loadViewerDocument(
+  config: SwConfig,
+  opts: { force?: boolean } = {},
+): Promise<{ config: SwConfig; spec: SwSpec }> {
   const embebido = parseIsDocument(config);
   if (embebido) {
     const { spec: _omit, ...viewer } = embebido.config;
@@ -158,7 +163,9 @@ export async function loadViewerDocument(config: SwConfig): Promise<{ config: Sw
   const url = config.specUrl || connSpecUrl || (config.apiBase ? inferSwaggerUrls(config.apiBase).spec : '');
   if (!url) throw new Error('IS-Swagger: falta `specUrl` o `apiBase`.');
 
-  const data = await fetchJson(url);
+  if (opts.force) clearJsonCache(url);
+
+  const data = await fetchJson(url, { force: opts.force });
   const desdeIs = parseIsDocument(data);
   if (desdeIs) {
     const { spec: _omit, ...viewer } = desdeIs.config;

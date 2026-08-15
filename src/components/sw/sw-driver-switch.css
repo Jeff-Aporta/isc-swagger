@@ -1,15 +1,24 @@
-/* Selector de presentación en la cabecera. Discreto: es un ajuste de lectura, no una acción. */
+/* Selector de presentación en la cabecera. Compacto: no debe competir en
+   altura con los botones de solo icono (descarga / reload / tema). */
 
 :host {
   display: inline-flex;
   align-items: center;
+  max-block-size: 2rem;
 }
 
 .selector {
-  min-width: 8.5rem;
+  min-width: 6.75rem;
+  max-width: 9rem;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  /* Tokens habituales del kit is-*: densificar el control small. */
+  --is-input-height: 1.875rem;
+  --is-control-height: 1.875rem;
+  --is-control-min-height: 1.875rem;
+  --is-space-control-y: 0.15rem;
 }
 
-/* En móvil la cabecera va justa y la etiqueta del driver ya se entiende sola. */
 @media (max-width: 40rem) {
-  .selector { min-width: 6.5rem; }
+  .selector { min-width: 5.75rem; max-width: 7.5rem; }
 }

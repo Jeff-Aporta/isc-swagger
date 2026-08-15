@@ -31,6 +31,7 @@ módulo. Están al final de esta página.
 | `export.ts` | Documento JSON, colección Postman, formato IS |
 | `postman-md.ts` | MD InSoft → Postman: diagramas→PNG, `is-code`→fences |
 | `kit-tags.ts` | `SW_KIT_TAGS`: lista canónica de tags `is-*` que carga el host ISS vía CDN. **No** duplicar en PatyIA `01-api.json` |
+| `json-cache.ts` | Cache 24 h de config/spec; `clearJsonCache` + `force` para el botón actualizar |
 
 ## Reusar antes de crear
 

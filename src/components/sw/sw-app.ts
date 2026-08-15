@@ -10,7 +10,7 @@
  * de los pasos se enseña en pantalla con la URL que falló, no en la consola.
  */
 
-import { adoptCss, precargarCss, define, html } from './_shared.js';
+import { adoptCss, precargarCss, define, html, avisar } from './_shared.js';
 import { loadViewerDocument, resolveBootConfig } from '../../js/config.js';
 import type { SwConn } from '../../js/conn.js';
 import { buildDocIndex, groupOperationsByTag, sortGroupsBySpecOrder } from '../../js/openapi.js';
@@ -42,12 +42,17 @@ class SwApp extends HTMLElement {
 
   #estado: 'cargando' | 'listo' | 'error' = 'cargando';
   #error = '';
+  #recargando = false;
 
   #navNodo: HTMLElement | null = null;
   #listaNodo: HTMLElement | null = null;
   #totalNodo: HTMLElement | null = null;
   #gruposNodos = new Map<string, HTMLElement>();
   #desuscribir: (() => void) | null = null;
+
+  #onDocReload = (): void => {
+    void this.#cargar({ force: true });
+  };
 
   constructor() {
     super();
@@ -76,11 +81,13 @@ class SwApp extends HTMLElement {
       this.#sincronizarGrupos();
     });
 
+    this.addEventListener('sw-doc-reload', this.#onDocReload);
     this.#render();
     void this.#cargar();
   }
 
   disconnectedCallback(): void {
+    this.removeEventListener('sw-doc-reload', this.#onDocReload);
     this.#desuscribir?.();
     this.#desuscribir = null;
   }
@@ -115,10 +122,15 @@ class SwApp extends HTMLElement {
     }
   }
 
-  async #cargar(): Promise<void> {
+  async #cargar(opts: { force?: boolean } = {}): Promise<void> {
+    if (opts.force && this.#recargando) return;
+    if (opts.force) {
+      this.#recargando = true;
+      avisar('Actualizando documentación…', 'brand');
+    }
     try {
       const boot = resolveBootConfig(this.#conn ?? this.#connDesdeAtributo());
-      const { config, spec } = await loadViewerDocument(boot);
+      const { config, spec } = await loadViewerDocument(boot, { force: opts.force });
 
       this.#config = config;
       this.#auth = resolveAuthConfig(config);
@@ -129,9 +141,13 @@ class SwApp extends HTMLElement {
       this.#serverBase = readServerFromUrl() || inferDefaultServerBase(spec, config);
       this.#navTab = resolveActiveNavTab(resolveVisibleNavTabs(config, this.#session), this.#navTab);
       this.#estado = 'listo';
+      if (opts.force) avisar('Documentación actualizada', 'success');
     } catch (e) {
       this.#estado = 'error';
       this.#error = (e as Error)?.message ?? String(e);
+      if (opts.force) avisar(this.#error, 'danger');
+    } finally {
+      this.#recargando = false;
     }
     this.#render();
   }

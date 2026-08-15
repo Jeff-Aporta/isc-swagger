@@ -36,7 +36,9 @@ Guardián de que esas páginas no mienten: `tests/docs.test.mjs`.
 | Buscar por query **siempre** ignora la pestaña activa | Filtrar por tab cuando hay query (esconde lo que el usuario pidió) |
 | `?s=<base64url(JSON)>` lleva tema+paleta+q | Parámetros sueltos para el mismo fin (rompe el estado compartido con `boot.js`) |
 | Click en la marca = reset (`?s=`); la `?conn=` se queda | Reiniciar vía location.reload() (rompe el shell sin redibujar) |
-| Botón descargar: `variant="plain"` con solo icono | Texto + borde en una acción que ya tiene el icono claro |
+| Botón descargar / reload: `variant="plain"` solo icono + `aria-label` | Texto «Descargar» u otro label en la cabecera |
+| Reload documento: `clearJsonCache` + `loadViewerDocument(..., { force: true })` | Esperar 24 h o pedir al usuario vaciar localStorage a mano |
+| Selector Documento/Clásico: control compacto (~2 rem de alto) | `is-select` a altura de campo de formulario grande |
 | Registrar el componente en `index.html`, `all.ts` y `docs/manifest.js` | Dejarlo en uno solo (parcial = bug mudo) |
 | Tests en `tests/*.test.mjs` contra `dist/cdn/` | `.test.ts`: no hay pipeline TS para tests |
 | `?conn=` → `kind: "config"` InSoft pasa por `parseInsoftConfig` | Asumir OpenAPI: el spec sintetizado no lleva `openapi:` en la salida |
