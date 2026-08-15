@@ -79,7 +79,7 @@ docs/                         sitio documental (no se compila)
   index.html                  shell: barra + índice + iframe
   paginas/                    prosa: por qué, stack, arquitectura, estrategias
   previews/                   una página por `sw-*`, con casos en vivo
-  video/                      vídeo del hero
+  video/                      (reservado; hero → YouTube unlisted)
 dist/cdn/                     artefacto publicado: todo plano y hermano
 tests/                        node --test contra dist/cdn
 ```

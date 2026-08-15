@@ -187,7 +187,7 @@ test('renderMarkdown no interpreta markdown dentro de código inline', () => {
 
 /* ── exportación ────────────────────────────────────────────── */
 
-test('toPostmanCollection traduce {param} a :param y agrupa por tag', () => {
+test('toPostmanCollection traduce {param} a :param y agrupa por tag', async () => {
   const spec = {
     info: { title: 'X' },
     servers: [{ url: 'https://h' }],
@@ -195,7 +195,7 @@ test('toPostmanCollection traduce {param} a :param y agrupa por tag', () => {
       '/t/{id}': { get: { tags: ['T'], parameters: [{ name: 'q', in: 'query' }], responses: {} } },
     },
   };
-  const col = toPostmanCollection(spec);
+  const col = await toPostmanCollection(spec);
   assert.equal(col.item.length, 1);
   assert.equal(col.item[0].name, 'T');
   const req = col.item[0].item[0].request;

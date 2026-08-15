@@ -8,7 +8,7 @@ import{crearComponente as u,define as p,emitir as g,html as n,avisar as a}from".
               >
                 <is-button
                   slot="trigger"
-                  variant="plain"
+                  variant="outlined"
                   color="neutral"
                   aria-label="Descargar documento"
                   title="Descargar documento"
@@ -25,7 +25,7 @@ import{crearComponente as u,define as p,emitir as g,html as n,avisar as a}from".
             `:null}
         <is-button
           class="rl"
-          variant="plain"
+          variant="outlined"
           color="neutral"
           aria-label="Actualizar documentación"
           title="Actualizar desde el servidor (ignora cache local de 24 h)"

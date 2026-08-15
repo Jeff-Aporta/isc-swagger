@@ -77,11 +77,11 @@
   min-width: 0;
 }
 
+.hero__video-frame,
 .hero__video video {
   display: block;
   width: 100%;
-  /* El vídeo es 1920×1080; fijar la razón evita que el layout salte cuando
-     todavía no han llegado los metadatos. */
+  /* 16:9 fijo: evita saltos de layout antes de que el iframe pinte. */
   aspect-ratio: 16 / 9;
   border: 1px solid var(--is-border-soft, #1f242b);
   border-radius: 0.85rem;

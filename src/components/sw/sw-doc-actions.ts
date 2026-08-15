@@ -46,7 +46,7 @@ const SwDocActions = crearComponente<Props>(
               >
                 <is-button
                   slot="trigger"
-                  variant="plain"
+                  variant="outlined"
                   color="neutral"
                   aria-label="Descargar documento"
                   title="Descargar documento"
@@ -66,7 +66,7 @@ const SwDocActions = crearComponente<Props>(
           : null}
         <is-button
           class="rl"
-          variant="plain"
+          variant="outlined"
           color="neutral"
           aria-label="Actualizar documentación"
           title="Actualizar desde el servidor (ignora cache local de 24 h)"

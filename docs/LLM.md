@@ -27,7 +27,7 @@ Dos clases de página, y la distinción importa:
 | `styles/doc.css` | Páginas de prosa |
 | `styles/hero.css` | Solo la portada (composición de dos columnas con el vídeo) |
 | `styles/preview.css` | Páginas de componente |
-| `video/` | Vídeo del hero y su póster |
+| `video/` | (vacío / reservado) — el hero usa YouTube unlisted `k0XcnhHQlzc` |
 
 ## Reglas de rutas
 

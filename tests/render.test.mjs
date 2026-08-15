@@ -89,8 +89,10 @@ test('sw-doc monta is-md-render con el markdown', () => {
   const root = montar('sw-doc', { markdown: '# Hola\n\nUn **párrafo**.' });
   const md = root.querySelector('is-md-render.md');
   assert.ok(md);
-  assert.equal(md.getAttribute('value'), '# Hola\n\nUn **párrafo**.');
   assert.ok(md.hasAttribute('readonly'));
+  const source = md.querySelector('script[type="text/markdown"]');
+  assert.ok(source);
+  assert.equal(source.textContent, '# Hola\n\nUn **párrafo**.');
 });
 
 test('sw-params pinta un campo por parámetro y ninguno si la lista está vacía', () => {

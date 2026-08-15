@@ -113,6 +113,7 @@ body {
   min-width: 0;
 }
 
+.hero__video-frame,
 .hero__video video {
   display: block;
   width: 100%;

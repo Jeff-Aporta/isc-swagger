@@ -41,25 +41,23 @@
       </div>
 
       <!--
-        Vídeo del hero. `poster` cubre el primer pintado; sin `autoplay` para
-        no arrancar sonido sin que nadie lo pida, que es lo que hace que la
-        gente cierre la pestaña. `preload="metadata"` baja solo la cabecera.
+        Vídeo unlisted en YouTube (https://youtu.be/k0XcnhHQlzc). Sin archivo
+        local: el embed evita hospedar el MP4 en el sitio de docs.
       -->
       <figure class="hero__video">
-        <video
-          controls
-          playsinline
-          preload="metadata"
-          poster="../video/is-swagger-promo.poster.jpg"
-          aria-label="Vídeo de presentación de IS-Swagger"
-        >
-          <source src="../video/is-swagger-promo.mp4" type="video/mp4">
-          <p>
-            Tu navegador no reproduce el vídeo.
-            <a href="../video/is-swagger-promo.mp4">Descárgalo aquí</a>.
-          </p>
-        </video>
-        <figcaption>Presentación · 1080p · 6 min</figcaption>
+        <iframe
+          class="hero__video-frame"
+          src="https://www.youtube-nocookie.com/embed/k0XcnhHQlzc"
+          title="Vídeo de presentación de IS-Swagger"
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+        ></iframe>
+        <figcaption>
+          Presentación ·
+          <a href="https://youtu.be/k0XcnhHQlzc" rel="noopener noreferrer" target="_blank">YouTube</a>
+        </figcaption>
       </figure>
     </section>
 
