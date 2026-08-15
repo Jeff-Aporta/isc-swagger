@@ -24,6 +24,7 @@
   &[data-method="put"]    { --sw-metodo: var(--is-color-warning-strong, #f08c00); }
   &[data-method="patch"]  { --sw-metodo: var(--is-accent, #1a6eb0); }
   &[data-method="delete"] { --sw-metodo: var(--is-color-danger-strong, #e03131); }
+  &[data-method="query"]  { --sw-metodo: var(--sw-method-query, #0d9488); }
 }
 
 /* ── Resumen (cabecera colapsada) ───────────────────────────── */

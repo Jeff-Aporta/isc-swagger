@@ -393,7 +393,14 @@ test('los umbrales del CSS y los del JS son los mismos', async () => {
 test('QUERY tiene color propio: el API lo usa para filtrar', async () => {
   const { METHOD_COLOR } = await import('../dist/cdn/js/openapi.js');
   assert.ok(METHOD_COLOR.query, 'QUERY sin entrada: saldría gris como un OPTIONS');
-  assert.notEqual(METHOD_COLOR.query, 'neutral');
+  assert.notEqual(METHOD_COLOR.query, METHOD_COLOR.get, 'QUERY no debe compartir color con GET');
+  assert.notEqual(METHOD_COLOR.query, 'info');
+  assert.notEqual(METHOD_COLOR.query, 'brand', 'brand≈info en ContaPyme; QUERY usa teal en CSS');
+  const { readFileSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const raiz = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
+  const css = readFileSync(join(raiz, 'src', 'components', 'sw', 'sw-method.css'), 'utf8');
+  assert.match(css, /data-method=["']query["']/, 'sw-method.css pinta QUERY con teal propio');
 });
 
 test('todos los chips de método miden lo mismo', async () => {

@@ -279,16 +279,16 @@ export function toneToIsColor(tone: SwTono): 'success' | 'warning' | 'danger' | 
   return 'neutral';
 }
 
-/** Color `is-*` por método HTTP. Es la única tabla: chips, bordes y botones la comparten. */
+/** Color `is-*` por método HTTP. Es la única tabla: chips, bordes y botones la comparten.
+ *  QUERY no usa `info`/`brand`: en paleta ContaPyme ambos son azul y se confundían con GET. */
 export const METHOD_COLOR: Record<string, string> = {
   get: 'info',
   post: 'success',
   put: 'warning',
   patch: 'brand',
   delete: 'danger',
-  // QUERY es un metodo HTTP real (draft IETF) y el API lo usa para filtrar conversaciones y
-  // archivos con cuerpo JSON. Sin entrada aqui salia gris, como si fuera un OPTIONS.
-  query: 'brand',
+  // Teal propio en sw-method.css / sw-operation.css (el enum is-tag no trae cyan).
+  query: 'neutral',
   options: 'neutral',
   head: 'neutral',
   trace: 'neutral',
