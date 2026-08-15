@@ -9,6 +9,7 @@
  */
 export const SW_KIT_TAGS = [
   'is-button',
+  'is-button-group',
   'is-copy-button',
   'is-dropdown',
   'is-dropdown-item',

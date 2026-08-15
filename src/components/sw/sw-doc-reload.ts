@@ -7,7 +7,7 @@
 
 import { crearComponente, define, emitir, html } from './_shared.js';
 
-const SwDocReload = crearComponente(
+const SwDocReload = crearComponente<Record<string, never>>(
   import.meta.url,
   (root, _props, host) => {
     root.append(html`

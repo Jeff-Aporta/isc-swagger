@@ -11,8 +11,7 @@
 import { adoptCss, precargarCss, define, html, emitir, esc } from './_shared.js';
 import './sw-auth.js';
 import './sw-driver-switch.js';
-import './sw-export.js';
-import './sw-doc-reload.js';
+import './sw-doc-actions.js';
 
 interface Props {
   brand: SwBrand;
@@ -81,8 +80,8 @@ class SwNav extends HTMLElement {
     );
     this.#authNodo = autenticacion;
 
-    const exportar = document.createElement('sw-export');
-    (exportar as HTMLElement & { props: unknown }).props = { spec, config };
+    const docAcciones = document.createElement('sw-doc-actions');
+    (docAcciones as HTMLElement & { props: unknown }).props = { spec, config };
 
     this.#root.append(html`
       <header class="barra">
@@ -113,8 +112,7 @@ class SwNav extends HTMLElement {
         </is-input>
 
         <div class="acciones">
-          ${exportar}
-          <sw-doc-reload></sw-doc-reload>
+          ${docAcciones}
           ${autenticacion}
           <sw-driver-switch></sw-driver-switch>
           <is-theme-toggle></is-theme-toggle>

@@ -1,4 +1,4 @@
-import{adoptCss as m,precargarCss as v,define as w,html as i,emitir as t,esc as g}from"./_shared.js";import"./sw-auth.js";import"./sw-driver-switch.js";import"./sw-export.js";import"./sw-doc-reload.js";class u extends HTMLElement{#e;#s={brand:{},tabs:[],activeTab:"",query:"",spec:null,config:{},authEnabled:!1,auth:{},session:null};#i=null;constructor(){super(),this.#e=this.attachShadow({mode:"open"})}connectedCallback(){this.#t()}get props(){return this.#s}set props(s){const a={...this.#s};this.#s={...this.#s,...s??{}},this.isConnected&&(a.query!==this.#s.query&&Object.keys(s??{}).length===1||this.#t())}abrirLogin(s){this.#i?.abrirLogin(s)}#t(){const{brand:s,tabs:a,activeTab:r,query:o,spec:l,config:p,authEnabled:d,auth:h,session:b}=this.#s;this.#e.replaceChildren();const n=document.createElement("sw-auth");n.props={authEnabled:d,auth:h,session:b},n.addEventListener("sw-session-change",e=>t(this,"sw-session-change",e.detail)),this.#i=n;const c=document.createElement("sw-export");c.props={spec:l,config:p},this.#e.append(i`
+import{adoptCss as m,precargarCss as v,define as g,html as e,emitir as t,esc as w}from"./_shared.js";import"./sw-auth.js";import"./sw-driver-switch.js";import"./sw-doc-actions.js";class u extends HTMLElement{#i;#s={brand:{},tabs:[],activeTab:"",query:"",spec:null,config:{},authEnabled:!1,auth:{},session:null};#e=null;constructor(){super(),this.#i=this.attachShadow({mode:"open"})}connectedCallback(){this.#t()}get props(){return this.#s}set props(s){const a={...this.#s};this.#s={...this.#s,...s??{}},this.isConnected&&(a.query!==this.#s.query&&Object.keys(s??{}).length===1||this.#t())}abrirLogin(s){this.#e?.abrirLogin(s)}#t(){const{brand:s,tabs:a,activeTab:r,query:o,spec:c,config:d,authEnabled:p,auth:h,session:b}=this.#s;this.#i.replaceChildren();const n=document.createElement("sw-auth");n.props={authEnabled:p,auth:h,session:b},n.addEventListener("sw-session-change",i=>t(this,"sw-session-change",i.detail)),this.#e=n;const l=document.createElement("sw-doc-actions");l.props={spec:c,config:d},this.#i.append(e`
       <header class="barra">
         <button
           type="button"
@@ -7,10 +7,10 @@ import{adoptCss as m,precargarCss as v,define as w,html as i,emitir as t,esc as 
           title="Reiniciar visor"
           onclick=${()=>t(this,"sw-reset",null)}
         >
-          ${s?.icon?i`<is-icon class="marca-icono" icon="${s.icon}"></is-icon>`:null}
+          ${s?.icon?e`<is-icon class="marca-icono" icon="${s.icon}"></is-icon>`:null}
           <div class="marca-texto">
-            <span class="marca-titulo">${s?.title??l?.info?.title??"API"}</span>
-            ${s?.subtitle?i`<span class="marca-sub">${s.subtitle}</span>`:null}
+            <span class="marca-titulo">${s?.title??c?.info?.title??"API"}</span>
+            ${s?.subtitle?e`<span class="marca-sub">${s.subtitle}</span>`:null}
           </div>
         </button>
 
@@ -21,24 +21,23 @@ import{adoptCss as m,precargarCss as v,define as w,html as i,emitir as t,esc as 
           placeholder="Buscar ruta, resumen u operationId…"
           aria-label="Buscar operaciones"
           value="${o}"
-          onis-input=${e=>t(this,"sw-search",{query:String(e.target.value??"")})}
+          onis-input=${i=>t(this,"sw-search",{query:String(i.target.value??"")})}
         >
           <is-icon slot="start" icon="mdi:magnify"></is-icon>
         </is-input>
 
         <div class="acciones">
-          ${c}
-          <sw-doc-reload></sw-doc-reload>
+          ${l}
           ${n}
           <sw-driver-switch></sw-driver-switch>
           <is-theme-toggle></is-theme-toggle>
         </div>
       </header>
 
-      ${o.trim()?i`
+      ${o.trim()?e`
             <div class="busqueda-titulo" role="status" aria-live="polite">
               <is-icon icon="mdi:magnify"></is-icon>
-              <span>Resultados para <code class="busqueda-titulo__q">${g(o)}</code></span>
+              <span>Resultados para <code class="busqueda-titulo__q">${w(o)}</code></span>
               <button
                 type="button"
                 class="busqueda-limpiar"
@@ -49,21 +48,21 @@ import{adoptCss as m,precargarCss as v,define as w,html as i,emitir as t,esc as 
                 Limpiar
               </button>
             </div>
-          `:a.length>1?i`
+          `:a.length>1?e`
               <nav class="secciones" role="tablist" aria-label="Secciones">
-                ${a.map(e=>i`
+                ${a.map(i=>e`
                     <button
                       type="button"
                       class="seccion"
                       role="tab"
-                      ${e.id===r?"selected":""}
-                      aria-selected="${e.id===r?"true":"false"}"
-                      onclick=${()=>t(this,"sw-nav-tab",{tab:e.id})}
+                      ${i.id===r?"selected":""}
+                      aria-selected="${i.id===r?"true":"false"}"
+                      onclick=${()=>t(this,"sw-nav-tab",{tab:i.id})}
                     >
-                      ${e.icon?i`<is-icon icon="${e.icon}"></is-icon>`:null}
-                      ${e.label}
+                      ${i.icon?e`<is-icon icon="${i.icon}"></is-icon>`:null}
+                      ${i.label}
                     </button>
                   `)}
               </nav>
             `:null}
-    `),m(this.#e,import.meta.url,"sw-nav")}}v(import.meta.url,"sw-nav"),w("sw-nav",u);export{u as SwNav};
+    `),m(this.#i,import.meta.url,"sw-nav")}}v(import.meta.url,"sw-nav"),g("sw-nav",u);export{u as SwNav};

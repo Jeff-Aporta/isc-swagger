@@ -30,8 +30,7 @@ import './sw-method.js';
 import './sw-auth.js';
 import './sw-layout.js';
 import './sw-driver-switch.js';
-import './sw-export.js';
-import './sw-doc-reload.js';
+import './sw-doc-actions.js';
 import './sw-minidoc-view.js';
 import './sw-minidoc-code.js';
 
@@ -282,8 +281,8 @@ class SwMinidoc extends HTMLElement {
       this.#session = ((e as CustomEvent).detail as { session: SwSesion | null })?.session ?? null;
     });
 
-    const exportar = document.createElement('sw-export');
-    (exportar as HTMLElement & { props: unknown }).props = { spec: this.#spec, config: this.#config };
+    const docAcciones = document.createElement('sw-doc-actions');
+    (docAcciones as HTMLElement & { props: unknown }).props = { spec: this.#spec, config: this.#config };
 
     const iconoMarca = this.#config.brand?.icon || 'mdi:api';
 
@@ -304,8 +303,7 @@ class SwMinidoc extends HTMLElement {
             }}
           ></is-input>
           ${autenticacion}
-          ${exportar}
-          <sw-doc-reload></sw-doc-reload>
+          ${docAcciones}
           <sw-driver-switch></sw-driver-switch>
           <is-theme-toggle></is-theme-toggle>
         </div>

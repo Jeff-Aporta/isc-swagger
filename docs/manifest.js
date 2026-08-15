@@ -46,6 +46,7 @@ export const componentes = [
   { tag: 'sw-auth', title: 'Sesión', page: 'previews/sw-auth.html', category: 'shell' },
   { tag: 'sw-export', title: 'Descargas', page: 'previews/sw-export.html', category: 'shell' },
   { tag: 'sw-doc-reload', title: 'Actualizar documento', page: 'previews/sw-doc-reload.html', category: 'shell' },
+  { tag: 'sw-doc-actions', title: 'Documento (pill)', page: 'previews/sw-doc-actions.html', category: 'shell' },
   { tag: 'sw-nav', title: 'Barra superior', page: 'previews/sw-nav.html', category: 'shell' },
 
   { tag: 'sw-viewer', title: 'Envoltura de drivers', page: 'previews/sw-viewer.html', category: 'shell' },

@@ -31,6 +31,7 @@ Cómo se escribe uno, cómo se adopta el CSS y qué está prohibido:
 | `<sw-auth>` | `authEnabled`, `auth`, `session` | `sw-session-change` | Sesión JWT: chip, diálogo de login, pegado de token |
 | `<sw-export>` | `spec`, `config` | — | Descargas: documento JSON, Postman, IS (trigger solo icono) |
 | `<sw-doc-reload>` | — | `sw-doc-reload` | Actualiza config desde API (invalida cache 24 h); solo icono |
+| `<sw-doc-actions>` | `spec`, `config` | `sw-doc-reload` | Pastilla: descarga + recarga en `<is-button-group pill>` (cabeceras) |
 | `<sw-viewer>` | `conn`, `driver` | — | Envoltura: monta el driver elegido y escucha `sw-driver-change` |
 | `<sw-driver-switch>` | `value` | `sw-driver-change` | Selector de presentación, en la cabecera junto al tema |
 | `<sw-layout>` | — (slots) | `sw-layout-modo` | Armazón de 3 zonas: splits arrastrables y colapso a cajón |
@@ -51,7 +52,7 @@ demás usan `crearComponente`. Cada uno de los seis debe llamar
 
 ```
 sw-app
-├── sw-nav ── sw-auth · sw-export · is-theme-toggle
+├── sw-nav ── sw-auth · sw-doc-actions · is-theme-toggle
 ├── sw-info
 ├── sw-server
 └── sw-tag-group *
@@ -69,7 +70,7 @@ bloque de abajo **al abrir**, no al pintar la lista.
 ```
 sw-minidoc
 └── sw-layout                    ← splits arrastrables + cajones en pantalla estrecha
-    ├── slot cabecera ── is-icon · is-input · sw-auth · sw-driver-switch · is-theme-toggle
+    ├── slot cabecera ── is-icon · is-input · sw-auth · sw-doc-actions · sw-driver-switch · is-theme-toggle
     ├── slot inicio (índice) ── sw-method *
     ├── slot centro ── sw-minidoc-view
     │   ├── sw-method · sw-path

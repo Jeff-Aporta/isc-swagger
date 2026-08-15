@@ -32,6 +32,7 @@ await import('./sw-server.js');
 await import('./sw-auth.js');
 await import('./sw-export.js');
 await import('./sw-doc-reload.js');
+await import('./sw-doc-actions.js');
 await import('./sw-nav.js');
 await import('./sw-app.js');
 

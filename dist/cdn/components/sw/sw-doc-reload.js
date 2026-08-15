@@ -1,12 +1,12 @@
-import{crearComponente as a,define as r,emitir as l,html as c}from"./_shared.js";const o=a(import.meta.url,(e,t,i)=>{e.append(c`
+import{crearComponente as i,define as a,emitir as c,html as l}from"./_shared.js";const o=i(import.meta.url,(e,n,r)=>{e.append(l`
       <is-button
         class="btn"
         variant="plain"
         color="neutral"
         aria-label="Actualizar documentación"
         title="Actualizar desde el servidor (ignora cache local de 24 h)"
-        onis-click=${()=>l(i,"sw-doc-reload",null)}
+        onis-click=${()=>c(r,"sw-doc-reload",null)}
       >
         <is-icon icon="mdi:refresh"></is-icon>
       </is-button>
-    `)},{},"sw-doc-reload");r("sw-doc-reload",o);export{o as SwDocReload};
+    `)},{},"sw-doc-reload");a("sw-doc-reload",o);export{o as SwDocReload};
