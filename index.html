@@ -18,7 +18,7 @@
 -->
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="mask-icon" href="./favicon.svg" color="#4ade80">
-<link rel="apple-touch-icon" href="./docs/video/is-swagger-promo.poster.jpg">
+<link rel="apple-touch-icon" href="https://i.ytimg.com/vi/k0XcnhHQlzc/hqdefault.jpg">
 
 <!--
   Miniatura para redes. Las URL de og:image e og:url deben ser **absolutas**: Facebook,
@@ -30,16 +30,16 @@
 <meta property="og:url" content="https://jeff-aporta.github.io/isc-swagger/">
 <meta property="og:title" content="IS-Swagger · Visor de documentación de APIs">
 <meta property="og:description" content="Visor de documentación InSoft en web components: explora, documenta y prueba los endpoints de cualquier API documentada, sin salir del navegador.">
-<meta property="og:image" content="https://jeff-aporta.github.io/isc-swagger/docs/video/is-swagger-promo.poster.jpg">
+<meta property="og:image" content="https://i.ytimg.com/vi/k0XcnhHQlzc/maxresdefault.jpg">
 <meta property="og:image:type" content="image/jpeg">
-<meta property="og:image:width" content="1920">
-<meta property="og:image:height" content="1080">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
 <meta property="og:image:alt" content="Interfaz de IS-Swagger mostrando endpoints agrupados por sección">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="IS-Swagger · Visor de documentación de APIs">
 <meta name="twitter:description" content="Explora, documenta y prueba los endpoints de tu API desde el navegador. Web components, sin React ni bundler.">
-<meta name="twitter:image" content="https://jeff-aporta.github.io/isc-swagger/docs/video/is-swagger-promo.poster.jpg">
+<meta name="twitter:image" content="https://i.ytimg.com/vi/k0XcnhHQlzc/maxresdefault.jpg">
 <meta name="twitter:image:alt" content="Interfaz de IS-Swagger mostrando endpoints agrupados por sección">
 
 <script type="application/ld+json">
@@ -50,7 +50,7 @@
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Cualquiera con navegador moderno",
   "url": "https://jeff-aporta.github.io/isc-swagger/",
-  "image": "https://jeff-aporta.github.io/isc-swagger/docs/video/is-swagger-promo.poster.jpg",
+  "image": "https://i.ytimg.com/vi/k0XcnhHQlzc/maxresdefault.jpg",
   "description": "Visor de documentación de APIs en web components: explora, documenta y prueba los endpoints de tu API desde el navegador.",
   "author": { "@type": "Person", "name": "Jeff-Aporta" },
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
@@ -98,16 +98,9 @@
 <script type="module">
   import { ISWebComponentsLoader as L } from
     'https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/loader.min.js';
+  import { SW_KIT_TAGS } from './dist/cdn/js/kit-tags.js';
   // Sin L.pin → tip de main. Pin solo si el host lo pide de forma explícita.
-  // Lista viva: si un `sw-*` empieza a usar otro tag del kit, añadirlo aquí y en LLM.md.
-  await L.load(
-    'is-button', 'is-copy-button', 'is-dropdown', 'is-dropdown-item',
-    'is-checkbox', 'is-input', 'is-option', 'is-select', 'is-textarea',
-    'is-spinner', 'is-tag', 'is-theme-toggle', 'is-toast',
-    'is-format-bytes', 'is-format-date', 'is-format-number', 'is-relative-time',
-    'is-callout', 'is-details', 'is-dialog', 'is-divider', 'is-drawer', 'is-split-panel',
-    'is-icon', 'is-code', 'is-md-render',
-  );
+  await L.load(...SW_KIT_TAGS);
 </script>
 
 <!--
@@ -184,16 +177,23 @@
       </div>
     </div>
     <figure class="hero__video">
-      <video controls playsinline preload="metadata"
-             poster="./docs/video/is-swagger-promo.poster.jpg"
-             aria-label="Vídeo de presentación de IS-Swagger">
-        <source src="./docs/video/is-swagger-promo.mp4" type="video/mp4">
-        <p>
-          Tu navegador no reproduce el vídeo.
-          <a href="./docs/video/is-swagger-promo.mp4">Descárgalo aquí</a>.
-        </p>
-      </video>
-      <figcaption>Presentación · 1080p · 6 min</figcaption>
+      <!--
+        Vídeo unlisted en YouTube (no archivo local). El iframe evita hospedar
+        ~25 MB en Pages; el id es público en el embed aunque el listado esté oculto.
+      -->
+      <iframe
+        class="hero__video-frame"
+        src="https://www.youtube-nocookie.com/embed/k0XcnhHQlzc"
+        title="Vídeo de presentación de IS-Swagger"
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+      ></iframe>
+      <figcaption>
+        Presentación ·
+        <a href="https://youtu.be/k0XcnhHQlzc" rel="noopener noreferrer" target="_blank">YouTube</a>
+      </figcaption>
     </figure>
   </section>
 

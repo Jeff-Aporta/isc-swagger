@@ -4,17 +4,21 @@
  * Todo se genera en el navegador desde la spec / config ya cargada. No hay endpoint
  * de exportación: el visor es 100 % front y una descarga que dependiera del host
  * dejaría de funcionar al abrir el HTML suelto.
+ *
+ * Postman: la description de cada request usa `x-iss-doc-md` convertido —
+ * diagramas `is-*` → PNG transparente en `<img src="data:…">`, `<is-code>` → fences.
  */
 
 import { listOperations, resolveServerUrl, jsonPretty } from './openapi.js';
 import { buildIsDocument } from './is-document.js';
+import { issDocMdForPostman, opDocMd } from './postman-md.js';
 
 export interface SwFormatoExport {
   id: string;
   label: string;
   icon: string;
   filename: string;
-  build(): string;
+  build(): string | Promise<string>;
 }
 
 const slug = (s: unknown): string =>
@@ -47,8 +51,14 @@ export function toOpenApi30(spec: SwSpec): Record<string, unknown> {
  * Los `{param}` de OpenAPI se traducen a `:param` (la sintaxis de Postman) y
  * cada segmento va también en `path[]`, que es lo que Postman usa realmente
  * para construir la petición; `raw` solo se muestra en la barra de la app.
+ *
+ * La description de cada item es el markdown InSoft ya convertido para Postman
+ * (PNG de diagramas + fences de código).
  */
-export function toPostmanCollection(spec: SwSpec, nombre?: string): Record<string, unknown> {
+export async function toPostmanCollection(
+  spec: SwSpec,
+  nombre?: string,
+): Promise<Record<string, unknown>> {
   const base = resolveServerUrl(spec) || '{{baseUrl}}';
   const porTag = new Map<string, Record<string, unknown>[]>();
 
@@ -67,13 +77,19 @@ export function toPostmanCollection(spec: SwSpec, nombre?: string): Record<strin
 
     const headers = (op.parameters ?? [])
       .filter((p) => p.in === 'header')
-      .map((p) => ({ key: p.name, value: p.example != null ? String(p.example) : '', description: p.description ?? '' }));
+      .map((p) => ({
+        key: p.name,
+        value: p.example != null ? String(p.example) : '',
+        description: p.description ?? '',
+      }));
 
     const jsonBody = op.requestBody?.content?.['application/json'];
     const ejemplo = jsonBody?.example ?? jsonBody?.schema?.example;
     if (jsonBody) headers.push({ key: 'Content-Type', value: 'application/json', description: '' });
 
     const segmentos = op.path.split('/').filter(Boolean).map((s) => s.replace(/^\{(.+)\}$/, ':$1'));
+    const docMd = opDocMd(op as unknown as Record<string, unknown>);
+    const description = docMd ? await issDocMdForPostman(docMd) : (op.description ?? op.summary ?? '');
 
     porTag.get(tag)!.push({
       name: op.summary || `${op.method.toUpperCase()} ${op.path}`,
@@ -86,7 +102,7 @@ export function toPostmanCollection(spec: SwSpec, nombre?: string): Record<strin
           path: segmentos,
           query,
         },
-        description: op.description ?? op.summary ?? '',
+        description,
         ...(jsonBody
           ? { body: { mode: 'raw', raw: jsonPretty(ejemplo ?? {}), options: { raw: { language: 'json' } } } }
           : {}),
@@ -137,7 +153,7 @@ export function buildExportFormats(spec: SwSpec | null, config: SwConfig): SwFor
       label: 'Colección Postman',
       icon: 'mdi:send-outline',
       filename: `${postmanName}.postman_collection.json`,
-      build: () => jsonPretty(toPostmanCollection(spec, spec.info?.title)),
+      build: async () => jsonPretty(await toPostmanCollection(spec, spec.info?.title)),
     },
   ];
   return formatos;

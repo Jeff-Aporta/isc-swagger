@@ -8,7 +8,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { JSDOM } from 'jsdom';
 
@@ -171,9 +171,16 @@ test('index.html referencia solo assets que el build produce', () => {
   }
 });
 
-test('index.html carga is-code e is-md-render en el kit (cURL/docs)', () => {
-  // Sin estos tags en L.load, sw-json/sw-doc montan elementos sin upgrade → cajas vacías.
+test('index.html carga el kit vía SW_KIT_TAGS (kit-tags.js)', () => {
   const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
-  assert.match(html, /['"]is-code['"]/, 'falta is-code en L.load');
-  assert.match(html, /['"]is-md-render['"]/, 'falta is-md-render en L.load');
+  assert.match(html, /SW_KIT_TAGS/, 'index.html debe usar SW_KIT_TAGS del CDN');
+  assert.match(html, /kit-tags\.js/, 'index.html debe importar dist/cdn/js/kit-tags.js');
+  const kit = readFileSync(join(ROOT, 'src', 'js', 'kit-tags.ts'), 'utf8');
+  for (const tag of ['is-code', 'is-md-render', 'is-flowchart', 'is-diagram-lightbox']) {
+    assert.match(kit, new RegExp(`['"]${tag}['"]`), `falta ${tag} en src/js/kit-tags.ts`);
+  }
+  assert.ok(
+    existsSync(join(ROOT, 'dist', 'cdn', 'js', 'kit-tags.js')),
+    'el build debe emitir dist/cdn/js/kit-tags.js',
+  );
 });

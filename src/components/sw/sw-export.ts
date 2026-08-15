@@ -3,6 +3,8 @@
  *
  * Los formatos se generan al pulsar, no al pintar el menú: serializar la spec
  * tres veces en cada repintado de la barra sería trabajo tirado.
+ *
+ * Postman es async (rasteriza diagramas a PNG); el resto suele ser sync.
  */
 
 import { crearComponente, define, html, avisar } from './_shared.js';
@@ -28,11 +30,18 @@ const SwExport = crearComponente<Props>(
           const id = item?.getAttribute('value');
           const formato = formatos.find((f) => f.id === id);
           if (!formato) return;
-          try {
-            descargarTexto(formato.filename, formato.build());
-          } catch (err) {
-            avisar(`No se pudo generar el archivo: ${(err as Error)?.message ?? err}`, 'danger');
-          }
+          void (async () => {
+            try {
+              if (formato.id === 'postman') {
+                avisar('Generando Postman (diagramas → PNG)…', 'brand');
+              }
+              const contenido = await Promise.resolve(formato.build());
+              descargarTexto(formato.filename, contenido);
+              avisar(`Descargado: ${formato.filename}`, 'success');
+            } catch (err) {
+              avisar(`No se pudo generar el archivo: ${(err as Error)?.message ?? err}`, 'danger');
+            }
+          })();
         }}
       >
         <is-button slot="trigger" variant="plain" color="neutral" aria-label="Descargar documento">

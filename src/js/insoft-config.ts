@@ -334,7 +334,8 @@ interface InsoftCatalog {
   lookups?: Record<string, unknown>;
   listFilters?: Record<string, unknown>;
   inputRecommendations?: Record<string, unknown>;
-  fPresets?: Record<string, unknown>;
+  /** Presets de body para QUERY listados (antes `fPresets` / query `f`). */
+  bodyPresets?: Record<string, unknown>;
   requestBodyExamples?: Record<string, unknown>;
   tryitConfirm?: Record<string, unknown>;
   tryitAttachments?: { templates?: Record<string, unknown> };

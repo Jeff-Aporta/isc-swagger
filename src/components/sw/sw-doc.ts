@@ -1,8 +1,10 @@
 /**
  * <sw-doc> — prosa Markdown vía `<is-md-render>` (kit is-webcomponents).
  *
- * El host debe haber cargado el tag `is-md-render`. Si el kit no está listo
- * todavía, el custom element queda inerte hasta el upgrade.
+ * El host debe haber cargado el tag `is-md-render` (y los `is-*` que el MD
+ * embute: `is-code`, `is-flowchart`, …). El cuerpo va en un
+ * `<script type="text/markdown">` hijo — no en el atributo `value` — para
+ * que HTML embebido (`<is-flowchart>`, `<is-code>`) no se rompa por comillas.
  */
 
 import { crearComponente, define, html } from './_shared.js';
@@ -27,7 +29,11 @@ const SwDoc = crearComponente<Props>(
     const render = document.createElement('is-md-render');
     render.className = 'md';
     render.setAttribute('readonly', '');
-    render.setAttribute('value', md);
+    const source = document.createElement('script');
+    source.type = 'text/markdown';
+    source.setAttribute('data-md-source', '');
+    source.textContent = md;
+    render.append(source);
 
     root.append(html`<div class="prosa">${render}</div>`);
   },

@@ -197,26 +197,26 @@ vacío en un ISS). No es el camino normal de `index.html` ni de previews/docs.
 
 ### Importación mínima con el loader
 
-`all.min.js` del kit arrastra las 12 categorías. Este visor usa 22 tags, así que carga por
-tag con el loader — que además lleva registro anti-redundancia y no repite peticiones:
+`all.min.js` del kit arrastra las 12 categorías. Este visor usa un subconjunto de tags,
+declarado **una sola vez** en `src/js/kit-tags.ts` (`SW_KIT_TAGS`) y publicado en
+`dist/cdn/js/kit-tags.js`. Hosts e `index.html` importan esa lista; no la duplican.
 
 ```html
 <script type="module">
   import { ISWebComponentsLoader as L } from
     'https://cdn.jsdelivr.net/gh/Jeff-Aporta/is-webcomponents@main/dist/cdn/loader.min.js';
-  // L.pin('abcdef…');  // opcional y explícito; sin esto → tip de main
-  await L.load('is-button', 'is-icon', /* … */);
+  import { SW_KIT_TAGS } from
+    'https://cdn.jsdelivr.net/gh/Jeff-Aporta/isc-swagger@main/dist/cdn/js/kit-tags.js';
+  await L.load(...SW_KIT_TAGS);
 </script>
 ```
 
-El CSS de cada componente lo trae su propio `.min.js` con `adoptCss`; del documento solo hacen
-falta `is-base.min.css` y `palettes.min.css`, que van por `<link>` para no bloquear el pintado.
-
 ### Inventario: los tags que usa el visor
 
-Si un `sw-*` empieza a usar otro tag del kit, hay que añadirlo **aquí, en `index.html` y en
-`isSwaggerKitTags` del host**; si no, el custom element no hace upgrade y el tag queda en el DOM
-sin shadow — sin error en consola. Caso real: sin `is-code`, cURL y respuestas salían cajas vacías.
+Si un `sw-*` empieza a usar otro tag del kit, añadirlo **en `src/js/kit-tags.ts`** (y
+actualizar esta tabla). El host ISS **no** mantiene `isSwaggerKitTags`: sin el tag el
+custom element no hace upgrade y el tag queda en el DOM sin shadow — sin error en consola.
+Caso real: sin `is-code`, cURL y respuestas salían cajas vacías.
 
 | Categoría | Tags que se usan | Fichero en el CDN |
 |---|---|---|
@@ -227,7 +227,13 @@ sin shadow — sin error en consola. Caso real: sin `is-code`, cURL y respuestas
 | `layout` | `is-callout`, `is-details`, `is-dialog`, `is-divider`, `is-drawer`, `is-split-panel` | `layout/<nombre>.min.js` |
 | `media` | `is-icon` | `media/icon.min.js` |
 | `code` | `is-code` | `code/code.min.js` |
-| `content` | `is-md-render` | `content/md-render.min.js` |
+| `helpers` | `is-md-render` | `helpers/md-render.min.js` |
+| `diagrams` | `is-flowchart`, `is-diagram-lightbox` | `diagrams/<nombre>.min.js` |
+
+Los MD de Notas (`x-iss-doc-md`) pueden embutir `<is-flowchart>` e `<is-code>` porque
+`is-md-render` pinta por `innerHTML` y el kit hace upgrade. Al exportar a Postman,
+`postman-md.ts` rasteriza diagramas a PNG transparente (`<img src="data:image/png;base64,…">`)
+y convierte `<is-code>` a fences ```.
 
 El nombre del fichero va **sin** el prefijo `is-`: `is-copy-button` vive en
 `actions/copy-button.min.js`. El loader hace esa traducción; solo importa al depurar un 404.
@@ -488,6 +494,7 @@ parte del contrato.
 |---|---|
 | `openapi.test.mjs` | Lectura de la spec: agrupación, orden, `$ref`, seguridad |
 | `dominio.test.mjs` | Filtros, URLs, errores HTTP, markdown, Postman, sesión, búsqueda, conn |
+| `postman-md.test.mjs` | Conversión MD InSoft → Postman (`is-code`→fences; pipeline diagramas) |
 | `render.test.mjs` | Que el shadow se llene (jsdom, `is-*` sin registrar) |
 | `app.test.mjs` | El ciclo completo de `sw-app` con la spec de demo real |
 | `minidoc.test.mjs` | Driver 2: vistas, pestañas de estado, cURL y que los dos drivers convivan |
