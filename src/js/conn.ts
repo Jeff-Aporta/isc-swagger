@@ -15,12 +15,12 @@
  *     embed:      true,             // modo iframe
  *     fixedServer: true,            // no mostrar selector de servidor
  *     paths: {
- *       config:    "/system/swagger/config.json",
- *       meta:      "/system/swagger/meta.json",
- *       paths:     "/system/swagger/paths.json",
- *       docsConfig:"/system/swagger/docs-config.json",
- *       info:      "/info"
+ *       config: "/system/swagger/config.json",  // único fetch del documento (meta+paths+docs)
+ *       info:   "/info"
  *     },
+ *
+ * Legacy (ya no los sirve PatyIA; el default del visor los deja por compat):
+ *       meta, paths, docsConfig — no reintroducir en el host.
  *     title:      "ISS PatyIA",
  *     icon:       "mdi:robot-happy-outline"
  *   }

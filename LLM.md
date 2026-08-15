@@ -42,6 +42,9 @@ Guardián de que esas páginas no mienten: `tests/docs.test.mjs`.
 | `?conn=` → `kind: "config"` InSoft pasa por `parseInsoftConfig` | Asumir OpenAPI: el spec sintetizado no lleva `openapi:` en la salida |
 | `auth.loginUrl` por defecto = `DEFAULT_AUTH_LOGIN_URL` (main-orchestrator) | Dejar `auth.enabled: false` cuando el visor trae `viewer.auth.enabled: true` |
 | `index.html` decide `data-modo` (hero vs app) **en `<head>`**, antes del primer pintado | Decidir el modo desde un módulo: el visor parpadea como hero antes de cambiar |
+| Título del índice (`.op-nombre`): **1 línea** + `ellipsis` | `-webkit-line-clamp: 2` u otro wrap (rompe el panel estrecho) |
+| `SW_KIT_TAGS` en `src/js/kit-tags.ts` (CDN); hosts ISS lo importan | Lista de tags `is-*` hardcodeada en el host (PatyIA ya la erradicó) |
+| Tras cambiar CSS/JS del visor: `npm run build` + push `main` + avisar al host que bumpee el pin SHA | Solo editar `src/` sin rebuild/push: jsDelivr sigue el commit viejo |
 
 ## Dos drivers, un solo documento
 

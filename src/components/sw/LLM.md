@@ -24,7 +24,7 @@ Cómo se escribe uno, cómo se adopta el CSS y qué está prohibido:
 | `<sw-params>` | `params`, `values`, `disabled`, `titulo` | `sw-param-change` | Campos de los parámetros |
 | `<sw-body>` | `op`, `value`, `disabled` | `sw-body-change` | Editor del cuerpo JSON |
 | `<sw-responses>` | `responses` | — | Respuestas **declaradas** (documentación, no resultado) |
-| `<sw-doc>` | `markdown`, `vacio` | — | Prosa Markdown de la operación o `x-iss-doc-md` |
+| `<sw-doc>` | `markdown`, `vacio` | — | Prosa Markdown vía `is-md-render` (HTML embebido: `is-flowchart`, `is-code`) |
 | `<sw-json>` | `value`, `maxHeight` | — | Bloque JSON con resaltado y copiar |
 | `<sw-method>` | `method` | — | Chip del verbo HTTP. Delega en `<is-tag>` |
 | `<sw-path>` | `path` | — | Ruta con los `{parámetros}` resaltados |
@@ -144,6 +144,13 @@ Los transversales están en [`../LLM.md`](../LLM.md). Los propios de esta capa:
 - **Barras de pestañas a mano** (`sw-nav` secciones, `sw-operation` pestañas) —
   deuda conocida frente a `<is-tab-group>`, con su motivo en
   [`../../LLM.md`](../../LLM.md). No es permiso para añadir una tercera.
+- **Títulos del índice minidoc en 2+ líneas** — el panel es estrecho; `.op-nombre`
+  debe ser **una línea** con `overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap` (no `-webkit-line-clamp: 2`). El path debajo ya tenía
+  ellipsis; el título no. Guardián visual: screenshot del panel; CSS en
+  `sw-minidoc.css`.
+- **Repetir el verbo HTTP en el summary** — el chip `sw-method` ya lo muestra.
+  El host (PatyIA) vigila summaries/H2 sin `(GET|QUERY|…)`.
 
 ## Módulos internos
 

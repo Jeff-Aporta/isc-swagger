@@ -29,6 +29,8 @@ módulo. Están al final de esta página.
 | `tryit-body.ts` | Si la operación lleva cuerpo y con qué ejemplo |
 | `markdown.ts` | Markdown → HTML **ya escapado** |
 | `export.ts` | Documento JSON, colección Postman, formato IS |
+| `postman-md.ts` | MD InSoft → Postman: diagramas→PNG, `is-code`→fences |
+| `kit-tags.ts` | `SW_KIT_TAGS`: lista canónica de tags `is-*` que carga el host ISS vía CDN. **No** duplicar en PatyIA `01-api.json` |
 
 ## Reusar antes de crear
 
