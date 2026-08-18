@@ -51,8 +51,17 @@ export function readSState(): Record<string, unknown> {
 /**
  * Escribe la bolsa en la URL, fusionando con lo que ya estuviera.
  * Siempre limpia los params planos de navegación legacy.
+ *
+ * `push` decide si la escritura entra en el historial. La regla es qué espera
+ * el lector al pulsar «atrás»: navegar (abrir otra operación, cambiar de
+ * sección) es un paso atrás que quiere deshacer, así que va con `pushState`;
+ * ajustar la vista (tema, driver, servidor, teclear en la búsqueda) no lo es y
+ * llenaría el historial de estados intermedios, así que va con `replaceState`.
+ *
+ * Escribir la misma URL nunca empuja: repetir la entrada obligaría a pulsar
+ * «atrás» dos veces para llegar al estado anterior de verdad.
  */
-export function writeSState(patch: Record<string, unknown>): void {
+export function writeSState(patch: Record<string, unknown>, opts: { push?: boolean } = {}): void {
   if (typeof location === 'undefined') return;
   const actual = readSState();
   const limpio: Record<string, unknown> = {};
@@ -68,7 +77,9 @@ export function writeSState(patch: Record<string, unknown>): void {
   } else {
     url.searchParams.delete(S_KEY);
   }
-  history.replaceState(history.state, '', url);
+  if (url.href === location.href) return;
+  if (opts.push) history.pushState(history.state, '', url);
+  else history.replaceState(history.state, '', url);
 }
 
 /** Query actual: lee de la URL. Cadena vacía si no hay. */

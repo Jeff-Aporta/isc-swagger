@@ -50,9 +50,6 @@ export interface SwConn {
   paths?: SwConnPaths;
   title?: string;
   icon?: string;
-  /** operationId que se abre cuando la URL no trae `op` en `?s=`. Lo decide el API, no el visor: cuál
-   *  es el endpoint por el que conviene empezar depende de cada documento. */
-  defaultOp?: string;
   [k: string]: unknown;
 }
 
@@ -120,7 +117,6 @@ export interface SwConnResuelto {
   paths: SwConnPaths;
   fixedServer: boolean;
   brand: { title?: string; icon?: string };
-  defaultOp: string;
 }
 
 /**
@@ -141,6 +137,5 @@ export function normalizeConn(conn: SwConn | null | undefined): SwConnResuelto |
       title: conn.title ? String(conn.title) : undefined,
       icon: conn.icon ? String(conn.icon) : undefined,
     },
-    defaultOp: conn.defaultOp ? String(conn.defaultOp) : '',
   };
 }

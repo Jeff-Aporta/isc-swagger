@@ -132,6 +132,10 @@ abierta y búsqueda. Todo lo demás es controlado.
 
 - Escritura de la URL: **solo** `sw-app`, vía `js/url-state.ts`.
 - `?s=` (tema+paleta+q) lo escribe `js/search-state.ts`.
+- Navegar (sección, operación, sub-pestaña) entra en el historial con `pushState`;
+  ajustar la vista (tema, driver, servidor, teclear en la búsqueda) usa `replaceState`.
+- Sin `?s=` se abre **siempre** la primera sección y la primera operación: el documento
+  no puede elegir otra.
 - Un hijo que necesita cambiar algo **emite**: `sw-op-toggle`, `sw-op-tab`,
   `sw-param-change`, `sw-body-change`, `sw-server-change`, `sw-search`,
   `sw-nav-tab`, `sw-session-change`, `sw-need-login`, `sw-reset`.
@@ -358,7 +362,7 @@ Al cargar, `loadViewerDocument`:
 Base64url de `{theme, palette, q, ...}`. La escribe `boot.js` antes del primer
 pintado (tema+paleta). El visor suma `q` (query de búsqueda). F5 restaura todo.
 
-- `js/search-state.ts`: `readSState`, `writeSState`, `getQuery`, `setQuery`, `clearSState`.
+- `js/search-state.ts`: `readSState`, `writeSState(patch, { push })`, `getQuery`, `setQuery`, `clearSState`.
 - `setQuery('')` borra la clave; `clearSState()` borra la bolsa entera (reset).
 - `boot.js` no se toca: lee `?s=` y deja `q` en paz al cambiar tema/paleta.
 

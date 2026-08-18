@@ -94,7 +94,6 @@ export function resolveBootConfig(connDirecto?: SwConn | null): SwConfig {
     // URL, así que un conn entregado como objeto a `<sw-app>` se quedaba sin `paths.config` y el
     // visor caía al `/swagger.json` inferido. Con la URL ya resuelta, ambas vías se comportan igual.
     config.specUrl = joinConnUrl(config.apiBase, conn.paths.config) || undefined;
-    if (conn.defaultOp) config.defaultOp = conn.defaultOp;
   }
   if (spec) config.specUrl = spec;
   if (api) config.apiBase = normalizeApiBase(api);

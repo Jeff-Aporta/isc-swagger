@@ -67,11 +67,14 @@ class SwApp extends HTMLElement {
     this.#query = getQuery();
 
     this.#desuscribir = subscribeUrlState((estado) => {
+      // Volver a una entrada sin `tab` es volver al arranque, y el arranque activa la primera
+      // sección: copiar el `''` tal cual dejaría la barra sin ninguna pestaña marcada.
+      const tab = resolveActiveNavTab(this.#tabs, estado.tab);
       // Solo interesa el «atrás» del navegador: si el estado ya coincide, este
       // aviso viene de nuestra propia escritura y repintar sería trabajo doble.
-      if (estado.tab === this.#navTab && estado.op === this.#opAbierta && estado.opTab === this.#opTab) return;
-      const tabCambio = estado.tab !== this.#navTab;
-      this.#navTab = estado.tab;
+      if (tab === this.#navTab && estado.op === this.#opAbierta && estado.opTab === this.#opTab) return;
+      const tabCambio = tab !== this.#navTab;
+      this.#navTab = tab;
       this.#opAbierta = estado.op;
       this.#opTab = estado.opTab;
       if (tabCambio) {
@@ -228,7 +231,9 @@ class SwApp extends HTMLElement {
     this.#opTab = OP_TAB_DEFAULT;
     this.#navTab = resolveActiveNavTab(this.#tabs, '');
     clearSState();
-    mergeUrlState({ tab: '', op: '', opTab: OP_TAB_DEFAULT });
+    // Reiniciar no es navegar a otra vista: es volver al estado con el que se entra sin `?s=`,
+    // así que reemplaza la entrada actual en vez de añadir una.
+    mergeUrlState({ tab: '', op: '', opTab: OP_TAB_DEFAULT }, { push: false });
     this.#sincronizarNav();
     this.#pintarLista();
   }

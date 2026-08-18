@@ -7,7 +7,12 @@
  *   ?s=<base64url({ op, tab, opt, theme, … })>
  *
  * No se escriben `?op=` / `?tab=` / `?opt=` planos (legado: se migran al leer).
- * Las escrituras usan `replaceState` vía `writeSState`.
+ *
+ * Cambiar de operación o de sección **es** navegar dentro del SPA, así que cada
+ * cambio entra en el historial (`pushState`): atrás y adelante recorren la
+ * misma secuencia de vistas que el lector recorrió. Solo las escrituras que
+ * corrigen la URL sin que el lector haya navegado —restaurar el estado inicial,
+ * migrar params legacy— se hacen con `replaceState` (`{ push: false }`).
  */
 
 import { migrateLegacyNavToS, readSState, writeSState } from './search-state.js';
@@ -42,8 +47,14 @@ export function readUrlState(): SwUrlState {
   };
 }
 
-/** Fusiona solo las claves presentes; `''` borra el campo en `?s=`. */
-export function mergeUrlState(patch: Partial<SwUrlState>): void {
+/**
+ * Fusiona solo las claves presentes; `''` borra el campo en `?s=`.
+ *
+ * `push` por defecto: quien llama está reflejando una navegación del lector.
+ * Pásalo en `false` para sincronizar la URL con un estado que el visor resolvió
+ * solo (la sección o la operación por defecto), que no es un paso atrás.
+ */
+export function mergeUrlState(patch: Partial<SwUrlState>, opts: { push?: boolean } = {}): void {
   if (typeof location === 'undefined') return;
   try {
     migrateLegacyNavToS();
@@ -54,7 +65,7 @@ export function mergeUrlState(patch: Partial<SwUrlState>): void {
     if (patch.opTab !== undefined) {
       next[PARAM_OP_TAB] = patch.opTab === OP_TAB_DEFAULT ? '' : patch.opTab;
     }
-    writeSState(next);
+    writeSState(next, { push: opts.push !== false });
     notificar();
   } catch {
     /* URL no manipulable (file://) */

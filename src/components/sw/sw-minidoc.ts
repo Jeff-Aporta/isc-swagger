@@ -91,8 +91,11 @@ class SwMinidoc extends HTMLElement {
 
     this.#desuscribir = subscribeUrlState((estado) => {
       // Solo el «atrás» del navegador: si ya coincide, el aviso viene de nuestra escritura.
-      if (estado.op === this.#opAbierta) return;
-      this.#opAbierta = estado.op;
+      // Volver a una entrada sin `op` es volver al arranque, y el arranque abre la primera:
+      // dejar la vista en blanco haría que «atrás» pareciera un error de carga.
+      const op = this.#opValida(estado.op);
+      if (op === this.#opAbierta) return;
+      this.#opAbierta = op;
       this.#sincronizarSeleccion();
     });
 
@@ -124,13 +127,10 @@ class SwMinidoc extends HTMLElement {
       this.#docIndex = buildDocIndex(spec);
       this.#session = this.#auth.enabled ? getStoredJwt() : null;
       this.#serverBase = readServerFromUrl() || inferDefaultServerBase(spec, config);
-      // Sin operación en la URL se abre la que declare el documento y, si no declara ninguna,
-      // la primera: una página en blanco no dice qué es esto.
-      if (!this.#opAbierta) {
-        const preferida = String(this.#config.defaultOp ?? '').trim();
-        const existe = preferida && this.#todas.some((o) => o.operationId === preferida);
-        this.#opAbierta = existe ? preferida : (this.#todas[0]?.operationId ?? '');
-      }
+      // Sin operación válida en la URL se abre la primera del índice, siempre. Que el documento
+      // pudiera declarar otra («defaultOp») desconcertaba: se entraba sin `?s=` y el índice
+      // aparecía con una fila cualquiera marcada, no con la de arriba.
+      this.#opAbierta = this.#opValida(this.#opAbierta);
       this.#estado = 'listo';
       if (opts.force) avisar('Documentación actualizada', 'success');
     } catch (e) {
@@ -145,6 +145,12 @@ class SwMinidoc extends HTMLElement {
 
   get #todas(): SwOp[] {
     return this.#grupos.flatMap((g) => g.operations);
+  }
+
+  /** El id si existe en el documento; si no, el de la primera operación. */
+  #opValida(id: string): string {
+    if (id && this.#todas.some((o) => o.operationId === id)) return id;
+    return this.#todas[0]?.operationId ?? '';
   }
 
   get #gruposVisibles(): SwGrupo[] {

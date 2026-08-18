@@ -364,6 +364,27 @@ test('writeSState fusiona sin pisar theme/palette que ya estuvieran', () => {
   assert.equal(dec.q, 'tercero', 'q añadido');
 });
 
+test('navegar apila historial y ajustar la vista no', () => {
+  const dom = mountLocation('');
+  const inicio = dom.window.history.length;
+  mergeUrlState({ op: 'getUno' });
+  mergeUrlState({ op: 'getDos' });
+  assert.equal(dom.window.history.length, inicio + 2, 'cada operación es una entrada');
+  setQuery('insoft');
+  assert.equal(dom.window.history.length, inicio + 2, 'teclear en la búsqueda no apila');
+  mergeUrlState({ op: 'getTres' }, { push: false });
+  assert.equal(dom.window.history.length, inicio + 2, 'push:false reemplaza');
+  assert.equal(readUrlState().op, 'getTres');
+});
+
+test('reescribir el mismo estado no duplica la entrada del historial', () => {
+  const dom = mountLocation('');
+  mergeUrlState({ op: 'getUno' });
+  const tras = dom.window.history.length;
+  mergeUrlState({ op: 'getUno' });
+  assert.equal(dom.window.history.length, tras);
+});
+
 test('readSState devuelve {} si `?s=` está corrupto', () => {
   mountLocation('?s=@@@@');
   assert.deepEqual(readSState(), {});
