@@ -32,6 +32,9 @@ npm run serve     # http://localhost:4190
 
 `npm run dev` deja el build en watch. `npm test` compila y corre `node --test`.
 
+CDN (cuando `dist/` está en GitHub): `https://cdn.jsdelivr.net/gh/Jeff-Aporta/isc-swagger@main/dist/cdn/`.
+Agentes: [`dist/cdn/LLM.md`](src/cdn/LLM.md). Tests Deno de piezas JSON: `dist/cdn/js/iss-swagger-doc.ts`.
+
 ## Cómo se le dice qué documentar
 
 Por orden de precedencia:
@@ -81,6 +84,7 @@ docs/                         sitio documental (no se compila)
   previews/                   una página por `sw-*`, con casos en vivo
   video/                      (reservado; hero → YouTube unlisted)
 dist/cdn/                     artefacto publicado: todo plano y hermano
+  LLM.md, js/*.d.ts, types/     contrato para agentes y tests Deno
 tests/                        node --test contra dist/cdn
 ```
 

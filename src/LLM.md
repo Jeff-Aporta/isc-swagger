@@ -22,8 +22,9 @@ No hay React, ni MUI, ni Babel, ni bundler. TypeScript → módulos ES planos.
 | `components/` | [components/LLM.md](components/LLM.md) | Pintado: traduce esos datos a `is-*`. El **cómo** se ve |
 | `components/sw/` | [components/sw/LLM.md](components/sw/LLM.md) | Catálogo de los tags `sw-*` |
 | `../docs/` | [../docs/LLM.md](../docs/LLM.md) | Sitio documental: prosa + una página por `sw-*` |
+| `cdn/` | [cdn/LLM.md](cdn/LLM.md) | Contrato **público** que el build copia a `dist/cdn/LLM.md` |
 | `css/` | — | `app.css`: solo lo que vive en **light DOM** (el diálogo de confirmación) |
-| `types/` | — | `swagger.d.ts`: tipos ambiente, sin `import`/`export` |
+| `types/` | — | `swagger.d.ts`: tipos ambiente; el build los publica en `dist/cdn/types/` |
 
 `js/boot.js` y `js/hojas.js` son los dos únicos archivos en JavaScript plano:
 corren síncronos en `<head>`, antes de que exista ningún módulo. Ver

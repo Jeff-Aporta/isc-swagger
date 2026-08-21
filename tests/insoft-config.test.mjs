@@ -88,6 +88,54 @@ test('requestBody.bodyKey resuelve el ejemplo desde catalog.requestBodies', () =
   assert.ok(put.requestBody.content['application/json'].schema, 'schema inline del body');
 });
 
+test('QUERY con parameters in:query los mueve al body, no a la URL', () => {
+  const { spec } = parseInsoftConfig({
+    kind: 'config',
+    version: 2,
+    info: { title: 'RAG', version: '1' },
+    paths: {
+      '/metricas': {
+        query: {
+          summary: 'Tiempos',
+          parameters: [{ name: 'dias', in: 'query', schema: { type: 'integer', default: 30 } }],
+        },
+      },
+    },
+    catalog: { docs: {} },
+  }, 'https://h');
+  const op = spec.paths['/metricas'].query;
+  assert.ok(op, 'debe seguir siendo método query, no get');
+  assert.equal((op.parameters ?? []).some((p) => p.in === 'query'), false);
+  assert.equal(op.requestBody.content['application/json'].example.dias, 30);
+});
+
+test('QUERY con requestBody OpenAPI (content) no pierde el schema', () => {
+  const { spec } = parseInsoftConfig({
+    kind: 'config',
+    version: 2,
+    info: { title: 'RAG', version: '1' },
+    paths: {
+      '/metricas': {
+        query: {
+          summary: 'Tiempos',
+          requestBody: {
+            content: {
+              'application/json': {
+                schema: { type: 'object', properties: { dias: { type: 'integer' } } },
+                example: { dias: 30 },
+              },
+            },
+          },
+        },
+      },
+    },
+    catalog: { docs: {} },
+  }, 'https://h');
+  const media = spec.paths['/metricas'].query.requestBody.content['application/json'];
+  assert.equal(media.example.dias, 30);
+  assert.ok(media.schema.properties.dias, 'el visor pintaba body vacío y dias como ?dias=');
+});
+
 test('el viewer del ISS se traduce a SwConfig del visor', () => {
   const { config } = parseInsoftConfig(SAMPLE, 'https://h/api');
   assert.equal(config.brand.title, 'ISS PatyIA');

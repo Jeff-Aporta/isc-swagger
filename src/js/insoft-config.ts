@@ -21,9 +21,22 @@
  *     → x-iss-doc-md: catalog.docs["systemOpenai"]
  */
 
+import type { InsoftCatalog, InsoftConfig } from './iss-swagger-doc.js';
+
 const ISS_DOC_MD = 'x-iss-doc-md';
 const ISS_SUBGROUP = 'x-isa-subgroup';
 const ISS_SUBGROUPS = 'x-isa-subgroups';
+const ISS_TRYIT_ATTACHMENTS = 'x-iss-tryit-attachments';
+
+function inlineCatalogSchema(catalog: InsoftCatalog, schema: unknown): unknown {
+  if (!schema || typeof schema !== 'object') return schema;
+  const ref = (schema as { $ref?: string }).$ref;
+  if (typeof ref !== 'string') return schema;
+  const m = ref.match(/#\/catalog\/schemas\/([^/]+)$/);
+  if (!m) return schema;
+  const def = catalog.schemas?.[m[1]!];
+  return def ? { ...def } : schema;
+}
 
 const ISS_RESPONSE_KIND = {
   type: 'object',
@@ -170,7 +183,7 @@ function buildResponses(
 }
 
 /** Construye el `operation` que el visor entiende. */
-function buildOperation(catalog: InsoftCatalog, def: Record<string, unknown>): Record<string, unknown> {
+function buildOperation(catalog: InsoftCatalog, method: string, def: Record<string, unknown>): Record<string, unknown> {
   const op: Record<string, unknown> = {
     summary: def.summary,
     description: def.description ?? '',
@@ -186,23 +199,54 @@ function buildOperation(catalog: InsoftCatalog, def: Record<string, unknown>): R
     if (typeof md === 'string') op[ISS_DOC_MD] = md.replace(/\\+`/g, '`');
   }
 
-  if (Array.isArray(def.parameters) && def.parameters.length) {
-    op.parameters = def.parameters.map((p) => ({ ...(p as Record<string, unknown>) }));
+  const paramsIn = Array.isArray(def.parameters) ? (def.parameters as Record<string, unknown>[]) : [];
+  const queryParams = paramsIn.filter((p) => p.in === 'query');
+  const otrosParams = paramsIn.filter((p) => p.in !== 'query');
+  // QUERY no admite ?q=: esos campos van en el JSON. Si el JSON ISS los declaró
+  // como parameters in:query, el visor armaría GET ?dias= y el Worker responde 400.
+  if (method === 'query') {
+    if (otrosParams.length) op.parameters = otrosParams.map((p) => ({ ...p }));
+  } else if (paramsIn.length) {
+    op.parameters = paramsIn.map((p) => ({ ...p }));
   }
+
+  if (def.tryitAttachments != null) op.tryitAttachments = def.tryitAttachments;
 
   if (def.requestBody && typeof def.requestBody === 'object') {
     const rb = def.requestBody as Record<string, unknown>;
-    const bodyKey = rb.bodyKey as string | undefined;
-    const example = bodyKey ? catalog.requestBodies?.[bodyKey] : rb.example;
-    op.requestBody = {
-      required: rb.required !== false,
-      description: rb.description ?? 'Cuerpo de la petición',
-      content: {
-        'application/json': {
-          schema: rb.schema ?? { type: 'object' },
-          example: example ?? {},
+    if (rb.content && typeof rb.content === 'object') {
+      op.requestBody = {
+        required: rb.required,
+        description: rb.description,
+        content: rb.content,
+      };
+    } else {
+      const bodyKey = rb.bodyKey as string | undefined;
+      const example = bodyKey ? catalog.requestBodies?.[bodyKey] : rb.example;
+      op.requestBody = {
+        required: rb.required !== false,
+        description: rb.description ?? 'Cuerpo de la petición',
+        content: {
+          'application/json': {
+            schema: inlineCatalogSchema(catalog, rb.schema) ?? { type: 'object' },
+            ...(example !== undefined && example !== null ? { example } : {}),
+          },
         },
-      },
+      };
+    }
+  } else if (method === 'query' && queryParams.length) {
+    const properties: Record<string, unknown> = {};
+    const example: Record<string, unknown> = {};
+    for (const p of queryParams) {
+      const nombre = String(p.name ?? '');
+      if (!nombre) continue;
+      properties[nombre] = p.schema ?? { type: 'string' };
+      const v = p.example ?? (p.schema as { default?: unknown } | undefined)?.default;
+      if (v !== undefined) example[nombre] = v;
+    }
+    op.requestBody = {
+      required: false,
+      content: { 'application/json': { schema: { type: 'object', properties }, example } },
     };
   }
 
@@ -288,7 +332,7 @@ export function parseInsoftConfig(raw: InsoftConfig, apiBase: string): { config:
     if (!methods || typeof methods !== 'object') continue;
     const item: Record<string, unknown> = {};
     for (const [method, opDef] of Object.entries(methods as Record<string, unknown>)) {
-      if (opDef && typeof opDef === 'object') item[method] = buildOperation(catalog, opDef as Record<string, unknown>);
+      if (opDef && typeof opDef === 'object') item[method] = buildOperation(catalog, method, opDef as Record<string, unknown>);
     }
     paths[path] = item;
   }
@@ -309,34 +353,8 @@ export function parseInsoftConfig(raw: InsoftConfig, apiBase: string): { config:
     },
   };
 
+  if (catalog.tryitAttachments) spec[ISS_TRYIT_ATTACHMENTS] = catalog.tryitAttachments;
+
   return { config: buildViewerConfig(raw, apiBase), spec };
 }
 
-/* ── tipos locales (subconjunto del config InSoft que miramos) ── */
-
-interface InsoftConfig {
-  kind: string;
-  version: number;
-  info?: { title?: string; description?: string; version?: string };
-  viewer?: Record<string, unknown>;
-  protocol?: { serverUrl?: string };
-  tags?: Array<Record<string, unknown>>;
-  paths?: Record<string, Record<string, unknown>>;
-  docs?: Record<string, string>;
-  catalog?: InsoftCatalog;
-}
-
-interface InsoftCatalog {
-  schemas?: Record<string, Record<string, unknown>>;
-  payloads?: Record<string, unknown>;
-  requestBodies?: Record<string, unknown>;
-  docs?: Record<string, string>;
-  lookups?: Record<string, unknown>;
-  listFilters?: Record<string, unknown>;
-  inputRecommendations?: Record<string, unknown>;
-  /** Presets de body para QUERY listados (antes `fPresets` / query `f`). */
-  bodyPresets?: Record<string, unknown>;
-  requestBodyExamples?: Record<string, unknown>;
-  tryitConfirm?: Record<string, unknown>;
-  tryitAttachments?: { templates?: Record<string, unknown> };
-}

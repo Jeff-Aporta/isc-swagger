@@ -8,6 +8,7 @@ Esta página son las leyes y la historia de errores. El detalle por capa vive en
 | Página | Cuándo |
 | --- | --- |
 | [`src/LLM.md`](src/LLM.md) | Siempre. Índice, regla de reuso del kit, deuda conocida |
+| [`src/cdn/LLM.md`](src/cdn/LLM.md) | Contrato **público** (se copia a `dist/cdn/LLM.md` para el CDN) |
 | [`src/js/LLM.md`](src/js/LLM.md) | Vas a tocar dominio, parsers, URL o auth |
 | [`src/components/LLM.md`](src/components/LLM.md) | Vas a tocar pintado, CSS o repintado |
 | [`src/components/sw/LLM.md`](src/components/sw/LLM.md) | Necesitas props/eventos de un `sw-*` |
@@ -47,6 +48,7 @@ Guardián de que esas páginas no mienten: `tests/docs.test.mjs`.
 | Título del índice (`.op-nombre`): **1 línea** + `ellipsis` | `-webkit-line-clamp: 2` u otro wrap (rompe el panel estrecho) |
 | `SW_KIT_TAGS` en `src/js/kit-tags.ts` (CDN); hosts ISS lo importan | Lista de tags `is-*` hardcodeada en el host (PatyIA ya la erradicó) |
 | Tras cambiar CSS/JS del visor: `npm run build` + push `main` + avisar al host que bumpee el pin SHA | Solo editar `src/` sin rebuild/push: jsDelivr sigue el commit viejo |
+| `dist/cdn/LLM.md` + `js/iss-swagger-doc.{js,d.ts,ts}` para agentes y tests Deno | Reescribir el shape de `swagger__*.json` en cada host |
 
 ## Dos drivers, un solo documento
 
@@ -514,6 +516,9 @@ parte del contrato.
 | `css-adopcion.test.mjs` | `adoptCss`: hoja síncrona desde caché, una descarga por href, repintar no la pierde |
 | `docs.test.mjs` | Que los `LLM.md` no mienten: catálogo completo, enlaces vivos, reglas que el código sigue cumpliendo |
 | `hojas.test.mjs` | El parche de `js/hojas.js` sobre los shadow roots del kit y el caché compartido |
+| `iss-swagger-doc.test.mjs` | Piezas JSON `kind` meta/paths/config vs `assertIssSwaggerPiezas` |
+| `iss-swagger-md.test.mjs` | JSON → markdown / HTML de `GET /LLM.md` |
+| `cdn.test.mjs` | Artefactos públicos: `LLM.md`, `.d.ts`, `iss-swagger-doc.ts`, convertidor `.min.js` |
 | `invariantes.test.mjs` | Regresiones de bugs ya vistos (OpenAPI, flicker, auth, conn, spec por defecto) |
 
 El patrón de fallo de este stack es siempre el mismo: **el artefacto se genera
