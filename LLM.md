@@ -48,6 +48,9 @@ Guardián de que esas páginas no mienten: `tests/docs.test.mjs`.
 | Título del índice (`.op-nombre`): **1 línea** + `ellipsis` | `-webkit-line-clamp: 2` u otro wrap (rompe el panel estrecho) |
 | `SW_KIT_TAGS` en `src/js/kit-tags.ts` (CDN); hosts ISS lo importan | Lista de tags `is-*` hardcodeada en el host (PatyIA ya la erradicó) |
 | Tras cambiar CSS/JS del visor: `npm run build` + push `main` + avisar al host que bumpee el pin SHA | Solo editar `src/` sin rebuild/push: jsDelivr sigue el commit viejo |
+| Cuerpo try-it vacío = `{ }` (`formatBodyExample`) | `JSON.stringify(null)` → literal `"null"` en el editor |
+| Picker de adjuntos general, sin `accept=` | Filtrar MIME por endpoint o inventar un input nativo |
+| Host RAG = GitHub Pages; host ISS = jsDelivr `@sha40` | Asumir que un push actualiza los dos canales |
 | `dist/cdn/LLM.md` + `js/iss-swagger-doc.{js,d.ts,ts}` para agentes y tests Deno | Reescribir el shape de `swagger__*.json` en cada host |
 
 ## Dos drivers, un solo documento
@@ -472,6 +475,26 @@ es el contrato del backend. Documentarlo en UI es parte del contrato.
     no están registrados: se ve el tag vacío hasta que carguen. Por eso el
     orden en `index.html` es: módulos → IIFE de un-hide.
 
+17. **Cuerpo try-it `"null"`** — `skeletonFromSchema` caía a `null` en `$ref` sin
+    example (p. ej. `QUERY /voces`). El editor hacía `JSON.stringify` y el usuario
+    veía la palabra null, JSON inválido para un objeto. Fix: no volcar skeleton;
+    `formatBodyExample` de `null` o `undefined` pinta `{ }` vacío. Guardián:
+    `dominio.test.mjs`.
+
+18. **Adjuntos: picker general** — si la op admite archivos (`tryitAttachments`,
+    multipart/octet-stream, schema `dataUrl`/`base64`) se pinta `<is-file-input
+    multiple>` **sin** `accept=`. No hay lista MIME por endpoint. Empaquetado:
+    `tryit-attach.ts` → FormData `files`+`body` o data URL en el JSON. `QUERY` de
+    listado (sqlFiltering) **no** muestra picker. `api-fetch.ts` no pone
+    `Content-Type` a mano sobre `FormData`.
+
+19. **FileReader no existe en Node** — el polyfill de tests debe usar
+    `arrayBuffer` + `btoa`. Un `FileReader` inventado no corre en `node --test`.
+
+20. **`npm test` completo puede no terminar** — JSDOM + `search-state` a veces
+    cuelga tras los asserts. Un hang no es verde. Correr el archivo puntual
+    (`dominio.test.mjs`, `invariantes.test.mjs`, …).
+
 ## Seguridad de lo que se pinta
 
 La spec es entrada no confiable. `html\`\`` escapa todo primitivo por defecto;
@@ -499,7 +522,8 @@ parte del contrato.
 
 ## Testing
 
-`npm test` compila y corre `node --test tests/*.test.mjs`.
+`npm test` compila y corre `node --test tests/*.test.mjs`. La suite entera puede
+colgarse en JSDOM/`search-state`: un hang no cuenta como verde; corre el archivo.
 
 | Archivo | Caza |
 |---|---|

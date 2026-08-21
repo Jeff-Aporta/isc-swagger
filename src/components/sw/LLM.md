@@ -20,7 +20,7 @@ Cómo se escribe uno, cómo se adopta el CSS y qué está prohibido:
 | `<sw-server>` | `value`, `options` | `sw-server-change` | Selector del host contra el que se prueba |
 | `<sw-tag-group>` | `group`, `spec`, `serverBase`, `authEnabled`, `docIndex`, `opAbierta`, `opTab` | reemite los de `sw-operation` | Un tag con sus operaciones (y subgrupos) |
 | `<sw-operation>` | `op`, `spec`, `serverBase`, `authEnabled`, `docMd`, `abierto`, `tab` | `sw-op-toggle`, `sw-op-tab`, `sw-need-login` | Tarjeta desplegable de una operación |
-| `<sw-try>` | `op`, `spec`, `serverBase`, `authEnabled` | `sw-need-login` | «Probar»: arma la petición, la ejecuta, enseña la respuesta |
+| `<sw-try>` | `op`, `spec`, `serverBase`, `authEnabled` | `sw-need-login` | «Probar»: cuerpo JSON, adjuntos si la op los admite, respuesta |
 | `<sw-params>` | `params`, `values`, `disabled`, `titulo` | `sw-param-change` | Campos de los parámetros |
 | `<sw-body>` | `op`, `value`, `disabled` | `sw-body-change` | Editor del cuerpo JSON |
 | `<sw-responses>` | `responses` | — | Respuestas **declaradas** (documentación, no resultado) |
@@ -135,6 +135,8 @@ Los transversales están en [`../LLM.md`](../LLM.md). Los propios de esta capa:
 
 - **`sw-try` repintando entero** — le quitaba el foco al campo en cada tecla.
   Por eso reparte el repintado en zonas (URL, aviso, resultado).
+- **`sw-try` cuerpo `"null"` / picker MIME** — ver raíz `LLM.md` errores 17–18.
+  `<is-file-input multiple>` sin `accept=`. No `type="file"` nativo.
 - **`sw-nav` repintando con cada tecla** — la búsqueda la escribe el usuario en
   ese mismo shadow. Ignora el cambio de `query` cuando viene solo.
 - **`sw-operation` montando todo al pintar la lista** — doscientos endpoints,

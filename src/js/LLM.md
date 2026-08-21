@@ -66,6 +66,8 @@ módulo. Están al final de esta página.
 - Emitir `spec.openapi`: el visor parsea InSoft, y ese campo sería residual.
 - Dejar `auth.enabled: false` cuando el visor trae `viewer.auth.enabled: true`.
 - Escribir la URL fuera de `url-state.ts` / `search-state.ts`.
+- Pintar `"null"` en el editor de cuerpo: `formatBodyExample` de ausencia → `{ }`.
+- Poner `accept=` en el picker de try-it, o mostrarlo en un QUERY de listado.
 
 ## Errores conocidos y prevención
 
@@ -80,6 +82,9 @@ módulo. Están al final de esta página.
    se salta: el usuario tecleó algo y no quiere que la nav se lo esconda.
 4. **`prefers-color-scheme`** — no se usa. El tema es explícito para que un
    enlace compartido se vea igual en cualquier equipo.
+5. **Cuerpo try-it `"null"`** — `$ref` sin example. `tryit-body.ts`. Tests:
+   `dominio.test.mjs`.
+6. **FileReader en Node** — polyfill con `arrayBuffer` + `btoa`, no FileReader.
 
 ## Los dos archivos en JavaScript plano
 
