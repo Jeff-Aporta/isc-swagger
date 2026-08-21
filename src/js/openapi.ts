@@ -211,6 +211,17 @@ export function resolveParam(param: SwParam, spec: SwSpec | null | undefined): S
   return def ? { ...def, ...param, $ref: undefined } : param;
 }
 
+/** Resuelve `$ref` de un schema contra `components.schemas`. */
+export function resolveSchema(schema: SwSchema | undefined, spec: SwSpec | null | undefined, profundidad = 0): SwSchema | undefined {
+  if (!schema || profundidad > 8) return schema;
+  const ref = typeof schema.$ref === 'string' ? schema.$ref : '';
+  if (!ref) return schema;
+  const key = ref.split('/').pop() ?? '';
+  const def = spec?.components?.schemas?.[key];
+  if (!def) return { ...schema, $ref: undefined };
+  return resolveSchema({ ...def, ...schema, $ref: undefined }, spec, profundidad + 1);
+}
+
 export function resolveParams(op: SwOp, spec: SwSpec | null | undefined): SwParam[] {
   return (op.parameters ?? []).map((p) => resolveParam(p, spec)).filter((p) => !!p.name);
 }

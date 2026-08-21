@@ -15,7 +15,9 @@ const { filterGroupsByQuery, filterGroupsByNavTab, resolveVisibleNavTabs, resolv
 const { normalizeApiBase, inferSwaggerUrls } = await import('../dist/cdn/js/config.js');
 const { normalizeServerBase, joinApiUrl, inferDefaultServerBase } = await import('../dist/cdn/js/server-base.js');
 const { formatHttpError, extractApiError } = await import('../dist/cdn/js/http-error.js');
-const { validateBodyJson, opUsesRequestBody, resolveTryItBodyExamples } = await import('../dist/cdn/js/tryit-body.js');
+const { validateBodyJson, opUsesRequestBody, resolveTryItBodyExamples, defaultTryItBodyText, formatBodyExample } =
+  await import('../dist/cdn/js/tryit-body.js');
+const { opAllowsAttachments, packTryItBody, attachmentFieldNames } = await import('../dist/cdn/js/tryit-attach.js');
 const { sanitizeParamInputValue, paramTypeLabel, paramInitialValue, paramEnum } =
   await import('../dist/cdn/js/param-schema.js');
 const { renderMarkdown } = await import('../dist/cdn/js/markdown.js');
@@ -145,6 +147,45 @@ test('resolveTryItBodyExamples toma los `examples` de la spec con su summary', (
   const r = resolveTryItBodyExamples(op);
   assert.equal(r.length, 1);
   assert.equal(r[0].label, 'Caso A');
+});
+
+test('defaultTryItBodyText no pinta el literal null (schema $ref sin ejemplo)', () => {
+  const op = {
+    method: 'query',
+    requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/sqlFiltering' } } } },
+  };
+  const texto = defaultTryItBodyText(op);
+  assert.deepEqual(JSON.parse(texto), {});
+  assert.notEqual(texto.trim(), 'null');
+  assert.deepEqual(JSON.parse(formatBodyExample(null)), {});
+});
+
+test('opAllowsAttachments es genérico: plantilla, multipart o dataUrl; sin MIME', () => {
+  assert.equal(opAllowsAttachments({ method: 'query', requestBody: { content: { 'application/json': { schema: { type: 'object' } } } } }), false);
+  assert.equal(opAllowsAttachments({ tryitAttachments: 'conversacion' }), true);
+  assert.equal(opAllowsAttachments({ requestBody: { content: { 'multipart/form-data': { schema: { type: 'object' } } } } }), true);
+  assert.equal(
+    opAllowsAttachments({
+      requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { dataUrl: { type: 'string' } } } } } },
+    }),
+    true,
+  );
+  assert.deepEqual(attachmentFieldNames({ tryitAttachments: { images: { field: 'imagenes' }, audios: { field: 'audios' } } }), [
+    'imagenes',
+    'audios',
+  ]);
+});
+
+test('packTryItBody sin archivos deja el JSON; con archivos no filtra tipo', async () => {
+  const { body, multipart } = await packTryItBody({ method: 'query' }, null, '', []);
+  assert.equal(multipart, false);
+  assert.equal(body, '{}');
+  const f = new File([Uint8Array.from([1, 2, 3])], 'nota.bin', { type: 'application/octet-stream' });
+  const packed = await packTryItBody({ tryitAttachments: { files: { field: 'archivos' } } }, null, '{\n  \n}', [f]);
+  assert.equal(packed.multipart, false);
+  const obj = JSON.parse(packed.body);
+  assert.equal(obj.archivos.length, 1);
+  assert.match(obj.archivos[0], /^data:/);
 });
 
 test('sanitizeParamInputValue recorta lo que el tipo no admite', () => {
