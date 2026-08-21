@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist/cdn/js",
+    "rootDir": "src/js"
+  },
+  "include": [
+    "src/js/iss-swagger-doc.ts",
+    "src/js/kit-tags.ts"
+  ]
+}

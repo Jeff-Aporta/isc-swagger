@@ -18,9 +18,15 @@
  *     all.min.js              bundle único de los componentes (lo que se consume por CDN)
  *     boot.js, hojas.js       scripts planos, síncronos en <head>
  *     components/sw/*.js|css  cada componente con su hoja al lado
+ *     LLM.md                  contrato público para agentes
  *     js/*.js                 dominio (config, conn, openapi, …)
+ *     js/*.d.ts               interfaces públicas (piezas JSON, convertidor, kit-tags)
+ *     js/iss-swagger-doc.ts   mismo contrato, importable en Deno con tipos
+ *     js/iss-swagger-md.min.js convertidor markdown en un solo ESM
+ *     types/swagger.d.ts      tipos ambiente del visor
  */
 import { readdirSync, mkdirSync, writeFileSync, rmSync, copyFileSync, existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join, basename, dirname, relative } from 'node:path';
 import esbuild from 'esbuild';
 
@@ -126,6 +132,27 @@ async function compilar() {
   const planos = listar(join(SRC, 'js'), '.js');
   for (const archivo of planos) copyFileSync(archivo, join(OUT, basename(archivo)));
 
+  const llm = join(SRC, 'cdn', 'LLM.md');
+  if (existsSync(llm)) copyFileSync(llm, join(OUT, 'LLM.md'));
+
+  mkdirSync(join(OUT, 'types'), { recursive: true });
+  mkdirSync(join(OUT, 'js'), { recursive: true });
+  copyFileSync(join(SRC, 'types', 'swagger.d.ts'), join(OUT, 'types', 'swagger.d.ts'));
+  copyFileSync(join(SRC, 'js', 'iss-swagger-doc.ts'), join(OUT, 'js', 'iss-swagger-doc.ts'));
+
+  const tsc = join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc');
+  execFileSync(process.execPath, [tsc, '-p', 'tsconfig.cdn.json'], { cwd: ROOT, stdio: 'inherit' });
+
+  const mdBundle = await esbuild.build({
+    entryPoints: [join(SRC, 'js', 'iss-swagger-md.ts')],
+    bundle: true,
+    write: false,
+    format: 'esm',
+    target: 'es2022',
+    minify: true,
+  });
+  writeFileSync(join(OUT, 'js', 'iss-swagger-md.min.js'), mdBundle.outputFiles[0].text);
+
   return { ts: ts.length, css: css.length, planos: planos.length };
 }
 
@@ -136,7 +163,7 @@ if (process.argv.includes('--watch')) {
   const { watch } = await import('node:fs');
   let pendiente = null;
   watch(SRC, { recursive: true }, (_e, archivo) => {
-    if (!archivo || !/\.(ts|css|js)$/.test(archivo)) return;
+    if (!archivo || !/\.(ts|css|js|md)$/.test(archivo)) return;
     clearTimeout(pendiente);
     pendiente = setTimeout(async () => {
       try {
