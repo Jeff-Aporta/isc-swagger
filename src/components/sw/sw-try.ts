@@ -14,6 +14,7 @@
 import { adoptCss, precargarCss, define, html, emitir } from './_shared.js';
 import { jsonPretty, operationRequiresBearer, resolveParams } from '../../js/openapi.js';
 import { defaultTryItBodyText, shouldShowTryItBody } from '../../js/tryit-body.js';
+import { opAllowsAttachments, packTryItBody } from '../../js/tryit-attach.js';
 import { paramInitialValue } from '../../js/param-schema.js';
 import { joinApiUrl } from '../../js/server-base.js';
 import { fetchApiRaw, extractEnvelopeError } from '../../js/api-fetch.js';
@@ -43,6 +44,7 @@ class SwTry extends HTMLElement {
 
   #valores: Record<string, string> = {};
   #body = '';
+  #archivos: File[] = [];
   #bodyError: string | null = null;
   #ocupado = false;
   #resultado: SwResultado | null = null;
@@ -87,6 +89,7 @@ class SwTry extends HTMLElement {
       }
     }
     this.#body = op ? defaultTryItBodyText(op) : '';
+    this.#archivos = [];
     this.#bodyError = null;
     this.#resultado = null;
     this.#aviso = '';
@@ -104,6 +107,8 @@ class SwTry extends HTMLElement {
     const { op, serverBase } = this.#props;
     if (!op) return '';
     let url = joinApiUrl(serverBase, aplicarPathParams(op.path, this.#valores));
+    // QUERY lleva el filtro en el body. Meterlo en ? rompe las APIs InSoft (400).
+    if (op.method === 'query') return url;
     const qs = new URLSearchParams();
     for (const p of this.#params) {
       if (p.in !== 'query') continue;
@@ -194,9 +199,23 @@ class SwTry extends HTMLElement {
       }
 
       const init: Parameters<typeof fetchApiRaw>[1] = { method: op.method.toUpperCase(), headers };
-      if (shouldShowTryItBody(op)) {
-        headers['Content-Type'] = 'application/json';
-        init.body = this.#body.trim() || '{}';
+      if (shouldShowTryItBody(op) || this.#archivos.length) {
+        let cuerpo = this.#body.trim() || '{}';
+        if (op.method === 'query' && (cuerpo === '{}' || !cuerpo)) {
+          const fromQs: Record<string, unknown> = {};
+          for (const p of this.#params) {
+            if (p.in !== 'query') continue;
+            const v = this.#valores[String(p.name)];
+            if (v != null && String(v).length) fromQs[String(p.name)] = v;
+          }
+          if (Object.keys(fromQs).length) cuerpo = JSON.stringify(fromQs);
+        }
+        const packed = await packTryItBody(op, this.#props.spec, cuerpo, this.#archivos);
+        if (packed.multipart) init.body = packed.body;
+        else {
+          headers['Content-Type'] = 'application/json';
+          init.body = packed.body;
+        }
       }
 
       const inicio = performance.now();
@@ -334,6 +353,22 @@ class SwTry extends HTMLElement {
       if (ta && ta.value !== detail.value) ta.value = detail.value;
     });
 
+    const muestraAdjuntos = opAllowsAttachments(op, spec);
+    const zonaAdjuntos = muestraAdjuntos
+      ? html`
+          <section class="adjuntos">
+            <h4 class="adjuntos-titulo">Archivos adjuntos</h4>
+            <is-file-input
+              class="adjuntos-input"
+              multiple
+              label="Adjuntar archivos"
+              hint="Cualquier tipo. Van con la petición."
+              ${this.#ocupado ? 'disabled' : ''}
+            ></is-file-input>
+          </section>
+        `
+      : null;
+
     const bloqueaCuerpo = !!this.#bodyError;
     const requiereJwt = this.#necesitaJwt();
     const peligroso = METODOS_PELIGROSOS.has(op.method);
@@ -349,6 +384,7 @@ class SwTry extends HTMLElement {
         ${camposPath}
         ${camposOtros}
         ${cuerpo}
+        ${zonaAdjuntos}
 
         <div class="acciones">
           <is-button
@@ -380,6 +416,14 @@ class SwTry extends HTMLElement {
     this.#avisoNodo = this.#root.querySelector('.zona-aviso');
     this.#resultadoNodo = this.#root.querySelector('.zona-resultado');
     this.#botonNodo = this.#root.querySelector('.ejecutar');
+
+    const picker = this.#root.querySelector('.adjuntos-input') as (HTMLElement & { files: File[] }) | null;
+    if (picker) {
+      if (this.#archivos.length) picker.files = this.#archivos;
+      picker.addEventListener('is-change', () => {
+        this.#archivos = picker.files ?? [];
+      });
+    }
 
     this.#pintarUrl();
     this.#pintarAviso();

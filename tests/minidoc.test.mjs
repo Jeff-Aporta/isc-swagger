@@ -526,3 +526,22 @@ test('QUERY ofrece editor de cuerpo: es su razón de ser frente a GET', async ()
   assert.equal(opUsesRequestBody('query'), true);
   assert.equal(opUsesRequestBody('get'), false);
 });
+
+test('buildCurl QUERY no pone el filtro en la query string', () => {
+  const { texto } = buildCurl(
+    {
+      method: 'query',
+      path: '/metricas',
+      requestBody: {
+        content: { 'application/json': { example: { dias: 30 } } },
+      },
+      parameters: [{ name: 'dias', in: 'query', required: true, schema: { type: 'integer', default: 30 } }],
+    },
+    null,
+    'https://h',
+    false,
+  );
+  assert.match(texto, /--request QUERY/);
+  assert.doesNotMatch(texto, /\?dias=/);
+  assert.match(texto, /"dias": 30/);
+});

@@ -33,6 +33,10 @@ export interface SwFetchResult {
 export async function fetchApiRaw(url: string, opts: SwFetchOpts = {}): Promise<SwFetchResult> {
   const { auth, headers: extra, ...init } = opts;
   const headers = { ...authHeaders(auth !== false), ...(extra ?? {}) };
+  if (typeof FormData !== 'undefined' && init.body instanceof FormData) {
+    delete headers['Content-Type'];
+    delete headers['content-type'];
+  }
 
   let res: Response;
   try {

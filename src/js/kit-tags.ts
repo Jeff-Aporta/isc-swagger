@@ -18,6 +18,7 @@ export const SW_KIT_TAGS = [
   'is-option',
   'is-select',
   'is-textarea',
+  'is-file-input',
   'is-spinner',
   'is-tag',
   'is-theme-toggle',

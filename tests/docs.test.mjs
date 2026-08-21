@@ -32,6 +32,7 @@ const PAGINAS = [
   'src/js/LLM.md',
   'src/components/LLM.md',
   'src/components/sw/LLM.md',
+  'src/cdn/LLM.md',
   'docs/LLM.md',
 ];
 

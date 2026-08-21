@@ -27,10 +27,12 @@ módulo. Están al final de esta página.
 | `http-error.ts` | Traduce fallos de red y HTTP a mensaje de usuario |
 | `param-schema.ts` | Del `schema` de un parámetro al tipo de campo |
 | `tryit-body.ts` | Si la operación lleva cuerpo y con qué ejemplo |
+| `tryit-attach.ts` | Adjuntos del «Probar»: cuándo mostrar el picker y cómo empaquetarlos |
 | `markdown.ts` | Markdown → HTML **ya escapado** |
 | `export.ts` | Documento JSON, colección Postman, formato IS |
 | `postman-md.ts` | MD InSoft → Postman: diagramas→PNG, `is-code`→fences |
-| `kit-tags.ts` | `SW_KIT_TAGS`: lista canónica de tags `is-*` que carga el host ISS vía CDN. **No** duplicar en PatyIA `01-api.json` |
+| `iss-swagger-doc.ts` | Forma y asserts de piezas `swagger__*.json`. CDN: `dist/cdn/js/iss-swagger-doc.{js,d.ts,ts}` |
+| `iss-swagger-md.ts` | JSON → Markdown agentes. CDN: `js/iss-swagger-md.js` y `js/iss-swagger-md.min.js` |
 | `json-cache.ts` | Cache 24 h de config/spec; `clearJsonCache` + `force` para el botón actualizar |
 
 ## Reusar antes de crear

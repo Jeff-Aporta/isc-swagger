@@ -11,6 +11,9 @@
   gap: 1rem;
   min-width: 0;
   width: 100%;
+  box-sizing: border-box;
+  /* Hueco interno: campos y botón no se pegan al borde de la tarjeta. */
+  padding: var(--is-space-4, 1rem) var(--is-space-5, 1.25rem) var(--is-space-5, 1.25rem);
 }
 
 sw-body,
@@ -19,6 +22,23 @@ sw-json {
   display: block;
   width: 100%;
   min-width: 0;
+}
+
+.adjuntos {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.adjuntos-titulo {
+  margin: 0;
+  color: var(--is-text, #e6edf3);
+  font-family: var(--is-font-sans, system-ui, -apple-system, "Segoe UI", sans-serif);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  opacity: 0.6;
+  text-transform: uppercase;
 }
 
 /* ── Previsualización de la URL ─────────────────────────────── */
@@ -66,6 +86,10 @@ sw-json {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
+}
+
+.ejecutar {
+  margin-inline-start: auto;
 }
 
 .candado {

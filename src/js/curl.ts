@@ -64,10 +64,12 @@ export function buildCurl(
   const base = String(serverBase ?? '').replace(/\/+$/, '');
   const ruta = rutaConValores(op.path, params);
 
-  const query = params
-    .filter((p) => p.in === 'query' && p.required)
-    .map((p) => `${encodeURIComponent(String(p.name))}=${encodeURIComponent(ejemploDeParam(p))}`)
-    .join('&');
+  const query = op.method === 'query'
+    ? ''
+    : params
+      .filter((p) => p.in === 'query' && p.required)
+      .map((p) => `${encodeURIComponent(String(p.name))}=${encodeURIComponent(ejemploDeParam(p))}`)
+      .join('&');
 
   const url = `${base}${ruta}${query ? `?${query}` : ''}`;
   const metodo = op.method.toUpperCase();
