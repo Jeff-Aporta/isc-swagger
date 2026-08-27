@@ -98,11 +98,31 @@ class SwApp extends HTMLElement {
   /* ── Carga ────────────────────────────────────────────────── */
 
   /**
+   * Documento InSoft/OpenAPI quemado por el anfitrión (`doc=` o propiedad).
+   * Gana sobre `conn` y sobre cualquier fetch a `paths.docs`.
+   */
+  #doc: unknown = null;
+
+  get doc(): unknown { return this.#doc; }
+  set doc(v: unknown) {
+    this.#doc = v && typeof v === 'object' ? v : null;
+    if (this.isConnected) void this.#cargar();
+  }
+
+  #docDesdeAtributo(): unknown {
+    const raw = this.getAttribute('doc');
+    if (!raw?.trim()) return null;
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Conn que le pasa el anfitrión, como objeto o como JSON en el atributo `conn`.
-   *
-   * Es la vía de quien incrusta `<sw-app>` directamente desde el CDN: el host ya sabe su
-   * `apiBase` y sus rutas, así que las entrega y punto — sin base64 en la URL y sin iframe.
-   * La propiedad gana sobre el atributo, y ambas sobre `?conn=`.
+   * En ISS/PatyIA se prefiere `doc=`; `conn` queda para demos y `?conn=`.
    */
   #conn: SwConn | null = null;
 
@@ -132,7 +152,12 @@ class SwApp extends HTMLElement {
       avisar('Actualizando documentación…', 'brand');
     }
     try {
-      const boot = resolveBootConfig(this.#conn ?? this.#connDesdeAtributo());
+      const doc = this.#doc ?? this.#docDesdeAtributo();
+      // Si hay `doc`, `conn` se ignora por completo.
+      const boot = resolveBootConfig(
+        doc != null ? null : (this.#conn ?? this.#connDesdeAtributo()),
+        doc,
+      );
       const { config, spec } = await loadViewerDocument(boot, { force: opts.force });
 
       this.#config = config;
@@ -342,7 +367,7 @@ class SwApp extends HTMLElement {
             <h2 class="fallo-titulo">No se pudo cargar el documento</h2>
             <pre class="fallo-texto">${this.#error}</pre>
             <p class="fallo-pista">
-              Quema el JSON en <code>conn.spec</code>, o deja el fallback
+              Quema el JSON en el atributo <code>doc</code> del componente, o deja el fallback
               <code>paths.docs</code> (default <code>/docs?v=json</code>).
             </p>
           </is-callout>

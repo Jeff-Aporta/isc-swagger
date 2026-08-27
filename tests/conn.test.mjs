@@ -23,6 +23,54 @@ const mountDom = (url) => {
   return dom;
 };
 
+test('si llega doc, conn se ignora por completo', async () => {
+  const dom = new JSDOM('<!doctype html><html><body></body></html>', {
+    url: 'http://localhost:8802/api/docs',
+    pretendToBeVisual: true,
+  });
+  for (const k of ['window', 'document', 'URL', 'URLSearchParams']) globalThis[k] = dom.window[k];
+  globalThis.location = dom.window.location;
+
+  let fetches = 0;
+  globalThis.fetch = async () => { fetches += 1; throw new Error('no fetch'); };
+
+  const { resolveBootConfig, loadViewerDocument } = await import('../dist/cdn/js/config.js?bust=' + Math.random());
+  const boot = resolveBootConfig(
+    {
+      apiBase: 'https://evil.example/api',
+      title: 'Del Conn',
+      paths: { docs: '/system/swagger/config.json' },
+    },
+    sample,
+  );
+  assert.equal(boot.brand?.title, undefined, 'brand del conn no debe colarse');
+  assert.notEqual(boot.apiBase, 'https://evil.example/api');
+  assert.equal(boot.specUrl, undefined);
+  await loadViewerDocument(boot);
+  assert.equal(fetches, 0);
+});
+
+test('atributo doc= materializa sin fetch ni conn', async () => {
+  const dom = new JSDOM('<!doctype html><html><body></body></html>', {
+    url: 'http://localhost:8802/api/docs',
+    pretendToBeVisual: true,
+  });
+  for (const k of ['window', 'document', 'URL', 'URLSearchParams']) globalThis[k] = dom.window[k];
+  globalThis.location = dom.window.location;
+
+  let fetches = 0;
+  globalThis.fetch = async () => { fetches += 1; throw new Error('no fetch'); };
+
+  const { resolveBootConfig, loadViewerDocument } = await import('../dist/cdn/js/config.js?bust=' + Math.random());
+  const boot = resolveBootConfig(null, sample);
+  assert.equal(boot.specUrl, undefined);
+  assert.equal(boot.apiBase, 'http://localhost:8802/api');
+  assert.equal(boot.serverSelect, false);
+  const { spec } = await loadViewerDocument(boot);
+  assert.equal(fetches, 0);
+  assert.ok(Object.keys(spec.paths ?? {}).length > 0);
+});
+
 test('?conn= con spec quemado no hace fetch', async () => {
   mountDom(buildUrl({
     apiBase: 'https://h/api',

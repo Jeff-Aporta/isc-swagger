@@ -1,18 +1,8 @@
 /**
  * <sw-viewer> — monta el driver elegido y deja cambiarlo en caliente.
  *
- * Es la envoltura que usa la página: en vez de decidir a mano si pone `<sw-app>` o
- * `<sw-minidoc>`, pone `<sw-viewer>` y el selector aparece solo.
- *
- * El selector ya no vive aquí: está en la cabecera de cada driver, junto al conmutador de tema,
- * que es donde el lector lo busca. Lo monta `<sw-driver-switch>`, que solo escribe la
- * preferencia y emite `sw-driver-change`; esta envoltura lo escucha y hace el cambio, porque es
- * la única que sabe dónde está montado el driver actual.
- *
- * Cambiar de driver **destruye y recrea** el componente. No hay estado que migrar: cada driver
- * carga el documento en su `connectedCallback`, y lo compartido (operación abierta, servidor,
- * sesión) ya viaja por la URL y por el almacenamiento, así que la vista nueva aterriza donde
- * estaba la anterior.
+ * El anfitrión ISS quema el documento en el atributo `doc` (JSON completo).
+ * `conn` queda solo para demos / `?conn=`; PatyIA no lo usa.
  */
 
 import { adoptCss, precargarCss, define, html } from './_shared.js';
@@ -21,10 +11,23 @@ import { driverMeta, readDriver, writeDriver, type SwDriver } from '../../js/dri
 import './sw-app.js';
 import './sw-minidoc.js';
 
+type DriverHost = HTMLElement & { conn?: SwConn | null; doc?: unknown };
+
+function parseAttrJson(raw: string | null): unknown {
+  if (!raw?.trim()) return null;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 class SwViewer extends HTMLElement {
   #root: ShadowRoot;
   #driver: SwDriver['id'] = readDriver();
   #conn: SwConn | null = null;
+  #doc: unknown = null;
   #montajeNodo: HTMLElement | null = null;
 
   constructor() {
@@ -32,34 +35,32 @@ class SwViewer extends HTMLElement {
     this.#root = this.attachShadow({ mode: 'open' });
   }
 
-  /**
-   * Lee el conn del atributo `conn` (JSON).
-   *
-   * Existe para que el anfitrión pueda entregarlo **antes** de que el elemento haga upgrade. Con
-   * la asignación por propiedad hay carrera: el driver se monta sin conn, falla con «falta
-   * specUrl o apiBase», pinta el error y solo entonces llega la propiedad y se re-monta. Ese
-   * parpadeo de error era visible en cada carga.
-   */
-  #connDesdeAtributo(): SwConn | null {
-    const rawAttr = this.getAttribute('conn');
-    if (!rawAttr?.trim()) return null;
-    try {
-      const parsed = JSON.parse(rawAttr) as unknown;
-      return parsed && typeof parsed === 'object' ? (parsed as SwConn) : null;
-    } catch {
-      return null;
-    }
-  }
-
-  /** Conn del anfitrión. Se reenvía al driver activo y a los que vengan después. */
+  /** Conn del anfitrión. Se ignora si también hay `doc`. */
   get conn(): SwConn | null { return this.#conn; }
   set conn(v: SwConn | null) {
     this.#conn = v && typeof v === 'object' ? v : null;
-    const activo = this.#montajeNodo?.firstElementChild as (HTMLElement & { conn?: SwConn | null }) | null;
-    if (activo) activo.conn = this.#conn;
+    const activo = this.#montajeNodo?.firstElementChild as DriverHost | null;
+    if (!activo) return;
+    if (this.#doc != null) {
+      activo.doc = this.#doc;
+      activo.conn = null;
+    } else {
+      activo.conn = this.#conn;
+    }
   }
 
-  /** Driver activo. Escribible para poder fijarlo desde el anfitrión o desde una prueba. */
+  /** Documento InSoft/OpenAPI quemado (`doc=`). Si llega, `conn` se ignora. */
+  get doc(): unknown { return this.#doc; }
+  set doc(v: unknown) {
+    this.#doc = v && typeof v === 'object' ? v : null;
+    const activo = this.#montajeNodo?.firstElementChild as DriverHost | null;
+    if (!activo) return;
+    if (this.#doc != null) {
+      activo.doc = this.#doc;
+      activo.conn = null;
+    }
+  }
+
   get driver(): SwDriver['id'] { return this.#driver; }
   set driver(v: SwDriver['id']) {
     if (v === this.#driver) return;
@@ -69,7 +70,6 @@ class SwViewer extends HTMLElement {
   }
 
   connectedCallback(): void {
-    // El evento sube desde la cabecera del driver montado, atravesando su shadow.
     this.addEventListener('sw-driver-change', (e) => {
       const elegido = (e as CustomEvent).detail?.driver as SwDriver['id'] | undefined;
       if (elegido) this.driver = elegido;
@@ -80,11 +80,15 @@ class SwViewer extends HTMLElement {
   #montarDriver(): void {
     const zona = this.#montajeNodo;
     if (!zona) return;
-    const nodo = document.createElement(this.#driver) as HTMLElement & { conn?: SwConn | null };
-    this.#conn ??= this.#connDesdeAtributo();
-    // El conn se asigna antes de insertarlo: si se hiciera después, el driver ya habría
-    // arrancado su carga con la configuración de la URL y pediría el documento dos veces.
-    if (this.#conn) nodo.conn = this.#conn;
+    const nodo = document.createElement(this.#driver) as DriverHost;
+    this.#doc ??= parseAttrJson(this.getAttribute('doc'));
+    this.#conn ??= parseAttrJson(this.getAttribute('conn')) as SwConn | null;
+    // `doc` gana: si hay documento quemado, no se reenvía `conn` (se ignora por completo).
+    if (this.#doc != null) {
+      nodo.doc = this.#doc;
+    } else if (this.#conn) {
+      nodo.conn = this.#conn;
+    }
     zona.replaceChildren(nodo);
   }
 

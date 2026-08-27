@@ -2,12 +2,12 @@
  * config.ts — de dónde sale la configuración del visor y cómo se carga la spec.
  *
  * Precedencia:
- *   1. `conn.spec` — JSON único quemado por el host (vía preferida ISS).
- *   2. `paths.docs` / default `/docs?v=json` — un solo GET si no hay spec quemado
- *      y el host no personalizó/desactivó el path.
- *   3. `?spec=<url>` / `config.specUrl` — demos OpenAPI sueltos.
+ *   1. Atributo/propiedad `doc` — JSON único quemado por el host (vía PatyIA / ISS).
+ *   2. `conn.spec` / `?conn=` con `spec` — mismo documento vía payload conn.
+ *   3. `paths.docs` / default `/docs?v=json` — un GET solo si no hay documento quemado.
+ *   4. `?spec=<url>` / `config.specUrl` — demos OpenAPI sueltos.
  *
- * No existe `/system/swagger/config.json` ni piezas meta/paths/docs-config.
+ * No existe `/system/swagger/config.json`.
  */
 
 import { parseIsDocument } from './is-document.js';
@@ -35,6 +35,16 @@ export function normalizeApiBase(input: unknown): string {
   u.search = '';
   u.hash = '';
   return `${u.origin}${u.pathname}`;
+}
+
+/** apiBase del origen actual (`https://host/api`) cuando el host solo quema `doc`. */
+function apiBaseDesdeOrigen(): string {
+  if (typeof location === 'undefined') return '';
+  try {
+    return normalizeApiBase(location.origin);
+  } catch {
+    return '';
+  }
 }
 
 function leerConfigEmbebida(): SwConfig {
@@ -82,16 +92,31 @@ export function materializeEmbeddedSpec(
 
 /**
  * Config base, antes de consultar la red.
+ *
+ * @param connDirecto  Conn del anfitrión (`conn=` / propiedad). Opcional.
+ * @param docDirecto   Documento InSoft/OpenAPI quemado (`doc=` / propiedad). Preferido en ISS.
  */
-export function resolveBootConfig(connDirecto?: SwConn | null): SwConfig {
-  const conn = normalizeConn(connDirecto) ?? resolveConnConfig(typeof location !== 'undefined' ? location.search : null);
-
+export function resolveBootConfig(connDirecto?: SwConn | null, docDirecto?: unknown): SwConfig {
   const host = (typeof window !== 'undefined' ? window.__SWAGGER_CONFIG__ : null) ?? {};
   const config: SwConfig = { ...leerConfigEmbebida(), ...host };
 
   const sp = typeof location !== 'undefined' ? new URLSearchParams(location.search) : null;
   const specParam = sp?.get('spec')?.trim();
   const api = sp?.get('api')?.trim();
+
+  // `doc` gana: si llega documento quemado, `conn` (y su fetch) se ignoran.
+  if (docDirecto !== undefined && docDirecto !== null) {
+    config.spec = docDirecto as SwConfig['spec'];
+    delete config.specUrl;
+    config.serverSelect = false;
+    if (!config.apiBase) config.apiBase = apiBaseDesdeOrigen();
+    if (specParam) config.specUrl = specParam;
+    if (api) config.apiBase = normalizeApiBase(api);
+    config.ns = config.ns || DEFAULT_NS;
+    return config;
+  }
+
+  const conn = normalizeConn(connDirecto) ?? resolveConnConfig(typeof location !== 'undefined' ? location.search : null);
 
   if (conn) {
     config.apiBase = normalizeApiBase(conn.apiBase);
@@ -102,15 +127,14 @@ export function resolveBootConfig(connDirecto?: SwConn | null): SwConfig {
     config.brand = brand;
 
     if (conn.spec !== undefined && conn.spec !== null) {
-      // Host quemó el JSON único: no hay segunda petición.
       config.spec = conn.spec as SwConfig['spec'];
       delete config.specUrl;
     } else {
-      // Fallback: un solo GET a paths.docs (default `/docs?v=json`), personalizable.
       const url = resolveDocsJsonUrl(config.apiBase, conn.paths);
       config.specUrl = url || undefined;
     }
   }
+
   if (specParam) config.specUrl = specParam;
   if (api) config.apiBase = normalizeApiBase(api);
 
@@ -141,9 +165,6 @@ async function fetchJson(url: string, opts: { force?: boolean } = {}): Promise<u
   return data;
 }
 
-/**
- * Carga la spec y la parte de config que venga con ella.
- */
 export async function loadViewerDocument(
   config: SwConfig,
   opts: { force?: boolean } = {},
@@ -157,13 +178,13 @@ export async function loadViewerDocument(
   if (config.spec && typeof config.spec === 'object') {
     const materializado = materializeEmbeddedSpec(config, config.spec);
     if (materializado) return materializado;
-    throw new Error('IS-Swagger: el `spec` embebido no es documento InSoft, ni OpenAPI 3, ni documento IS.');
+    throw new Error('IS-Swagger: el `doc`/`spec` embebido no es documento InSoft, ni OpenAPI 3, ni documento IS.');
   }
 
   const url = String(config.specUrl ?? '').trim();
   if (!url) {
     throw new Error(
-      'IS-Swagger: falta el documento. Quémalo en `conn.spec`, o deja que el visor pida `paths.docs` (default `/docs?v=json`).',
+      'IS-Swagger: falta el documento. Quémalo en el atributo `doc` del componente, o deja el fallback `paths.docs` (default `/docs?v=json`).',
     );
   }
 

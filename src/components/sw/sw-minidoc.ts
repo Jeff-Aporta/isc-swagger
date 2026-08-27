@@ -59,6 +59,7 @@ class SwMinidoc extends HTMLElement {
 
   /** Conn entregado por el anfitrión. Mismo contrato que `sw-app`. */
   #conn: SwConn | null = null;
+  #doc: unknown = null;
 
   #onDocReload = (): void => {
     void this.#cargar({ force: true });
@@ -67,6 +68,23 @@ class SwMinidoc extends HTMLElement {
   constructor() {
     super();
     this.#root = this.attachShadow({ mode: 'open' });
+  }
+
+  get doc(): unknown { return this.#doc; }
+  set doc(v: unknown) {
+    this.#doc = v && typeof v === 'object' ? v : null;
+    if (this.isConnected) void this.#cargar();
+  }
+
+  #docDesdeAtributo(): unknown {
+    const rawAttr = this.getAttribute('doc');
+    if (!rawAttr?.trim()) return null;
+    try {
+      const parsed = JSON.parse(rawAttr) as unknown;
+      return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch {
+      return null;
+    }
   }
 
   get conn(): SwConn | null { return this.#conn; }
@@ -117,7 +135,12 @@ class SwMinidoc extends HTMLElement {
       avisar('Actualizando documentación…', 'brand');
     }
     try {
-      const boot = resolveBootConfig(this.#conn ?? this.#connDesdeAtributo());
+      const doc = this.#doc ?? this.#docDesdeAtributo();
+      // Si hay `doc`, `conn` se ignora por completo.
+      const boot = resolveBootConfig(
+        doc != null ? null : (this.#conn ?? this.#connDesdeAtributo()),
+        doc,
+      );
       const { config, spec } = await loadViewerDocument(boot, { force: opts.force });
 
       this.#config = config;
