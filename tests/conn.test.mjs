@@ -1,20 +1,18 @@
 /**
- * conn.test.mjs — la autoconexión `?conn=` llega hasta la spec.
- *
- * Cubre el camino que el usuario ve cuando PatyIA / ISS comparte un enlace
- * `?conn=...`: el visor decodifica el base64url, fija `apiBase` + marca +
- * `serverSelect=false`, y al cargar el documento apunta a
- * `<apiBase>/system/swagger/config.json` (o el override de `paths.config`).
+ * conn.test.mjs — documento único: quemado en `conn.spec` o GET `paths.docs`.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import { encodeConnParam } from '../dist/cdn/js/conn.js';
 
-const buildUrl = (conn) => {
-  const raw = encodeConnParam(conn);
-  return `http://localhost:4190/index.html?conn=${raw}`;
-};
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const sample = JSON.parse(readFileSync(join(root, 'tests/fixtures/insoft-config.sample.json'), 'utf8'));
+
+const buildUrl = (conn) => `http://localhost:4190/index.html?conn=${encodeConnParam(conn)}`;
 
 const mountDom = (url) => {
   const dom = new JSDOM('<!doctype html><html><body></body></html>', { url, pretendToBeVisual: true });
@@ -25,82 +23,87 @@ const mountDom = (url) => {
   return dom;
 };
 
-const stubFetch = (onFetch) => {
-  globalThis.fetch = async (req) => {
-    onFetch(String(req));
-    return new Response(JSON.stringify({ openapi: '3.0.3', paths: {} }), { status: 200 });
-  };
-};
-
-test('?conn= fija apiBase, marca y oculta el selector de servidor', () => {
-  const url = buildUrl({
-    apiBase: 'https://ayudascp-ia-staging.azurewebsites.net/api',
+test('?conn= con spec quemado no hace fetch', async () => {
+  mountDom(buildUrl({
+    apiBase: 'https://h/api',
     fixedServer: true,
     title: 'ISS PatyIA',
-    icon: 'mdi:robot-happy-outline',
-  });
-  mountDom(url);
+    spec: sample,
+  }));
+  let fetches = 0;
+  globalThis.fetch = async () => { fetches += 1; throw new Error('no fetch'); };
 
-  // Reimporta con el nuevo location para forzar el camino URL.
-  return import('../dist/cdn/js/config.js?bust=' + Math.random()).then(({ resolveBootConfig }) => {
-    const cfg = resolveBootConfig();
-    assert.equal(cfg.apiBase, 'https://ayudascp-ia-staging.azurewebsites.net/api');
-    assert.equal(cfg.serverSelect, false);
-    assert.equal(cfg.brand.title, 'ISS PatyIA');
-    assert.equal(cfg.brand.icon, 'mdi:robot-happy-outline');
-  });
+  const { resolveBootConfig, loadViewerDocument } = await import('../dist/cdn/js/config.js?bust=' + Math.random());
+  const boot = resolveBootConfig();
+  assert.equal(boot.specUrl, undefined);
+  const { spec } = await loadViewerDocument(boot);
+  assert.equal(fetches, 0);
+  assert.ok(Object.keys(spec.paths ?? {}).length > 0);
 });
 
-test('?conn= con override de paths.config se respeta al pedir la spec', async () => {
-  const url = buildUrl({
+test('sin spec quemado cae a default /docs?v=json', async () => {
+  mountDom(buildUrl({ apiBase: 'https://h/api', title: 'Sin spec' }));
+  let fetched = '';
+  globalThis.fetch = async (req) => {
+    fetched = String(req);
+    return new Response(JSON.stringify(sample), { status: 200 });
+  };
+
+  const { resolveBootConfig, loadViewerDocument } = await import('../dist/cdn/js/config.js?bust=' + Math.random());
+  const cfg = resolveBootConfig();
+  assert.equal(cfg.specUrl, 'https://h/api/docs?v=json');
+  await loadViewerDocument(cfg);
+  assert.equal(fetched, 'https://h/api/docs?v=json');
+});
+
+test('paths.docs personalizado se respeta', async () => {
+  mountDom(buildUrl({
     apiBase: 'https://h/api',
-    paths: { config: '/x/custom.json' },
-  });
-  const dom = mountDom(url);
+    paths: { docs: '/mi/doc.json' },
+  }));
   let fetched = '';
-  stubFetch((u) => { fetched = u; });
+  globalThis.fetch = async (req) => {
+    fetched = String(req);
+    return new Response(JSON.stringify({ openapi: '3.0.3', paths: {} }), { status: 200 });
+  };
 
   const cfgMod = await import('../dist/cdn/js/config.js?bust=' + Math.random());
-  const cfg = cfgMod.resolveBootConfig();
-  const { spec } = await cfgMod.loadViewerDocument(cfg);
-  assert.equal(spec.openapi, '3.0.3');
-  assert.equal(fetched, 'https://h/api/x/custom.json');
+  await cfgMod.loadViewerDocument(cfgMod.resolveBootConfig());
+  assert.equal(fetched, 'https://h/api/mi/doc.json');
 });
 
-test('?conn= sin override cae al default ISS /system/swagger/config.json', async () => {
-  const url = buildUrl({ apiBase: 'https://h/api' });
-  const dom = mountDom(url);
-  let fetched = '';
-  stubFetch((u) => { fetched = u; });
-
-  const cfgMod = await import('../dist/cdn/js/config.js?bust=' + Math.random());
-  const cfg = cfgMod.resolveBootConfig();
-  await cfgMod.loadViewerDocument(cfg);
-  assert.equal(fetched, 'https://h/api/system/swagger/config.json');
+test('paths.docs vacío desactiva el fetch (hace falta spec)', async () => {
+  mountDom(buildUrl({
+    apiBase: 'https://h/api',
+    paths: { docs: '' },
+  }));
+  const { resolveBootConfig, loadViewerDocument } = await import('../dist/cdn/js/config.js?bust=' + Math.random());
+  const cfg = resolveBootConfig();
+  assert.equal(cfg.specUrl, undefined);
+  await assert.rejects(() => loadViewerDocument(cfg), /conn\.spec|paths\.docs|\/docs\?v=json/);
 });
 
-test('?conn= gana sobre `<script id="sw-config">` para apiBase y marca', async () => {
-  const url = buildUrl({ apiBase: 'https://h/api', title: 'Del Conn', icon: 'mdi:api' });
+test('spec quemado gana sobre specUrl del script (no pide config.json legacy)', async () => {
+  const url = buildUrl({ apiBase: 'https://h/api', title: 'Del Conn', spec: sample });
   const dom = new JSDOM(
     `<!doctype html><html><head>
        <script type="application/json" id="sw-config">${JSON.stringify({
-         apiBase: 'https://otro/api',
-         specUrl: './demo/openapi.sample.json',
-         brand: { title: 'Del Script', icon: 'mdi:x' },
+         specUrl: 'https://evil.example/system/swagger/config.json',
+         brand: { title: 'Del Script' },
        })}</script>
      </head><body></body></html>`,
     { url, pretendToBeVisual: true },
   );
-  for (const k of ['window', 'document', 'HTMLElement', 'URL', 'URLSearchParams']) {
-    globalThis[k] = dom.window[k];
-  }
+  for (const k of ['window', 'document', 'HTMLElement', 'URL', 'URLSearchParams']) globalThis[k] = dom.window[k];
   globalThis.location = dom.window.location;
+
+  let fetched = '';
+  globalThis.fetch = async (req) => { fetched = String(req); return new Response('{}', { status: 404 }); };
 
   const cfgMod = await import('../dist/cdn/js/config.js?bust=' + Math.random());
   const cfg = cfgMod.resolveBootConfig();
-  assert.equal(cfg.apiBase, 'https://h/api', '?conn= debe ganarle al <script>');
   assert.equal(cfg.brand.title, 'Del Conn');
-  // El specUrl del <script> no debe sobrevivir: se sustituye por el del propio conn,
-  // que es la spec del server al que se acaba de conectar.
-  assert.equal(cfg.specUrl, 'https://h/api/system/swagger/config.json', '?conn= debe imponer su propia spec sobre la del <script>');
+  assert.equal(cfg.specUrl, undefined);
+  await cfgMod.loadViewerDocument(cfg);
+  assert.equal(fetched, '');
 });

@@ -1,46 +1,41 @@
 /**
- * conn.ts — autoconexión ISS vía `?conn=<base64url>`.
+ * conn.ts — autoconexión ISS vía `?conn=<base64url>` o conn como objeto al componente.
  *
- * Un host (PatyIA, Clientes, demos) que quiere abrir el visor ya conectado
- * incrusta en la URL un JSON mínimo con `apiBase`, las rutas del sistema y la
- * marca. El visor lo decodifica, fija `config.apiBase` y pide la spec al host
- * desde el primer pintado.
+ * Un solo documento: el JSON InSoft completo (`kind:"config"` + paths + catalog…)
+ * vive en `conn.spec` cuando el host lo quema en la página. No existen los
+ * antiguos `/system/swagger/{config,meta,paths,docs-config}.json`.
  *
- *   ?conn=eyJhcGlCYXNlIjoi…IsInRpdGxlIjoiSVNTIFBhdHlJQSJ9
+ * Si el host **no** quema el JSON, el visor pide un único endpoint personalizable:
+ *   paths.docs  (default `/docs?v=json`, análogo a `?v=md`)
  *
- * Decodificado (referencia, no contrato):
  *   {
- *     apiBase:    "https://host/api",
- *     auto:       true,             // conectar al cargar (default)
- *     embed:      true,             // modo iframe
- *     fixedServer: true,            // no mostrar selector de servidor
+ *     apiBase: "https://host/api",
+ *     auto: true,
+ *     embed: true,
+ *     fixedServer: true,
  *     paths: {
- *       config: "/system/swagger/config.json",  // único fetch del documento (meta+paths+docs)
- *       info:   "/info"
+ *       info: "/info",
+ *       docs: "/docs?v=json"   // personalizable; solo si no hay `spec`
  *     },
- *
- * Legacy (ya no los sirve PatyIA; el default del visor los deja por compat):
- *       meta, paths, docsConfig — no reintroducir en el host.
- *     title:      "ISS PatyIA",
- *     icon:       "mdi:robot-happy-outline"
+ *     spec: { kind: "config", version: 1, … },  // preferido: quemado por el server
+ *     title: "ISS PatyIA",
+ *     icon: "mdi:robot-happy-outline"
  *   }
- *
- * Precedencia: `?conn=` gana sobre `<script id="sw-config">` y sobre
- * `window.__SWAGGER_CONFIG__`. Un enlace compartido debe conectar al host sin
- * importar el resto de configuración; lo demás solo rellena lo que `conn` no
- * dice.
  */
 
-/** Rutas por defecto que el ISS expone para swagger, relativas a `apiBase`. */
+/** Path por defecto del JSON único de documentación (relativo a `apiBase`). */
+export const DEFAULT_DOCS_JSON_PATH = '/docs?v=json';
+
+/** Rutas auxiliares + documento único. Sin meta/paths/config legacy. */
 export const DEFAULT_CONN_PATHS = {
-  config: '/system/swagger/config.json',
-  meta: '/system/swagger/meta.json',
-  paths: '/system/swagger/paths.json',
-  docsConfig: '/system/swagger/docs-config.json',
   info: '/info',
+  docs: DEFAULT_DOCS_JSON_PATH,
 } as const;
 
-export type SwConnPaths = Partial<typeof DEFAULT_CONN_PATHS> & Record<string, string>;
+export type SwConnPathValue = string | false | null;
+
+export type SwConnPaths = Partial<Record<keyof typeof DEFAULT_CONN_PATHS, SwConnPathValue>> &
+  Record<string, SwConnPathValue | undefined>;
 
 export interface SwConn {
   apiBase?: string;
@@ -48,9 +43,31 @@ export interface SwConn {
   embed?: boolean;
   fixedServer?: boolean;
   paths?: SwConnPaths;
+  /** Documento único en bruto (InSoft config u OpenAPI). Si viene, no hay fetch a `paths.docs`. */
+  spec?: unknown;
   title?: string;
   icon?: string;
   [k: string]: unknown;
+}
+
+/** `true` si el host desactivó el fetch del JSON de docs. */
+export function isDocsPathDisabled(paths: SwConnPaths | undefined): boolean {
+  if (!paths || !('docs' in paths)) return false;
+  const v = paths.docs;
+  return v === false || v == null || String(v).trim() === '';
+}
+
+/**
+ * URL del JSON único de docs, o `""` si no hay fetch.
+ * Solo aplica cuando no hay `spec` quemado: path personalizable, default `/docs?v=json`.
+ */
+export function resolveDocsJsonUrl(apiBase: string, paths: SwConnPaths | undefined): string {
+  if (isDocsPathDisabled(paths)) return '';
+  const raw = typeof paths?.docs === 'string' && paths.docs.trim()
+    ? paths.docs.trim()
+    : DEFAULT_DOCS_JSON_PATH;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return joinConnUrl(apiBase, raw);
 }
 
 /** Decodifica base64url tolerante a padding. Devuelve `null` si el JSON falla. */
@@ -83,19 +100,17 @@ export function encodeConnParam(obj: unknown): string {
   return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-/** Une `apiBase` con un segmento relativo (con o sin `/` inicial). */
+/** Une `apiBase` con un segmento relativo (admite `?query`). */
 export function joinConnUrl(apiBase: string, segment: string | undefined): string {
   const base = String(apiBase ?? '').replace(/\/+$/, '');
   if (!base || !segment) return '';
+  if (/^https?:\/\//i.test(segment)) return segment;
   const path = segment.startsWith('/') ? segment : `/${segment}`;
   return `${base}${path}`;
 }
 
 /**
  * Resuelve la config del visor a partir de `?conn=<base64url>`.
- *
- * Devuelve `null` si la URL no trae `?conn` o si lo trae corrupto: en ese
- * caso el visor sigue con `window.__SWAGGER_CONFIG__` y el `<script>`.
  */
 export function resolveConnConfig(search: string | URLSearchParams | null | undefined): SwConnResuelto | null {
   const sp =
@@ -117,25 +132,25 @@ export interface SwConnResuelto {
   paths: SwConnPaths;
   fixedServer: boolean;
   brand: { title?: string; icon?: string };
+  spec?: unknown;
 }
 
 /**
  * Normaliza un `SwConn` ya deserializado.
- *
- * Existe aparte de `resolveConnConfig` porque el conn puede llegar por dos vías y solo una
- * pasa por la URL: `?conn=<base64url>` cuando el visor vive en su propia página, y el objeto
- * plano que le pone el anfitrión a `<sw-app>` cuando el visor se incrusta como componente. La
- * segunda no tiene por qué codificarse en base64 ni ensuciar la barra de direcciones.
  */
 export function normalizeConn(conn: SwConn | null | undefined): SwConnResuelto | null {
   if (!conn?.apiBase) return null;
+  const incoming = conn.paths ?? {};
+  const paths: SwConnPaths = { ...DEFAULT_CONN_PATHS, ...incoming };
+  if (isDocsPathDisabled(incoming)) paths.docs = '';
   return {
     apiBase: String(conn.apiBase).replace(/\/+$/, ''),
-    paths: { ...DEFAULT_CONN_PATHS, ...(conn.paths ?? {}) },
+    paths,
     fixedServer: conn.fixedServer === true,
     brand: {
       title: conn.title ? String(conn.title) : undefined,
       icon: conn.icon ? String(conn.icon) : undefined,
     },
+    spec: conn.spec !== undefined ? conn.spec : undefined,
   };
 }

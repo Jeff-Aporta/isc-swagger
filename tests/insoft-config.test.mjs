@@ -165,32 +165,26 @@ test('la spec sintetizada es válida para los módulos puros del visor', async (
   }
 });
 
-test('?conn= contra el ISS real termina con un spec listo (smoke contra la red)', async () => {
-  const connMod = await import('../dist/cdn/js/conn.js');
+test('conn.spec InSoft del fixture termina con un spec listo (sin red a config.json)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const sample = JSON.parse(readFileSync(new URL('./fixtures/insoft-config.sample.json', import.meta.url), 'utf8'));
   const cfgMod = await import('../dist/cdn/js/config.js');
-  const { encodeConnParam } = connMod;
-  const connRaw = encodeConnParam({
+
+  globalThis.fetch = async () => {
+    throw new Error('no debe haber fetch a /system/swagger/config.json');
+  };
+
+  const boot = cfgMod.resolveBootConfig({
     apiBase: 'https://ayudascp-ia-staging.azurewebsites.net/api',
     title: 'ISS PatyIA',
     icon: 'mdi:robot-happy-outline',
     fixedServer: true,
+    spec: sample,
   });
+  assert.equal(boot.apiBase, 'https://ayudascp-ia-staging.azurewebsites.net/api', 'apiBase del conn');
 
-  // Reescribe `location.search` antes de cualquier lectura: `resolveBootConfig`
-  // y `loadViewerDocument` leen `location.search` en tiempo de llamada.
-  const realFetch = globalThis.fetch;
-  const dom = new JSDOM(`<!doctype html><html><body></body></html>`, {
-    url: `http://localhost/?conn=${connRaw}`,
-  });
-  for (const k of ['window', 'document', 'URL', 'URLSearchParams']) globalThis[k] = dom.window[k];
-  globalThis.location = dom.window.location;
-  globalThis.fetch = realFetch;
-
-  const cfg = cfgMod.resolveBootConfig();
-  assert.equal(cfg.apiBase, 'https://ayudascp-ia-staging.azurewebsites.net/api', 'apiBase del conn');
-
-  const { spec, config } = await cfgMod.loadViewerDocument(cfg);
-  assert.ok(spec.paths && Object.keys(spec.paths).length > 0, 'spec cargada del ISS real');
+  const { spec, config } = await cfgMod.loadViewerDocument(boot);
+  assert.ok(spec.paths && Object.keys(spec.paths).length > 0, 'spec materializada del JSON quemado');
   assert.equal(config.brand.title, 'ISS PatyIA');
-  assert.equal(spec.openapi, undefined, 'la spec del ISS real no lleva openapi');
+  assert.equal(spec.openapi, undefined, 'la spec InSoft no lleva openapi');
 });

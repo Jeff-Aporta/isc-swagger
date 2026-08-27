@@ -105,24 +105,28 @@ test('cada render manual adopta y precarga su hoja, y la nombra', () => {
   assert.deepEqual(sinPrecarga, [], `renders manuales sin precargarCss nombrado: ${sinPrecarga.join(', ')}`);
 });
 
-/* ── ?conn= no debe ser ignorado por el specUrl embebido ────── */
+/* ── ?conn= con spec quemado anula el specUrl del <script> ────── */
 
-test('resolveBootConfig sustituye `specUrl` por la del conn', async () => {
+test('resolveBootConfig con conn.spec no hereda specUrl del script ni inventa config.json', async () => {
   const { JSDOM } = await import('jsdom');
+  const { readFileSync } = await import('node:fs');
+  const sample = JSON.parse(readFileSync(new URL('./fixtures/insoft-config.sample.json', import.meta.url), 'utf8'));
+  const conn = Buffer.from(JSON.stringify({ apiBase: 'https://x/api', spec: sample })).toString('base64url');
   const dom = new JSDOM(
     `<!doctype html><html><head>
        <script type="application/json" id="sw-config">${JSON.stringify({
          specUrl: './demo/old.json',
        })}</script>
      </head><body></body></html>`,
-    { url: `http://h/?conn=${Buffer.from(JSON.stringify({ apiBase: 'https://x/api' })).toString('base64url')}` },
+    { url: `http://h/?conn=${conn}` },
   );
   for (const k of ['window', 'document', 'URL', 'URLSearchParams']) globalThis[k] = dom.window[k];
   globalThis.location = dom.window.location;
   const { resolveBootConfig } = await import('../dist/cdn/js/config.js');
   const cfg = resolveBootConfig();
-  assert.equal(cfg.specUrl, 'https://x/api/system/swagger/config.json', 'el specUrl del <script> debe quedar fuera y mandar el del conn');
+  assert.equal(cfg.specUrl, undefined, 'spec quemado: sin specUrl ni config.json');
   assert.equal(cfg.apiBase, 'https://x/api');
+  assert.equal(cfg.spec?.kind, 'config');
 });
 
 /* ── La búsqueda debe ser cross-tab ──────────────────────────── */

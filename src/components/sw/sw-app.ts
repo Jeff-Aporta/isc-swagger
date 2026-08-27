@@ -342,8 +342,8 @@ class SwApp extends HTMLElement {
             <h2 class="fallo-titulo">No se pudo cargar el documento</h2>
             <pre class="fallo-texto">${this.#error}</pre>
             <p class="fallo-pista">
-              Comprueba <code>specUrl</code> o <code>apiBase</code> en la configuración, o abre el
-              visor con <code>?spec=&lt;url&gt;</code>.
+              Quema el JSON en <code>conn.spec</code>, o deja el fallback
+              <code>paths.docs</code> (default <code>/docs?v=json</code>).
             </p>
           </is-callout>
         </div>

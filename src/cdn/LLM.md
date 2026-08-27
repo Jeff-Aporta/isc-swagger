@@ -30,7 +30,12 @@ Un host no publica OpenAPI como contrato: publica piezas con `kind` distinto. **
 | `config` | `swagger__config.json` | `catalog` (docs, schemas, payloads). **Sin** `paths`. Docs en `catalog.docs`, no en la raíz |
 | `general` | `swagger__general.json` | Portada: `titulo`, `resumen`, `secciones` |
 
-El visor pide el documento **unido** en `GET …/system/swagger/config.json`. Esa ruta es cable interno: no se lista en `paths`.
+El host entrega el documento **unido** (meta+paths+catalog) de dos formas:
+
+1. **Quemado** en `conn.spec` (preferido en ISS / PatyIA).
+2. **Un GET** a `paths.docs` (default `/docs?v=json`), solo si no hay `spec` quemado.
+
+No existe `GET …/system/swagger/config.json` ni piezas sueltas por red.
 
 Métodos de operación: `get` `post` `put` `patch` `delete` `query` `options` `head`. Cada op necesita `summary`. Si `op.doc` existe, debe haber `catalog.docs[id]`.
 
@@ -82,7 +87,7 @@ const md = issSwaggerToMarkdown({ meta, paths, config, general });
 
 Lista de tags: solo `js/kit-tags.js`. No duplicarla en el host (sin el tag, el custom element no hace upgrade y no hay error en consola).
 
-`?conn=<base64url>` gana sobre el `specUrl` del `<script>`. Documento InSoft (`kind:"config"`) pasa por `parseInsoftConfig`; no asumas OpenAPI en la UI.
+`conn.spec` (JSON quemado) gana sobre cualquier fetch. Sin `spec`, el visor pide `paths.docs` (default `/docs?v=json`). Documento InSoft (`kind:"config"`) pasa por `parseInsoftConfig`; no asumas OpenAPI en la UI.
 
 ## 5. Leyes cortas
 

@@ -12,7 +12,7 @@ import { JSDOM } from 'jsdom';
 
 const { filterGroupsByQuery, filterGroupsByNavTab, resolveVisibleNavTabs, resolveActiveNavTab, contarOperaciones } =
   await import('../dist/cdn/js/nav.js');
-const { normalizeApiBase, inferSwaggerUrls } = await import('../dist/cdn/js/config.js');
+const { normalizeApiBase } = await import('../dist/cdn/js/config.js');
 const { normalizeServerBase, joinApiUrl, inferDefaultServerBase } = await import('../dist/cdn/js/server-base.js');
 const { formatHttpError, extractApiError } = await import('../dist/cdn/js/http-error.js');
 const { validateBodyJson, opUsesRequestBody, resolveTryItBodyExamples, defaultTryItBodyText, formatBodyExample } =
@@ -84,12 +84,6 @@ test('normalizeApiBase añade el /api que falta y descarta query y hash', () => 
   assert.equal(normalizeApiBase('https://example.com/base?x=1#y'), 'https://example.com/base/api');
   assert.equal(normalizeApiBase(''), '');
   assert.equal(normalizeApiBase('no es una url ::'), '');
-});
-
-test('inferSwaggerUrls deriva spec y config de la base', () => {
-  const u = inferSwaggerUrls('https://example.com/api');
-  assert.equal(u.spec, 'https://example.com/api/swagger.json');
-  assert.equal(u.config, 'https://example.com/api/system/swagger/config.json');
 });
 
 test('joinApiUrl no duplica ni pierde la barra', () => {
@@ -327,25 +321,30 @@ test('resolveConnConfig toma apiBase, paths y marca del payload base64url', () =
   const raw = encodeConnParam({
     apiBase: 'https://h/api',
     fixedServer: true,
-    paths: { config: '/x.json' },
+    paths: { info: '/health', docs: '/custom?v=json' },
     title: 'ISS PatyIA',
     icon: 'mdi:robot',
+    spec: { kind: 'config', version: 1, paths: {} },
   });
   const r = resolveConnConfig(`?conn=${raw}`);
   assert.equal(r.apiBase, 'https://h/api');
   assert.equal(r.fixedServer, true);
-  assert.equal(r.paths.config, '/x.json');
+  assert.equal(r.paths.info, '/health');
+  assert.equal(r.paths.docs, '/custom?v=json');
   assert.equal(r.brand.title, 'ISS PatyIA');
   assert.equal(r.brand.icon, 'mdi:robot');
+  assert.equal(r.spec?.kind, 'config');
 });
 
-test('resolveConnConfig rellena los paths que el payload no menciona con defaults ISS', () => {
+test('resolveConnConfig rellena defaults info + docs y no inventa meta/config legacy', () => {
   const raw = encodeConnParam({ apiBase: 'https://h/api' });
   const r = resolveConnConfig(`?conn=${raw}`);
-  assert.equal(r.paths.meta, DEFAULT_CONN_PATHS.meta);
-  assert.equal(r.paths.paths, DEFAULT_CONN_PATHS.paths);
-  assert.equal(r.paths.docsConfig, DEFAULT_CONN_PATHS.docsConfig);
   assert.equal(r.paths.info, DEFAULT_CONN_PATHS.info);
+  assert.equal(r.paths.docs, DEFAULT_CONN_PATHS.docs);
+  assert.equal(r.paths.config, undefined);
+  assert.equal(r.paths.meta, undefined);
+  assert.equal(r.paths.paths, undefined);
+  assert.equal(r.paths.docsConfig, undefined);
 });
 
 test('resolveConnConfig acepta URLSearchParams directamente', () => {

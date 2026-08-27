@@ -1,8 +1,7 @@
 /**
- * insoft-config.ts — `GET /system/swagger/config.json` → spec del visor.
+ * insoft-config.ts — documento InSoft `kind:"config"` → spec del visor.
  *
- * El servidor ISS no publica OpenAPI: publica su propio documento con
- * `{kind, version, info, viewer, protocol, tags, paths, docs, catalog}`.
+ * El host entrega el JSON en bruto (quemado en la página / `conn.spec`).
  * Aquí se transforma en el `SwSpec` interno que el resto del visor entiende.
  *
  * Mismo algoritmo que `iss-exports.browser.mjs::buildOpenApiFromConfig`, pero

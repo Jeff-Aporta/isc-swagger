@@ -154,7 +154,11 @@ interface SwConfig {
   /** Base `/api` del host con el que se prueba (Try it out). */
   apiBase?: string;
   specUrl?: string;
-  spec?: SwSpec;
+  /**
+   * Documento en memoria: OpenAPI, documento IS o InSoft `kind:"config"`.
+   * Si está, el visor no pide `paths.docs`.
+   */
+  spec?: SwSpec | Record<string, unknown>;
   brand?: SwBrand;
   auth?: SwAuthConfig;
   nav?: SwNavTab[];
