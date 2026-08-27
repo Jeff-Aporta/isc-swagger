@@ -320,7 +320,10 @@ function buildViewerConfig(raw: InsoftConfig, apiBase: string): SwConfig {
 export function isInsoftConfig(doc: unknown): doc is InsoftConfig {
   if (!doc || typeof doc !== 'object') return false;
   const d = doc as Record<string, unknown>;
-  return d.kind === 'config' && typeof d.version === 'number' && typeof d.paths === 'object';
+  // `version` puede faltar en merges del host; basta kind+paths para materializar.
+  if (d.kind !== 'config' || typeof d.paths !== 'object' || d.paths == null || Array.isArray(d.paths)) return false;
+  if (d.version != null && typeof d.version !== 'number') return false;
+  return true;
 }
 
 /** Convierte un `InsoftConfig` en `{config, spec}` para `loadViewerDocument`. */
