@@ -1,9 +1,8 @@
 /**
- * <sw-info> — cabecera del documento: título, versión y descripción.
+ * <sw-info> — cabecera del documento: título y descripción general (`info.description`).
  *
- * La descripción de `info` suele venir en Markdown y suele ser larga, así que
- * va colapsada tras las dos primeras líneas: lo que importa arriba del todo
- * es saber qué API es y qué versión, no leer su manual.
+ * En el driver clásico (`sw-app`) es la portada: la descripción va entera vía `sw-doc`,
+ * no colapsada, porque es el home al pulsar el logo.
  */
 
 import { crearComponente, define, html } from './_shared.js';
@@ -30,8 +29,9 @@ const SwInfo = crearComponente<Props>(
       <header class="info">
         <div class="linea">
           <h1 class="titulo">${info.title ?? 'API'}</h1>
+          ${info.version ? html`<span class="version">v${info.version}</span>` : null}
         </div>
-        ${doc ? html`<is-details class="descripcion" variant="plain" summary="Descripción del documento">${doc}</is-details>` : null}
+        ${doc ? html`<div class="descripcion">${doc}</div>` : null}
       </header>
     `);
   },

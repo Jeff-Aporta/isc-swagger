@@ -5,7 +5,7 @@
 import { convertIsCodeToFences } from './postman-md.js';
 import { ISS_SWAGGER_METHODS, type IssSwaggerMethod } from './iss-swagger-doc.js';
 
-const FLOW_RE = /<is-flowchart\b[\s\S]*?<\/is-flowchart>/gi;
+const FLOW_RE = /<(?:is-flowchart|is-sequence-diagram|is-er-diagram)\b[\s\S]*?<\/(?:is-flowchart|is-sequence-diagram|is-er-diagram)>/gi;
 const TAG_RE = /<\/?[a-z][\s\S]*?>/gi;
 
 function obj(x: unknown): x is Record<string, unknown> {

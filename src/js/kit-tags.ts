@@ -38,6 +38,8 @@ export const SW_KIT_TAGS = [
   'is-md-render',
   // Docs (`x-iss-doc-md`): HTML embebido que `is-md-render` pinta por innerHTML.
   'is-flowchart',
+  'is-sequence-diagram',
+  'is-er-diagram',
   'is-diagram-lightbox',
 ] as const;
 

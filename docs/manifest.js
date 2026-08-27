@@ -42,6 +42,7 @@ export const componentes = [
 
   { tag: 'sw-tag-group', title: 'Grupo de tag', page: 'previews/sw-tag-group.html', category: 'shell' },
   { tag: 'sw-info', title: 'Cabecera', page: 'previews/sw-info.html', category: 'shell' },
+  { tag: 'sw-home', title: 'Portada', page: 'previews/sw-home.html', category: 'shell' },
   { tag: 'sw-server', title: 'Servidor', page: 'previews/sw-server.html', category: 'shell' },
   { tag: 'sw-auth', title: 'Sesión', page: 'previews/sw-auth.html', category: 'shell' },
   { tag: 'sw-export', title: 'Descargas', page: 'previews/sw-export.html', category: 'shell' },

@@ -242,7 +242,7 @@ Caso real: sin `is-code`, cURL y respuestas salían cajas vacías.
 | `media` | `is-icon` | `media/icon.min.js` |
 | `code` | `is-code` | `code/code.min.js` |
 | `helpers` | `is-md-render` | `helpers/md-render.min.js` |
-| `diagrams` | `is-flowchart`, `is-diagram-lightbox` | `diagrams/<nombre>.min.js` |
+| `diagrams` | `is-flowchart`, `is-sequence-diagram`, `is-er-diagram`, `is-diagram-lightbox` | `diagrams/<nombre>.min.js` |
 
 Los MD de Notas (`x-iss-doc-md`) pueden embutir `<is-flowchart>` e `<is-code>` porque
 `is-md-render` pinta por `innerHTML` y el kit hace upgrade. Al exportar a Postman,

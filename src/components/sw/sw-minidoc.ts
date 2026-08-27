@@ -33,6 +33,7 @@ import './sw-driver-switch.js';
 import './sw-doc-actions.js';
 import './sw-minidoc-view.js';
 import './sw-minidoc-code.js';
+import './sw-home.js';
 
 class SwMinidoc extends HTMLElement {
   #root: ShadowRoot;
@@ -53,7 +54,7 @@ class SwMinidoc extends HTMLElement {
   #recargando = false;
 
   #indiceNodo: HTMLElement | null = null;
-  #vistaNodo: HTMLElement | null = null;
+  #centroNodo: HTMLElement | null = null;
   #codigoNodo: HTMLElement | null = null;
   #desuscribir: (() => void) | null = null;
 
@@ -109,8 +110,7 @@ class SwMinidoc extends HTMLElement {
 
     this.#desuscribir = subscribeUrlState((estado) => {
       // Solo el «atrás» del navegador: si ya coincide, el aviso viene de nuestra escritura.
-      // Volver a una entrada sin `op` es volver al arranque, y el arranque abre la primera:
-      // dejar la vista en blanco haría que «atrás» pareciera un error de carga.
+      // Volver a una entrada sin `op` es volver al home del documento.
       const op = this.#opValida(estado.op);
       if (op === this.#opAbierta) return;
       this.#opAbierta = op;
@@ -150,9 +150,7 @@ class SwMinidoc extends HTMLElement {
       this.#docIndex = buildDocIndex(spec);
       this.#session = this.#auth.enabled ? getStoredJwt() : null;
       this.#serverBase = readServerFromUrl() || inferDefaultServerBase(spec, config);
-      // Sin operación válida en la URL se abre la primera del índice, siempre. Que el documento
-      // pudiera declarar otra («defaultOp») desconcertaba: se entraba sin `?s=` y el índice
-      // aparecía con una fila cualquiera marcada, no con la de arriba.
+      // Sin operación en la URL se abre el home (`info.description`).
       this.#opAbierta = this.#opValida(this.#opAbierta);
       this.#estado = 'listo';
       if (opts.force) avisar('Documentación actualizada', 'success');
@@ -170,10 +168,10 @@ class SwMinidoc extends HTMLElement {
     return this.#grupos.flatMap((g) => g.operations);
   }
 
-  /** El id si existe en el documento; si no, el de la primera operación. */
+  /** El id si existe en el documento; si no, home (cadena vacía). */
   #opValida(id: string): string {
     if (id && this.#todas.some((o) => o.operationId === id)) return id;
-    return this.#todas[0]?.operationId ?? '';
+    return '';
   }
 
   get #gruposVisibles(): SwGrupo[] {
@@ -196,34 +194,61 @@ class SwMinidoc extends HTMLElement {
     this.#sincronizarSeleccion();
   }
 
-  /** Repinta solo lo que depende de la operación: el shell y el índice se quedan. */
+  /** Logo / inicio: vuelve al home y limpia la operación en la URL. */
+  #irHome(): void {
+    if (!this.#opAbierta) return;
+    this.#opAbierta = '';
+    mergeUrlState({ op: '' }, { push: false });
+    this.#sincronizarSeleccion();
+  }
+
+  /** Repinta solo lo que depende de la operación o del home: el shell y el índice se quedan. */
   #sincronizarSeleccion(): void {
     for (const b of this.#root.querySelectorAll('.op')) {
       b.toggleAttribute('data-activo', (b as HTMLElement).dataset.op === this.#opAbierta);
     }
-    const op = this.#op;
-    const requiereBearer = this.#auth.enabled && operationRequiresBearer(op ?? undefined, this.#spec);
 
-    if (this.#vistaNodo) {
-      (this.#vistaNodo as HTMLElement & { props: unknown }).props = {
-        op,
-        spec: this.#spec,
-        grupo: this.#grupoDeOp,
-        serverBase: this.#serverBase,
-        authEnabled: this.#auth.enabled,
-        docMd: op ? (this.#docIndex[op.operationId] ?? '') : '',
-      };
+    const centro = this.#centroNodo;
+    if (centro) {
+      centro.replaceChildren();
+      if (!this.#opAbierta) {
+        const home = document.createElement('sw-home');
+        (home as HTMLElement & { props: unknown }).props = { spec: this.#spec };
+        centro.append(home);
+      } else {
+        const op = this.#op;
+        const requiereBearer = this.#auth.enabled && operationRequiresBearer(op ?? undefined, this.#spec);
+        const vista = document.createElement('sw-minidoc-view');
+        (vista as HTMLElement & { props: unknown }).props = {
+          op,
+          spec: this.#spec,
+          grupo: this.#grupoDeOp,
+          serverBase: this.#serverBase,
+          authEnabled: this.#auth.enabled,
+          docMd: op ? (this.#docIndex[op.operationId] ?? '') : '',
+        };
+        centro.append(vista);
+        vista.scrollIntoView({ block: 'start' });
+        if (this.#codigoNodo) {
+          (this.#codigoNodo as HTMLElement & { props: unknown }).props = {
+            op,
+            spec: this.#spec,
+            serverBase: this.#serverBase,
+            requiereBearer,
+          };
+        }
+        return;
+      }
     }
+
     if (this.#codigoNodo) {
       (this.#codigoNodo as HTMLElement & { props: unknown }).props = {
-        op,
+        op: null,
         spec: this.#spec,
         serverBase: this.#serverBase,
-        requiereBearer,
+        requiereBearer: false,
       };
     }
-    // La columna central cambió entera: seguir a media página del endpoint anterior desorienta.
-    this.#vistaNodo?.scrollIntoView({ block: 'start' });
   }
 
   #filaOp(o: SwOp): HTMLElement {
@@ -277,7 +302,7 @@ class SwMinidoc extends HTMLElement {
   #render(): void {
     this.#root.replaceChildren();
     this.#indiceNodo = null;
-    this.#vistaNodo = null;
+    this.#centroNodo = null;
     this.#codigoNodo = null;
 
     if (this.#estado === 'cargando') {
@@ -301,7 +326,6 @@ class SwMinidoc extends HTMLElement {
 
     const titulo = this.#config.brand?.title || this.#spec?.info?.title || 'API';
 
-    const vista = document.createElement('sw-minidoc-view');
     const codigo = document.createElement('sw-minidoc-code');
 
     const autenticacion = document.createElement('sw-auth');
@@ -318,10 +342,10 @@ class SwMinidoc extends HTMLElement {
     this.#root.append(html`
       <sw-layout>
         <div slot="cabecera" class="cabecera">
-          <span class="marca">
+          <button type="button" class="marca" aria-label="Ir al inicio" title="Ir al inicio" onclick=${() => this.#irHome()}>
             <is-icon class="marca-logo" icon="${iconoMarca}"></is-icon>
             <span class="marca-texto">${titulo}</span>
-          </span>
+          </button>
           <is-input
             class="buscar"
             type="search"
@@ -338,13 +362,13 @@ class SwMinidoc extends HTMLElement {
         </div>
 
         <nav slot="inicio" class="indice" aria-label="Índice de endpoints"></nav>
-        <div slot="centro">${vista}</div>
+        <div slot="centro" class="centro"></div>
         <div slot="fin">${codigo}</div>
       </sw-layout>
     `);
 
     this.#indiceNodo = this.#root.querySelector('.indice');
-    this.#vistaNodo = vista;
+    this.#centroNodo = this.#root.querySelector('.centro');
     this.#codigoNodo = codigo;
 
     this.#pintarIndice();

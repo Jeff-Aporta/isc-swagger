@@ -176,7 +176,7 @@ test('index.html carga el kit vía SW_KIT_TAGS (kit-tags.js)', () => {
   assert.match(html, /SW_KIT_TAGS/, 'index.html debe usar SW_KIT_TAGS del CDN');
   assert.match(html, /kit-tags\.js/, 'index.html debe importar dist/cdn/js/kit-tags.js');
   const kit = readFileSync(join(ROOT, 'src', 'js', 'kit-tags.ts'), 'utf8');
-  for (const tag of ['is-code', 'is-md-render', 'is-flowchart', 'is-diagram-lightbox']) {
+  for (const tag of ['is-code', 'is-md-render', 'is-flowchart', 'is-sequence-diagram', 'is-er-diagram', 'is-diagram-lightbox']) {
     assert.match(kit, new RegExp(`['"]${tag}['"]`), `falta ${tag} en src/js/kit-tags.ts`);
   }
   assert.ok(

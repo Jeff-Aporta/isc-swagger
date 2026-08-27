@@ -16,7 +16,8 @@ Cómo se escribe uno, cómo se adopta el CSS y qué está prohibido:
 | --- | --- | --- | --- |
 | `<sw-app>` | — (lee config y URL) | — | Shell. Único dueño del estado |
 | `<sw-nav>` | `brand`, `tabs`, `activeTab`, `query`, `spec`, `config`, `authEnabled`, `auth`, `session` | `sw-nav-tab`, `sw-search`, `sw-reset`, `sw-session-change` | Barra superior: marca, secciones, búsqueda, acciones |
-| `<sw-info>` | `spec` | — | Cabecera del documento: título, versión, descripción |
+| `<sw-info>` | `spec` | — | Cabecera del documento en `sw-app`: título, versión y `info.description` |
+| `<sw-home>` | `spec` | — | Portada del visor: `info.description` completa vía `sw-doc` (clic en logo en minidoc) |
 | `<sw-server>` | `value`, `options` | `sw-server-change` | Selector del host contra el que se prueba |
 | `<sw-tag-group>` | `group`, `spec`, `serverBase`, `authEnabled`, `docIndex`, `opAbierta`, `opTab` | reemite los de `sw-operation` | Un tag con sus operaciones (y subgrupos) |
 | `<sw-operation>` | `op`, `spec`, `serverBase`, `authEnabled`, `docMd`, `abierto`, `tab` | `sw-op-toggle`, `sw-op-tab`, `sw-need-login` | Tarjeta desplegable de una operación |
@@ -24,7 +25,7 @@ Cómo se escribe uno, cómo se adopta el CSS y qué está prohibido:
 | `<sw-params>` | `params`, `values`, `disabled`, `titulo` | `sw-param-change` | Campos de los parámetros |
 | `<sw-body>` | `op`, `value`, `disabled` | `sw-body-change` | Editor del cuerpo JSON |
 | `<sw-responses>` | `responses` | — | Respuestas **declaradas** (documentación, no resultado) |
-| `<sw-doc>` | `markdown`, `vacio` | — | Prosa Markdown vía `is-md-render` (HTML embebido: `is-flowchart`, `is-code`) |
+| `<sw-doc>` | `markdown`, `vacio` | — | Prosa Markdown vía `is-md-render` (HTML embebido: `is-flowchart`, `is-sequence-diagram`, `is-er-diagram`, `is-code`) |
 | `<sw-json>` | `value`, `maxHeight` | — | Bloque JSON con resaltado y copiar |
 | `<sw-method>` | `method` | — | Chip del verbo HTTP. Delega en `<is-tag>` |
 | `<sw-path>` | `path` | — | Ruta con los `{parámetros}` resaltados |

@@ -26,6 +26,7 @@ globalThis.location = dom.window.location;
 
 await import('../dist/cdn/components/sw/sw-minidoc-view.js');
 await import('../dist/cdn/components/sw/sw-minidoc-code.js');
+await import('../dist/cdn/components/sw/sw-home.js');
 await import('../dist/cdn/components/sw/sw-app.js');
 await import('../dist/cdn/components/sw/sw-minidoc.js');
 await import('../dist/cdn/components/sw/sw-driver-switch.js');
@@ -88,6 +89,24 @@ test('sw-minidoc-view sin operación invita a elegir en vez de quedarse en blanc
     op: null, spec: null, grupo: '', serverBase: '', authEnabled: false, docMd: '',
   });
   assert.match(root.textContent, /Elige una operación/);
+});
+
+test('sw-home pinta info.description como portada', () => {
+  const root = montar('sw-home', {
+    spec: {
+      info: {
+        title: 'ISS PatyIA',
+        version: '1.0.0',
+        description: '## Bienvenido\n\nTexto **home**.',
+      },
+    },
+  });
+  assert.match(root.textContent, /ISS PatyIA/);
+  assert.match(root.textContent, /v1\.0\.0/);
+  const doc = root.querySelector('sw-doc');
+  assert.ok(doc, 'debe renderizar la descripción vía sw-doc');
+  const fuente = doc?.shadowRoot?.querySelector('script[type="text/markdown"]');
+  assert.match(fuente?.textContent ?? '', /Bienvenido/);
 });
 
 /* ── Columna de código ──────────────────────────────────────── */
@@ -249,6 +268,8 @@ test('el índice de minidoc expone el path en title y caption', async () => {
   assert.match(css, /flex-direction:\s*column/, 'el path debe ir debajo del título');
   assert.match(css, /\.op-path/, 'falta estilo del caption');
   assert.match(ts, /mdi:lock/, 'falta candado JWT en el índice');
+  assert.match(ts, /#irHome/, 'falta ir al home desde el logo');
+  assert.match(ts, /type="button" class="marca"/, 'el logo debe ser botón clicable');
   assert.match(ts, /flatMap/, 'los subgrupos deben aplanar sin divisores de entidad');
   assert.doesNotMatch(ts, /entidad-titulo/, 'no debe haber divisor por entidad en el índice');
   assert.match(css, /\.op-lock/, 'falta columna alineada del candado');

@@ -88,8 +88,8 @@ class SwNav extends HTMLElement {
         <button
           type="button"
           class="marca"
-          aria-label="Reiniciar visor"
-          title="Reiniciar visor"
+          aria-label="Ir al inicio"
+          title="Ir al inicio"
           onclick=${() => emitir(this, 'sw-reset', null)}
         >
           ${brand?.icon ? html`<is-icon class="marca-icono" icon="${brand.icon}"></is-icon>` : null}

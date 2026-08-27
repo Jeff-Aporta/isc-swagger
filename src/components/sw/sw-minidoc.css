@@ -24,9 +24,26 @@
   display: inline-flex;
   align-items: center;
   gap: var(--is-space-2, .5rem);
+  padding: 0.2rem 0.4rem;
+  border: 0;
+  border-radius: var(--is-radius-sm, 6px);
+  background: none;
+  color: inherit;
+  font: inherit;
   font-weight: 700;
   font-size: 1rem;
   white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: color-mix(in srgb, currentColor 6%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--is-color-brand, #1e90ff);
+    outline-offset: 2px;
+  }
 }
 
 /* Azul de marca ContaPyme: el logo es lo único con color saturado en la barra, para que ancle

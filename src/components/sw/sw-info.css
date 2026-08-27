@@ -28,7 +28,12 @@
   line-height: 1.2;
 }
 
+.version {
+  color: var(--is-text-dim, #8b949e);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 .descripcion {
-  --spacing: 0.5rem;
-  margin-left: -0.5rem;
+  min-width: 0;
 }

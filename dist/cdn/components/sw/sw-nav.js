@@ -3,8 +3,8 @@ import{adoptCss as m,precargarCss as v,define as g,html as e,emitir as t,esc as 
         <button
           type="button"
           class="marca"
-          aria-label="Reiniciar visor"
-          title="Reiniciar visor"
+          aria-label="Ir al inicio"
+          title="Ir al inicio"
           onclick=${()=>t(this,"sw-reset",null)}
         >
           ${s?.icon?e`<is-icon class="marca-icono" icon="${s.icon}"></is-icon>`:null}

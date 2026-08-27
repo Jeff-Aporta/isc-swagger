@@ -21,6 +21,7 @@ await import('./sw-method.js');
 await import('./sw-path.js');
 await import('./sw-json.js');
 await import('./sw-doc.js');
+await import('./sw-home.js');
 await import('./sw-params.js');
 await import('./sw-body.js');
 await import('./sw-responses.js');

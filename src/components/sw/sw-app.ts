@@ -249,15 +249,14 @@ class SwApp extends HTMLElement {
     this.#pintarLista();
   }
 
-  /** Reset: limpia `?s=` (tema, query, op, tab…). La `?conn=` se queda. */
+  /** Inicio: limpia búsqueda y operación; vuelve al home (`info.description`). */
   #reiniciar(): void {
     this.#query = '';
     this.#opAbierta = '';
     this.#opTab = OP_TAB_DEFAULT;
     this.#navTab = resolveActiveNavTab(this.#tabs, '');
     clearSState();
-    // Reiniciar no es navegar a otra vista: es volver al estado con el que se entra sin `?s=`,
-    // así que reemplaza la entrada actual en vez de añadir una.
+    // Inicio: estado inicial sin operación ni pestaña; reemplaza la URL actual.
     mergeUrlState({ tab: '', op: '', opTab: OP_TAB_DEFAULT }, { push: false });
     this.#sincronizarNav();
     this.#pintarLista();
