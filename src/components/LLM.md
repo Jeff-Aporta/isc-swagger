@@ -48,7 +48,7 @@ armazón `sw-layout`, y los tres del driver de vistas — `sw-minidoc`,
 - `adoptCss(this.#root, import.meta.url)` al final de **cada** salida del render;
 - `precargarCss(import.meta.url)` junto al `define(...)`.
 
-Guardián: `tests/invariantes.test.mjs`.
+Guardián: `tests/invariantes.test.ts`.
 
 ### Cuándo NO repintar entero
 
@@ -94,7 +94,7 @@ construibles.
 > `<link>`, sino que aplicarlo jamás es síncrono. Si vuelves a ver ese patrón en
 > el código, es una regresión.
 
-Guardianes: `tests/css-adopcion.test.mjs`, `tests/hojas.test.mjs`.
+Guardianes: `tests/css-adopcion.test.ts`, `tests/hojas.test.ts`.
 
 ## Composición y relaciones
 
@@ -159,16 +159,16 @@ números. El kit ya los trae y entran con `all.min.js`.
 
 ## Errores conocidos y prevención
 
-1. **CSS embebido en el `.ts`** — guardián: `tests/estructura.test.mjs`.
+1. **CSS embebido en el `.ts`** — guardián: `tests/estructura.test.ts`.
 2. **Flicker por `<link>` en el shadow** — arriba, con el intento fallido.
-   Guardianes: `css-adopcion.test.mjs`, `hojas.test.mjs`.
+   Guardianes: `css-adopcion.test.ts`, `hojas.test.ts`.
 3. **Diálogo montado en `document.body` con CSS en el shadow** — el diálogo de
    confirmación de `sw-try` vive en light DOM, así que su CSS está en
    `src/css/app.css` (`.sw-confirmar-*`). Un `.css` de componente **nunca**
    alcanza a un nodo fuera de su shadow.
 4. **Un custom element que `createElement` monta sin estar importado** — no hace
    upgrade: el tag queda en el DOM sin shadow y la vista sale vacía, **sin error
-   en consola**. Guardián: `estructura.test.mjs`.
+   en consola**. Guardián: `estructura.test.ts`.
 5. **Valores de enum inventados en un `is-*`** — `variant="ghost"` donde no
    existe no da error, no avisa y no se ve: se pinta con los valores por
    defecto. Verificar el enum en el `.md` del módulo.

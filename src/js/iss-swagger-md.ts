@@ -122,9 +122,12 @@ export function issSwaggerToMarkdown(input: unknown): string {
     lines.push('');
     for (const s of p.general.secciones) {
       if (str(s.titulo)) lines.push(`### ${s.titulo}`);
-      if (str(s.markdown)) {
+      // `str` recorta y devuelve '' si no era cadena: se usa ese resultado en
+      // vez del original, que sigue siendo `string | undefined`.
+      const markdown = str(s.markdown);
+      if (markdown) {
         lines.push('');
-        lines.push(issDocToLlmMarkdown(s.markdown));
+        lines.push(issDocToLlmMarkdown(markdown));
         lines.push('');
       }
     }
@@ -144,9 +147,10 @@ export function issSwaggerToMarkdown(input: unknown): string {
         lines.push('');
         lines.push(op.description);
       }
-      if (op.doc && str(docs[op.doc])) {
+      const doc = op.doc ? str(docs[op.doc]) : '';
+      if (doc) {
         lines.push('');
-        lines.push(issDocToLlmMarkdown(docs[op.doc]));
+        lines.push(issDocToLlmMarkdown(doc));
       }
       lines.push('');
     }

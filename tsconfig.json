@@ -18,5 +18,12 @@
     "isolatedModules": false,
     "useDefineForClassFields": true
   },
-  "include": ["src/types/**/*.d.ts", "src/components/**/*.ts", "src/js/**/*.ts"]
+  "include": [
+    "src/types/**/*.d.ts",
+    "src/components/**/*.ts",
+    "src/js/**/*.ts",
+    "docs/**/*.ts",
+    "scripts/**/*.ts",
+    "tests/**/*.ts"
+  ]
 }

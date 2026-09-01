@@ -64,6 +64,13 @@
 .endpoint sw-path { flex: 1 1 12rem; min-width: 0; }
 .probar { flex: 0 0 auto; }
 
+.probar-pop::part(menu) {
+  max-width: min(56rem, calc(100vw - 2rem));
+  min-width: min(24rem, 92vw);
+  max-height: min(85vh, var(--auto-size-available-height, 85vh));
+  padding: var(--is-space-4, 1rem);
+}
+
 .bloque { margin-bottom: var(--is-space-8, 2rem); }
 
 .bloque:has(sw-doc) {

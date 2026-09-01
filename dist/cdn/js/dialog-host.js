@@ -1,4 +1,4 @@
-const s="sw-dialog-host-css",n=`
+const n="sw-dialog-host-css",r=`
   .sw-confirmar-texto {
     margin: 0 0 0.75rem;
     font-size: 0.9375rem;
@@ -35,4 +35,4 @@ const s="sw-dialog-host-css",n=`
     display: block;
     min-width: 0;
   }
-`;function r(){if(typeof document>"u"||document.getElementById(s))return;const i=document.createElement("style");i.id=s,i.textContent=n,document.head.appendChild(i)}function a(i){r();const e=document.createElement("is-dialog");e.setAttribute("label",i.label),e.setAttribute("light-dismiss",""),i.className&&e.classList.add(...i.className.split(/\s+/).filter(Boolean));const o=i.width||"min(52rem, calc(100vw - 2rem))";e.setAttribute("width",o),e.style.setProperty("--is-dialog-width",o),e.style.setProperty("--spacing","var(--is-dialog-spacing, 1.1rem)"),e.append(i.content),e.addEventListener("is-hide",()=>e.remove()),e.addEventListener("is-after-hide",()=>e.remove()),document.body.appendChild(e);const t=e;return typeof t.show=="function"?t.show():t.open=!0,e}export{r as ensureDialogHostStyles,a as openHostDialog};
+`;function a(){if(typeof document>"u"||document.getElementById(n))return;const t=document.createElement("style");t.id=n,t.textContent=r,document.head.appendChild(t)}function d(t){a();const e=document.createElement("is-dialog");e.setAttribute("label",t.label),e.setAttribute("light-dismiss",""),t.className&&e.classList.add(...t.className.split(/\s+/).filter(Boolean));const o=t.width||"min(52rem, calc(100vw - 2rem))";e.setAttribute("width",o),e.style.setProperty("--is-dialog-width",o),e.style.setProperty("--spacing","var(--is-dialog-spacing, 1.1rem)"),e.append(t.content),e.addEventListener("is-after-hide",s=>{s.target===e&&e.remove()}),document.body.appendChild(e);const i=e;return typeof i.show=="function"?i.show():i.open=!0,e}export{a as ensureDialogHostStyles,d as openHostDialog};

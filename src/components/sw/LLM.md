@@ -47,7 +47,7 @@ Cómo se escribe uno, cómo se adopta el CSS y qué está prohibido:
 demás usan `crearComponente`. Cada uno de los seis debe llamar
 `adoptCss(this.#root, import.meta.url)` al final de **cada** salida del render y
 `precargarCss(import.meta.url)` junto al `define(...)`. Guardián:
-`tests/invariantes.test.mjs`.
+`tests/invariantes.test.ts`.
 
 ## Composición y relaciones
 
@@ -145,7 +145,7 @@ Los transversales están en [`../LLM.md`](../LLM.md). Los propios de esta capa:
 - **«OpenAPI» como marca en la UI** — el visor parsea **InSoft**. `sw-info` no
   pinta badge de versión OpenAPI; `sw-export` ofrece **IS-Swagger (config)**,
   **OpenAPI 3** y **Postman** como descargas (conversión local). Guardián:
-  `tests/invariantes.test.mjs`.
+  `tests/invariantes.test.ts`.
 - **Barras de pestañas a mano** (`sw-nav` secciones, `sw-operation` pestañas) —
   deuda conocida frente a `<is-tab-group>`, con su motivo en
   [`../../LLM.md`](../../LLM.md). No es permiso para añadir una tercera.

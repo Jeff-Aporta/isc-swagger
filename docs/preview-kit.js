@@ -1,83 +1,62 @@
-/**
- * preview-kit.js — utilidades que comparten todas las previews.
- *
- * Una preview declara **datos**, no chrome: `montar()` crea el componente, le
- * asigna `props` y lo envuelve en una tarjeta con título. Escribir ese
- * andamiaje a mano en cada archivo es lo que convirtió las previews del kit en
- * 400 líneas por tag.
- */
-
 const $ = (sel) => document.querySelector(sel);
-
-/**
- * Crea un componente con sus props y lo devuelve.
- * `props` se asigna por propiedad, nunca por atributo: los payloads del visor
- * llevan objetos anidados.
- */
-export function crear(tag, props) {
+function crear(tag, props) {
   const node = document.createElement(tag);
-  if (props !== undefined) node.props = props;
+  if (props !== void 0) node.props = props;
   return node;
 }
-
-/** Sección con título, nota opcional y contenido. */
-export function caso(titulo, nota, ...nodos) {
-  const section = document.createElement('section');
-  section.className = 'caso';
-
-  const h = document.createElement('h2');
-  h.className = 'caso__titulo';
+function caso(titulo, nota, ...nodos) {
+  const section = document.createElement("section");
+  section.className = "caso";
+  const h = document.createElement("h2");
+  h.className = "caso__titulo";
   h.textContent = titulo;
   section.append(h);
-
   if (nota) {
-    const p = document.createElement('p');
-    p.className = 'caso__nota';
+    const p = document.createElement("p");
+    p.className = "caso__nota";
     p.textContent = nota;
     section.append(p);
   }
-
-  const cuerpo = document.createElement('div');
-  cuerpo.className = 'caso__cuerpo';
-  cuerpo.append(...nodos.filter(Boolean));
+  const cuerpo = document.createElement("div");
+  cuerpo.className = "caso__cuerpo";
+  cuerpo.append(...nodos.filter((n) => n != null));
   section.append(cuerpo);
-
   return section;
 }
-
-/** Monta los casos dentro de `<main class="preview">` y sella el encabezado. */
-export function montar(tag, descripcion, casos) {
-  const main = $('.preview') ?? document.body;
-
-  const head = document.createElement('header');
-  head.className = 'preview__head';
+function montar(tag, descripcion, casos) {
+  const main = $(".preview") ?? document.body;
+  const head = document.createElement("header");
+  head.className = "preview__head";
   head.innerHTML = `<code class="preview__tag">&lt;${tag}&gt;</code>`;
   if (descripcion) {
-    const p = document.createElement('p');
-    p.className = 'preview__desc';
+    const p = document.createElement("p");
+    p.className = "preview__desc";
     p.textContent = descripcion;
     head.append(p);
   }
   main.append(head, ...casos);
-  document.title = `${tag} · preview`;
+  document.title = `${tag} \xB7 preview`;
 }
-
-/** Registra los eventos del componente en un panel, para verlos disparar. */
-export function registrarEventos(nodo, eventos) {
-  const log = document.createElement('div');
-  log.className = 'eventos';
-  log.innerHTML = '<span class="eventos__vacio">Sin eventos todavía.</span>';
-
+function registrarEventos(nodo, eventos) {
+  const log = document.createElement("div");
+  log.className = "eventos";
+  log.innerHTML = '<span class="eventos__vacio">Sin eventos todav\xEDa.</span>';
   for (const nombre of eventos) {
     nodo.addEventListener(nombre, (e) => {
-      const linea = document.createElement('code');
-      linea.className = 'eventos__linea';
-      linea.textContent = `${nombre} → ${JSON.stringify(e.detail ?? {})}`;
-      if (log.firstElementChild?.classList.contains('eventos__vacio')) log.replaceChildren();
+      const linea = document.createElement("code");
+      linea.className = "eventos__linea";
+      const detalle = e instanceof CustomEvent ? e.detail : void 0;
+      linea.textContent = `${nombre} \u2192 ${JSON.stringify(detalle ?? {})}`;
+      if (log.firstElementChild?.classList.contains("eventos__vacio")) log.replaceChildren();
       log.prepend(linea);
-      // Un log infinito hace crecer la página sin fin dentro del iframe.
       while (log.childElementCount > 8) log.lastElementChild.remove();
     });
   }
   return log;
 }
+export {
+  caso,
+  crear,
+  montar,
+  registrarEventos
+};

@@ -49,7 +49,10 @@ export function readDriver(): SwDriver['id'] {
   try {
     migrateLegacyNavToS();
     const enS = readSState()[PARAM_DRIVER];
-    if (typeof enS === 'string' && esDriver(enS.trim())) return enS.trim();
+    // El guardia estrecha la expresion que recibe, no la variable: hay que
+    // pasarle el valor ya recortado para poder devolver ese mismo.
+    const recortado = typeof enS === 'string' ? enS.trim() : null;
+    if (recortado != null && esDriver(recortado)) return recortado;
   } catch {
     /* URL ilegible: se sigue con la preferencia guardada */
   }

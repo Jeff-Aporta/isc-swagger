@@ -6,14 +6,12 @@
  * parámetros agrupados por sitio (path, query, header, cookie) y cuerpo. Nada está plegado,
  * porque el driver ya filtró a una sola operación y esconder la mitad no ahorra nada.
  *
- * «Probar» abre `sw-try` en un diálogo en vez de incrustarlo: el formulario de pruebas compite
- * por la atención con la documentación, y quien está leyendo parámetros todavía no quiere un
- * editor de cuerpo delante.
+ * «Probar» abre `sw-try` en un panel anclado al botón (is-dropdown), no en un modal
+ * centrado: queda pegado al trigger y no compite con la lectura del manual.
  */
 
 import { adoptCss, precargarCss, define, html, emitir } from './_shared.js';
 import { ejemploDeParam } from '../../js/curl.js';
-import { openHostDialog } from '../../js/dialog-host.js';
 import { jsonPretty, operationRequiresBearer, resolveParams } from '../../js/openapi.js';
 import './sw-method.js';
 import './sw-path.js';
@@ -100,23 +98,6 @@ class SwMinidocView extends HTMLElement {
     });
   }
 
-  /** Abre el formulario de pruebas en un diálogo. Se monta al abrir, no al pintar la vista. */
-  #abrirProbar(): void {
-    const { op, spec, serverBase, authEnabled } = this.#props;
-    if (!op) return;
-
-    const probar = document.createElement('sw-try');
-    (probar as HTMLElement & { props: unknown }).props = { op, spec, serverBase, authEnabled };
-    probar.addEventListener('sw-need-login', (e) => emitir(this, 'sw-need-login', (e as CustomEvent).detail));
-
-    openHostDialog({
-      label: `${op.method.toUpperCase()} ${op.path}`,
-      className: 'sw-dialog-try',
-      width: 'min(56rem, calc(100vw - 2rem))',
-      content: probar,
-    });
-  }
-
   #render(): void {
     const { op, spec, grupo, authEnabled, docMd } = this.#props;
     this.#root.replaceChildren();
@@ -152,6 +133,15 @@ class SwMinidocView extends HTMLElement {
       (docEl as HTMLElement & { props: unknown }).props = { markdown: docMd };
     }
 
+    const probar = document.createElement('sw-try');
+    (probar as HTMLElement & { props: unknown }).props = {
+      op,
+      spec,
+      serverBase: this.#props.serverBase,
+      authEnabled,
+    };
+    probar.addEventListener('sw-need-login', (e) => emitir(this, 'sw-need-login', (e as CustomEvent).detail));
+
     this.#root.append(html`
       ${grupo ? html`<p class="eyebrow">${grupo}</p>` : null}
       <h1 class="titulo">${op.summary || op.operationId}</h1>
@@ -160,10 +150,13 @@ class SwMinidocView extends HTMLElement {
       <div class="endpoint">
         ${metodo}
         ${ruta}
-        <is-button class="probar" variant="solid" color="success" onis-click=${() => this.#abrirProbar()}>
-          Probar
-          <is-icon slot="end" icon="mdi:play"></is-icon>
-        </is-button>
+        <is-dropdown class="probar-pop" placement="bottom-end" distance="6">
+          <is-button slot="trigger" class="probar" variant="solid" color="success">
+            Probar
+            <is-icon slot="end" icon="mdi:play"></is-icon>
+          </is-button>
+          ${probar}
+        </is-dropdown>
       </div>
 
       ${requiereBearer

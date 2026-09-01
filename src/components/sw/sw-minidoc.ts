@@ -251,7 +251,8 @@ class SwMinidoc extends HTMLElement {
     }
   }
 
-  #filaOp(o: SwOp): HTMLElement {
+  /** `html` devuelve un fragmento, no un elemento; el retorno lo refleja. */
+  #filaOp(o: SwOp): DocumentFragment {
     const metodo = document.createElement('sw-method');
     (metodo as HTMLElement & { props: unknown }).props = { method: o.method };
     const ruta = String(o.path || '');

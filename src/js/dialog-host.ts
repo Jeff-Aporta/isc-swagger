@@ -70,8 +70,11 @@ export function openHostDialog(opts: {
   dlg.style.setProperty('--is-dialog-width', width);
   dlg.style.setProperty('--spacing', 'var(--is-dialog-spacing, 1.1rem)');
   dlg.append(opts.content);
-  dlg.addEventListener('is-hide', () => dlg.remove());
-  dlg.addEventListener('is-after-hide', () => dlg.remove());
+  // Solo el propio is-dialog puede cerrarse: tooltips/dropdowns anidados emiten is-hide composed.
+  dlg.addEventListener('is-after-hide', (e: Event) => {
+    if (e.target !== dlg) return;
+    dlg.remove();
+  });
   document.body.appendChild(dlg);
   const el = dlg as HTMLElement & { open?: boolean; show?: () => void };
   if (typeof el.show === 'function') el.show();

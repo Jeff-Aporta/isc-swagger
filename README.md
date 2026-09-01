@@ -72,7 +72,7 @@ visor *es*: la palabra no sale a la interfaz.
 ```
 index.html                    SPA autosuficiente (carga dist/cdn por <script type="module">)
 demo/openapi.sample.json      documento de muestra: subgrupos, enum, JWT, obsoleta
-scripts/build.mjs             esbuild -> dist/cdn plano
+scripts/build.ts             esbuild -> dist/cdn plano
 src/
   css/app.css                 canvas y light DOM (lo que no cabe en un shadow)
   js/                         dominio puro, sin DOM
@@ -110,7 +110,7 @@ de rellenar el shadow, porque vaciarlo se lleva el `<link>`.
 
 Esto corrige el error de `is-tkts`, donde el CSS vivía en constantes del `.ts`:
 así no se puede minificar aparte, no se cachea aparte y ninguna herramienta de
-CSS lo ve. `tests/estructura.test.mjs` falla si vuelve a aparecer.
+CSS lo ve. `tests/estructura.test.ts` falla si vuelve a aparecer.
 
 ## Componentes
 

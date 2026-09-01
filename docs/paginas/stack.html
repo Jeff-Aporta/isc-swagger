@@ -221,10 +221,10 @@ dist/cdn/sw-operation.css</code></pre>
 npm run build      # src/**.ts → dist/cdn/*.js (+ *.css copiados)
 npm run dev        # el mismo build en watch
 npm run typecheck  # tsc --noEmit
-npm test           # build + node --test tests/*.test.mjs</code></pre>
+npm test           # build + node --test tests/*.test.ts</code></pre>
       <p>
         Dos archivos quedan fuera del pipeline de TypeScript a propósito:
-        <code>src/js/boot.js</code> y <code>src/js/hojas.js</code>. Corren
+        <code>src/js/boot.ts</code> y <code>src/js/hojas.ts</code>. Corren
         síncronos en <code>&lt;head&gt;</code>, antes de que exista ningún módulo,
         para aplicar el tema y preparar la caché de hojas sin parpadeo.
       </p>

@@ -44,7 +44,7 @@ Todas las páginas viven a **dos niveles** de la raíz
 
 Con un nivel de más o de menos, el import apunta a un directorio que no existe
 y la página sale en blanco **sin ningún error visible**. Guardián:
-`tests/estructura.test.mjs`.
+`tests/estructura.test.ts`.
 
 ## Cómo se escribe una página de prosa
 
@@ -112,7 +112,7 @@ mirar: un diagrama sin pie obliga a adivinar qué se estaba señalando.
 ## Qué no hacer
 
 - Llamar «OpenAPI» al visor. Es un formato que acepta, no lo que es.
-  Guardián: `tests/invariantes.test.mjs`.
+  Guardián: `tests/invariantes.test.ts`.
 - Lógica de página como string o `eval`.
 - Chrome a mano pudiendo usar `caso()` o las clases de `doc.css`.
 - Dejar una entrada del manifest sin su HTML, o al revés.
@@ -121,16 +121,16 @@ mirar: un diagrama sin pie obliga a adivinar qué se estaba señalando.
 ## Errores conocidos y prevención
 
 1. **Componente sin entrada en el manifest** — queda fuera del sitio y nadie lo
-   vuelve a mirar. Guardián: `tests/estructura.test.mjs`.
+   vuelve a mirar. Guardián: `tests/estructura.test.ts`.
 2. **Profundidad de ruta equivocada** — página en blanco, sin error.
-   Guardián: `tests/estructura.test.mjs`.
+   Guardián: `tests/estructura.test.ts`.
 3. **`sw.all.js` dejaba los componentes sin estilos** — dentro del bundle,
    `import.meta.url` vale lo mismo para todos los módulos, así que `adoptCss`
    derivaba `sw.all.css`, que no existe. Afectaba justo a `previews/sw-app.html`,
    la página estrella. Resuelto pasando el nombre de la hoja como tercer
    argumento (`adoptCss(shadow, import.meta.url, 'sw-method')`): el *directorio*
    de `import.meta.url` sí es correcto en los dos casos. Guardianes:
-   `tests/estructura.test.mjs` e `tests/invariantes.test.mjs`.
+   `tests/estructura.test.ts` e `tests/invariantes.test.ts`.
 4. **El vídeo del hero pesa** — va con `preload="metadata"` y sin `autoplay`.
    Arrancar sonido sin que nadie lo pida es lo que hace cerrar la pestaña.
 

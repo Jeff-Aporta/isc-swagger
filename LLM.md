@@ -14,7 +14,7 @@ Esta página son las leyes y la historia de errores. El detalle por capa vive en
 | [`src/components/sw/LLM.md`](src/components/sw/LLM.md) | Necesitas props/eventos de un `sw-*` |
 | [`docs/LLM.md`](docs/LLM.md) | Vas a tocar el sitio documental |
 
-Guardián de que esas páginas no mienten: `tests/docs.test.mjs`.
+Guardián de que esas páginas no mienten: `tests/docs.test.ts`.
 
 ## Carta de leyes
 
@@ -35,13 +35,13 @@ Guardián de que esas páginas no mienten: `tests/docs.test.mjs`.
 | Toda entrada de la spec pasa por `esc()` o por `html\`\`` | `innerHTML` con texto del documento |
 | `?conn=<base64url>` anula el `specUrl` del `<script>` | Dejar que el demo local gane al server real |
 | Buscar por query **siempre** ignora la pestaña activa | Filtrar por tab cuando hay query (esconde lo que el usuario pidió) |
-| `?s=<base64url(JSON)>` lleva tema+paleta+q | Parámetros sueltos para el mismo fin (rompe el estado compartido con `boot.js`) |
+| `?s=<base64url(JSON)>` lleva tema+paleta+q | Parámetros sueltos para el mismo fin (rompe el estado compartido con `boot.ts`) |
 | Click en la marca = reset (`?s=`); la `?conn=` se queda | Reiniciar vía location.reload() (rompe el shell sin redibujar) |
 | Botón descargar / reload: `variant="plain"` solo icono + `aria-label` | Texto «Descargar» u otro label en la cabecera |
 | Reload documento: `clearJsonCache` + `loadViewerDocument(..., { force: true })` | Esperar 24 h o pedir al usuario vaciar localStorage a mano |
 | Selector Documento/Clásico: control compacto (~2 rem de alto) | `is-select` a altura de campo de formulario grande |
 | Registrar el componente en `index.html`, `all.ts` y `docs/manifest.js` | Dejarlo en uno solo (parcial = bug mudo) |
-| Tests en `tests/*.test.mjs` contra `dist/cdn/` | `.test.ts`: no hay pipeline TS para tests |
+| Tests en `tests/*.test.ts` contra `dist/cdn/` | Importarlos desde `src/`: probaría código que nadie sirve |
 | `?conn=` → `kind: "config"` InSoft pasa por `parseInsoftConfig` | Asumir OpenAPI: el spec sintetizado no lleva `openapi:` en la salida |
 | `auth.loginUrl` por defecto = `DEFAULT_AUTH_LOGIN_URL` (main-orchestrator) | Dejar `auth.enabled: false` cuando el visor trae `viewer.auth.enabled: true` |
 | `index.html` decide `data-modo` (hero vs app) **en `<head>`**, antes del primer pintado | Decidir el modo desde un módulo: el visor parpadea como hero antes de cambiar |
@@ -93,7 +93,7 @@ estado entre sí. Reglas para que sigan sin pisarse:
 - Montar los dos a la vez funciona; solo duplica la carga del documento. `sw-viewer`
   mantiene uno solo vivo: al cambiar, reemplaza el nodo entero.
 
-Guardián: `tests/minidoc.test.mjs`.
+Guardián: `tests/minidoc.test.ts`.
 
 ## Estado persistido y caducidad por build
 
@@ -104,7 +104,7 @@ El visor guarda dos cosas en `localStorage`, y se tratan distinto **a propósito
 | Ancho de los paneles (geometría) | `is-components` → `is-split-panel` → `sw:split:*` | **Sí** |
 | Driver elegido | `sw:driver` | No |
 
-Cada build lleva un sello de fecha y hora (`__SW_BUILD__`, lo inyecta `scripts/build.mjs` y lo
+Cada build lleva un sello de fecha y hora (`__SW_BUILD__`, lo inyecta `scripts/build.ts` y lo
 expone `js/version.ts`). Al cargar `sw-layout` se compara con el sello que escribió la geometría
 guardada; si no coinciden, la geometría se descarta.
 
@@ -118,7 +118,7 @@ descartarla no cuesta nada. El driver **no** caduca: es una elección deliberada
 cambiar de versión no debe cambiarle la vista. Por eso `js/prefs.ts` enumera las claves de
 geometría en vez de vaciar el almacén — también respeta lo que guarden otros componentes del kit.
 
-Al tocar el layout, añadir aquí la clave nueva. Guardián: `tests/minidoc.test.mjs`.
+Al tocar el layout, añadir aquí la clave nueva. Guardián: `tests/minidoc.test.ts`.
 
 ## Arquitectura en tres frases
 
@@ -126,7 +126,7 @@ Al tocar el layout, añadir aquí la clave nueva. Guardián: `tests/minidoc.test
    prueba sin navegador y lo que decide qué se ve.
 2. `src/components/sw/` traduce esos datos a `is-*`. Cada componente es un
    `.ts` + un `.css` hermano y nada más.
-3. `scripts/build.mjs` transpila (no empaqueta) a `dist/cdn/`, un directorio
+3. `scripts/build.ts` transpila (no empaqueta) a `dist/cdn/`, un directorio
    **plano** donde todo módulo es hermano de todos. Los imports relativos se
    reescriben; los `.css` se copian al lado de su `.js`.
 
@@ -184,15 +184,15 @@ La hoja se adopta ahora como `CSSStyleSheet` construida y cacheada por href:
   (mientras baja el texto) y en navegadores sin hojas construibles.
 
 **El kit `is-*` viene del CDN y enlaza dos `<link>` por shadow root**, sin
-caché. `src/js/hojas.js` —plano, síncrono en `<head>`, antes que el kit—
+caché. `src/js/hojas.ts` —plano, síncrono en `<head>`, antes que el kit—
 envuelve `ShadowRoot.prototype.prepend` y cambia esos `<link>` por la hoja
 construida a partir de la segunda aparición del href. La primera se deja pasar
 tal cual: ningún componente puede quedarse sin estilos por esa capa. Publica el
 caché en `globalThis.__swHojas` y `_shared.ts` lo reusa — una sola descarga por
 hoja para todo el visor.
 
-Guardianes: `tests/hojas.test.mjs` (el parche del kit y el caché compartido) y
-`tests/css-adopcion.test.mjs` (adopción síncrona, sin `<link>`, sin segunda
+Guardianes: `tests/hojas.test.ts` (el parche del kit y el caché compartido) y
+`tests/css-adopcion.test.ts` (adopción síncrona, sin `<link>`, sin segunda
 descarga, y que repintar no se lleve la hoja).
 
 ## Coste diferido
@@ -330,7 +330,7 @@ viewer, paths, catalog, docs, tags}`). OpenAPI nunca debe salir a UI:
 - `parseInsoftConfig` no emite `spec.openapi` (sería un campo residual sin
   significado).
 
-Test: `tests/invariantes.test.mjs :: "la spec del InSoft no expone openapi"`
+Test: `tests/invariantes.test.ts :: "la spec del InSoft no expone openapi"`
 y `:: "index.html no menciona OpenAPI"`.
 
 ## `?conn=` (autoconexión ISS)
@@ -364,7 +364,7 @@ Al cargar, `loadViewerDocument`:
 
 ## `?s=` (bolsa de estado visual)
 
-Base64url de `{theme, palette, q, ...}`. La escribe `boot.js` antes del primer
+Base64url de `{theme, palette, q, ...}`. La escribe `boot.ts` antes del primer
 pintado (tema+paleta). El visor suma `q` (query de búsqueda). F5 restaura todo.
 
 - `js/search-state.ts`: `readSState`, `writeSState(patch, { push })`, `getQuery`, `setQuery`, `clearSState`.
@@ -395,12 +395,12 @@ es el contrato del backend. Documentarlo en UI es parte del contrato.
 
 1. **CSS embebido en el `.ts`** — heredado de is-tkts, donde estaba justificado
    por el HTML descargable autocontenido. Aquí no aplica. Guardián:
-   `tests/estructura.test.mjs`.
+   `tests/estructura.test.ts`.
 
 2. **Imports con carpetas en `dist/`** — el aplanado cubría `from"…"` pero no
    `import"…"` (import por efecto secundario). Un `import '../../js/x.js'`
    quedaba apuntando a un directorio inexistente: 404 y el módulo entero no se
-   ejecuta. Guardián: `estructura.test.mjs`.
+   ejecuta. Guardián: `estructura.test.ts`.
 
 3. **Diálogo montado en `document.body` con CSS en el shadow** — el diálogo de
    confirmación de `sw-try` vive en light DOM, así que su CSS está en
@@ -418,14 +418,14 @@ es el contrato del backend. Documentarlo en UI es parte del contrato.
 
 6. **Un CE que `createElement` monta sin estar importado** — no hace upgrade: el
    tag queda en el DOM sin shadow y la vista sale vacía, sin error en consola.
-   Guardián: `estructura.test.mjs` cruza componentes ↔ `index.html` ↔ `all.ts`.
+   Guardián: `estructura.test.ts` cruza componentes ↔ `index.html` ↔ `all.ts`.
 
 7. **`prefers-color-scheme`** — no se usa. El tema es explícito (`data-theme`
    en `<html>`, escrito por `boot.js` antes del primer pintado) para que un
    enlace compartido se vea igual en cualquier equipo.
 
 8. **`?conn=` ignorado por `specUrl` del `<script>`** — el visor mostraba el
-   demo local en vez del server real. Guardián: `invariantes.test.mjs`.
+   demo local en vez del server real. Guardián: `invariantes.test.ts`.
 
 9. **Flicker al cambiar pestaña** — el `<link>` dentro del shadow no bloquea el
    pintado de ese shadow, así que cada uno de los decenas de shadow roots que
@@ -434,14 +434,14 @@ es el contrato del backend. Documentarlo en UI es parte del contrato.
    fue el primer intento y **no bastaba**: el problema no era perderlo, era que
    nunca fue síncrono. Fix real: hojas construidas cacheadas por href
    (`adoptedStyleSheets`), más `js/hojas.js` para los shadow roots del kit.
-   Guardianes: `hojas.test.mjs`, `css-adopcion.test.mjs`, `invariantes.test.mjs`.
+   Guardianes: `hojas.test.ts`, `css-adopcion.test.ts`, `invariantes.test.ts`.
 
 10. **`auth.enabled: false` cuando `viewer.auth.enabled: true`** — el visor no
     tenía `loginUrl`, `resolveAuthConfig` lo desactivaba, no había forma de
     iniciar sesión. Fix: `DEFAULT_AUTH_LOGIN_URL` en `insoft-config.ts`.
 
 11. **OpenAPI en UI** — el visor parsea InSoft, no OpenAPI. Pintar «OpenAPI 3»
-    como marca miente. Guardián: `invariantes.test.mjs` (3 tests).
+    como marca miente. Guardián: `invariantes.test.ts` (3 tests).
 
 12. **Búsqueda escondida por la navTab** — con query la pestaña activa filtraba
     los resultados. Fix: con query, `filterGroupsByNavTab` se salta.
@@ -479,7 +479,7 @@ es el contrato del backend. Documentarlo en UI es parte del contrato.
     example (p. ej. `QUERY /voces`). El editor hacía `JSON.stringify` y el usuario
     veía la palabra null, JSON inválido para un objeto. Fix: no volcar skeleton;
     `formatBodyExample` de `null` o `undefined` pinta `{ }` vacío. Guardián:
-    `dominio.test.mjs`.
+    `dominio.test.ts`.
 
 18. **Adjuntos: picker general** — si la op admite archivos (`tryitAttachments`,
     multipart/octet-stream, schema `dataUrl`/`base64`) se pinta `<is-file-input
@@ -493,7 +493,7 @@ es el contrato del backend. Documentarlo en UI es parte del contrato.
 
 20. **`npm test` completo puede no terminar** — JSDOM + `search-state` a veces
     cuelga tras los asserts. Un hang no es verde. Correr el archivo puntual
-    (`dominio.test.mjs`, `invariantes.test.mjs`, …).
+    (`dominio.test.ts`, `invariantes.test.ts`, …).
 
 ## Seguridad de lo que se pinta
 
@@ -517,33 +517,33 @@ parte del contrato.
 5. Si `#render()` es manual: `adoptCss(this.#root, import.meta.url)` al final
    de cada salida del render, y `precargarCss(import.meta.url)` junto al
    `define(...)`. Con `crearComponente` no hay que hacer nada.
-6. `npm test` — `estructura.test.mjs` + `invariantes.test.mjs` + `docs.test.mjs`
+6. `npm test` — `estructura.test.ts` + `invariantes.test.ts` + `docs.test.ts`
    verifican.
 
 ## Testing
 
-`npm test` compila y corre `node --test tests/*.test.mjs`. La suite entera puede
+`npm test` compila y corre `node --test tests/*.test.ts`. La suite entera puede
 colgarse en JSDOM/`search-state`: un hang no cuenta como verde; corre el archivo.
 
 | Archivo | Caza |
 |---|---|
-| `openapi.test.mjs` | Lectura de la spec: agrupación, orden, `$ref`, seguridad |
-| `dominio.test.mjs` | Filtros, URLs, errores HTTP, markdown, Postman, sesión, búsqueda, conn |
-| `postman-md.test.mjs` | Conversión MD InSoft → Postman (`is-code`→fences; pipeline diagramas) |
-| `render.test.mjs` | Que el shadow se llene (jsdom, `is-*` sin registrar) |
-| `app.test.mjs` | El ciclo completo de `sw-app` con la spec de demo real |
-| `minidoc.test.mjs` | Driver 2: vistas, pestañas de estado, cURL y que los dos drivers convivan |
-| `estructura.test.mjs` | Inventario: cada componente ↔ `index.html` ↔ `all.ts` ↔ preview ↔ CSS hermano |
-| `conn.test.mjs` | `?conn=`: precedencia, override de paths, default ISS, conn > `<script>` |
-| `insoft-config.test.mjs` | Parser InSoft con fixture real + smoke contra la red |
-| `json-cache.test.mjs` | Cache local ≥24 h de los JSON del documento; fallback si la API cae |
-| `css-adopcion.test.mjs` | `adoptCss`: hoja síncrona desde caché, una descarga por href, repintar no la pierde |
-| `docs.test.mjs` | Que los `LLM.md` no mienten: catálogo completo, enlaces vivos, reglas que el código sigue cumpliendo |
-| `hojas.test.mjs` | El parche de `js/hojas.js` sobre los shadow roots del kit y el caché compartido |
-| `iss-swagger-doc.test.mjs` | Piezas JSON `kind` meta/paths/config vs `assertIssSwaggerPiezas` |
-| `iss-swagger-md.test.mjs` | JSON → markdown / HTML de `GET /LLM.md` |
-| `cdn.test.mjs` | Artefactos públicos: `LLM.md`, `.d.ts`, `iss-swagger-doc.ts`, convertidor `.min.js` |
-| `invariantes.test.mjs` | Regresiones de bugs ya vistos (OpenAPI, flicker, auth, conn, spec por defecto) |
+| `openapi.test.ts` | Lectura de la spec: agrupación, orden, `$ref`, seguridad |
+| `dominio.test.ts` | Filtros, URLs, errores HTTP, markdown, Postman, sesión, búsqueda, conn |
+| `postman-md.test.ts` | Conversión MD InSoft → Postman (`is-code`→fences; pipeline diagramas) |
+| `render.test.ts` | Que el shadow se llene (jsdom, `is-*` sin registrar) |
+| `app.test.ts` | El ciclo completo de `sw-app` con la spec de demo real |
+| `minidoc.test.ts` | Driver 2: vistas, pestañas de estado, cURL y que los dos drivers convivan |
+| `estructura.test.ts` | Inventario: cada componente ↔ `index.html` ↔ `all.ts` ↔ preview ↔ CSS hermano |
+| `conn.test.ts` | `?conn=`: precedencia, override de paths, default ISS, conn > `<script>` |
+| `insoft-config.test.ts` | Parser InSoft con fixture real + smoke contra la red |
+| `json-cache.test.ts` | Cache local ≥24 h de los JSON del documento; fallback si la API cae |
+| `css-adopcion.test.ts` | `adoptCss`: hoja síncrona desde caché, una descarga por href, repintar no la pierde |
+| `docs.test.ts` | Que los `LLM.md` no mienten: catálogo completo, enlaces vivos, reglas que el código sigue cumpliendo |
+| `hojas.test.ts` | El parche de `js/hojas.js` sobre los shadow roots del kit y el caché compartido |
+| `iss-swagger-doc.test.ts` | Piezas JSON `kind` meta/paths/config vs `assertIssSwaggerPiezas` |
+| `iss-swagger-md.test.ts` | JSON → markdown / HTML de `GET /LLM.md` |
+| `cdn.test.ts` | Artefactos públicos: `LLM.md`, `.d.ts`, `iss-swagger-doc.ts`, convertidor `.min.js` |
+| `invariantes.test.ts` | Regresiones de bugs ya vistos (OpenAPI, flicker, auth, conn, spec por defecto) |
 
 El patrón de fallo de este stack es siempre el mismo: **el artefacto se genera
 bien y el contenido está mal**. Build verde, navegador contento, y el CSS no
@@ -556,13 +556,13 @@ desincronizarse aquí sin que nada se rompa?*
 `tests/` no está ignorado por `.gitignore`: solo `tests/*.tmp`,
 `tests/coverage/` y `tests/.cache/`. El fixture real del ISS
 (`tests/fixtures/insoft-config.sample.json`, 76 KB) vive dentro del repo
-deliberadamente — `insoft-config.test.mjs` lo usa para cazar regresiones sin
+deliberadamente — `insoft-config.test.ts` lo usa para cazar regresiones sin
 necesidad de red.
 
 Si en algún momento se mete el repo a git y el fixture resulta pesado, mover
 solo el fixture a `.gitignore` con `!tests/fixtures/insoft-config.sample.json`
 si se quiere commitear o `tests/fixtures/*.sample.json` si se regenera en CI.
-No ignorar `tests/*.test.mjs`: son contrato ejecutable.
+No ignorar `tests/*.test.ts`: son contrato ejecutable.
 
 ## Windows
 

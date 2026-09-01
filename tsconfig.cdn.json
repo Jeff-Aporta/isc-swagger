@@ -8,11 +8,13 @@
     "skipLibCheck": true,
     "declaration": true,
     "emitDeclarationOnly": true,
-    "outDir": "dist/cdn/js",
-    "rootDir": "src/js"
+    "outDir": "dist/cdn",
+    "rootDir": "src"
   },
+  "//": "Emite un .d.ts junto a cada .js publicado. Antes solo cubria los dos entry points que el kit expone; se amplio a todo src/ para que los tests, que prueban dist/cdn como caja negra, no vean `any` en lo que importan.",
   "include": [
-    "src/js/iss-swagger-doc.ts",
-    "src/js/kit-tags.ts"
+    "src/js/**/*.ts",
+    "src/components/**/*.ts",
+    "src/types/**/*.d.ts"
   ]
 }

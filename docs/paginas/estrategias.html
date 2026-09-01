@@ -181,7 +181,7 @@
       <p>
         El kit <code>is-*</code> viene del CDN y enlaza sus propios
         <code>&lt;link&gt;</code> por shadow root.
-        <code>src/js/hojas.js</code> — plano y síncrono en <code>&lt;head&gt;</code>,
+        <code>src/js/hojas.ts</code> — plano y síncrono en <code>&lt;head&gt;</code>,
         antes que el kit — envuelve <code>ShadowRoot.prototype.prepend</code> y los
         cambia por la hoja construida <strong>a partir de la segunda aparición</strong>
         de cada URL. La primera se deja pasar tal cual, para que ningún componente
@@ -271,7 +271,7 @@
         se obedece igual.
       </p>
       <p>
-        Por eso hay una prueba, <code>tests/docs.test.mjs</code>, que verifica
+        Por eso hay una prueba, <code>tests/docs.test.ts</code>, que verifica
         contra el código: que no falte ninguna página, que los enlaces relativos
         resuelvan, que el catálogo de componentes no tenga fantasmas ni huecos,
         que la lista de componentes con render manual sea exacta, y que los

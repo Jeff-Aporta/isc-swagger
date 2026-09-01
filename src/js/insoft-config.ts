@@ -291,7 +291,9 @@ function buildViewerConfig(raw: InsoftConfig, apiBase: string): SwConfig {
     ns: typeof v.ns === 'string' ? v.ns : 'ISS',
     apiBase,
     brand: {
-      title: typeof brand.title === 'string' ? brand.title : (raw.info as Record<string, unknown>)?.title as string,
+      // `raw.info` esta tipado (`IssSwaggerInfo`), asi que no admite el casteo
+      // directo a `Record<string, unknown>`: se lee su campo tal cual.
+      title: typeof brand.title === 'string' ? brand.title : (raw.info?.title ?? ''),
       icon: typeof brand.icon === 'string' ? brand.icon : 'mdi:api',
     },
     auth: {

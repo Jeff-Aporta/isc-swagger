@@ -54,7 +54,7 @@ módulo. Están al final de esta página.
 
 ## Qué hacer
 
-- Escribir el caso nuevo como función pura y probarlo en `tests/*.test.mjs`
+- Escribir el caso nuevo como función pura y probarlo en `tests/*.test.ts`
   contra `dist/cdn/`.
 - Mantener el documento InSoft como entrada **no confiable**: nada de asumir
   que un campo existe o tiene el tipo declarado.
@@ -73,8 +73,8 @@ módulo. Están al final de esta página.
 
 1. **`?conn=` ignorado por el `specUrl` del `<script>`** — el visor caía al demo
    local y el usuario veía otra API. Fix: `resolveBootConfig` hace
-   `delete config.specUrl` cuando hay conn. Guardián: `tests/conn.test.mjs`,
-   `tests/invariantes.test.mjs`.
+   `delete config.specUrl` cuando hay conn. Guardián: `tests/conn.test.ts`,
+   `tests/invariantes.test.ts`.
 2. **`auth.enabled: false` con `viewer.auth.enabled: true`** — sin `loginUrl`,
    `resolveAuthConfig` desactivaba la sesión y no había forma de entrar. Fix:
    `DEFAULT_AUTH_LOGIN_URL` en `insoft-config.ts`.
@@ -83,7 +83,7 @@ módulo. Están al final de esta página.
 4. **`prefers-color-scheme`** — no se usa. El tema es explícito para que un
    enlace compartido se vea igual en cualquier equipo.
 5. **Cuerpo try-it `"null"`** — `$ref` sin example. `tryit-body.ts`. Tests:
-   `dominio.test.mjs`.
+   `dominio.test.ts`.
 6. **FileReader en Node** — polyfill con `arrayBuffer` + `btoa`, no FileReader.
 
 ## Los dos archivos en JavaScript plano
@@ -103,7 +103,7 @@ aparición de cada href se deja pasar tal cual —así ningún componente puede
 quedarse sin estilos por esa capa— y a partir de la segunda adopta la hoja ya
 construida. Publica el caché en `globalThis.__swHojas`, que `_shared.ts` reusa.
 
-Guardián: `tests/hojas.test.mjs`.
+Guardián: `tests/hojas.test.ts`.
 
 ## Navegación
 
