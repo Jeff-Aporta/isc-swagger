@@ -1,0 +1,5 @@
+const a=new Set(["is-sequence-diagram","is-flowchart","is-state-diagram","is-er-diagram","is-class-diagram","is-gantt","is-timeline","is-mindmap","is-sankey-diagram","is-quadrant-chart","is-block-diagram","is-component-diagram","is-use-case-diagram","is-swimlane-diagram","is-journey-map","is-venn-diagram"]);function p(s){const i=String(s??"").toLowerCase();if(!a.has(i))return null;const n=i.replace(/^is-/,"");return{js:`diagrams/${n}.min.js`,css:`diagrams/${n}.min.css`}}function g(s){return s.replace(/<\/script/gi,"<\\/script")}function d(s,i={}){if(!s)return"";const n=String(s.engine??"").toLowerCase();if(!a.has(n))return"";const{engine:r,alt:e,_doc:u,source:l,...o}=s,c=Object.keys(o).length?o:s,t=[];return i.abrirAlClic!==!1&&t.push("open-on-click"),e&&t.push(`alt="${String(e).replace(/"/g,"&quot;")}"`),`${`<${n}${t.length?" "+t.join(" "):""}>`}
+<script type="application/json">
+${g(JSON.stringify(c,null,2))}
+<\/script>
+</${n}>`}function f(s){const i=new Set;for(const n of s??[]){const r=String(n?.engine??"").toLowerCase();a.has(r)&&i.add(r)}return[...i].sort()}export{p as activosDe,d as diagramaTk2webcomponent,f as motoresUsados};
