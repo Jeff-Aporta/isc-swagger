@@ -16,12 +16,7 @@
 import { crearComponente, define, html, emitir } from './_shared.js';
 import { paramEnum, paramInputMode, paramTypeLabel, sanitizeParamInputValue } from '../../js/param-schema.js';
 
-interface Props {
-  params: SwParam[];
-  values: Record<string, string>;
-  disabled: boolean;
-  titulo: string;
-}
+type Props = { params: SwParam[]; values: Record<string, string>; disabled: boolean; titulo: string; };
 
 /** `is-select` cuando el schema declara `enum`; `is-input` en cualquier otro caso. */
 function campo(p: SwParam, valor: string, disabled: boolean, onChange: (v: string) => void): Node {

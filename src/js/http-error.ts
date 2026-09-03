@@ -34,15 +34,7 @@ const LOGIN_HINTS: Record<number, string> = {
   503: 'El servicio de autenticación no está disponible temporalmente.',
 };
 
-export interface SwHttpErrorOpts {
-  statusText?: string;
-  data?: unknown;
-  detail?: string;
-  endpoint?: string;
-  hint?: string;
-  defaultHint?: string;
-  context?: 'login' | string;
-}
+export type SwHttpErrorOpts = { statusText?: string; data?: unknown; detail?: string; endpoint?: string; hint?: string; defaultHint?: string; context?: 'login' | string; };
 
 /** Extrae el mensaje de error de las tres formas que usan las APIs InSoft. */
 export function extractApiError(data: unknown): string {

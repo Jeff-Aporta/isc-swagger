@@ -9,7 +9,7 @@ import { adoptCss, precargarCss, define, html, emitir } from './_shared.js';
 import type { SwOpTab } from '../../js/url-state.js';
 import './sw-operation.js';
 
-interface Props {
+type Props = {
   group: SwGrupo | null;
   spec: SwSpec | null;
   serverBase: string;
@@ -18,7 +18,7 @@ interface Props {
   /** `operationId` de la operación abierta, o vacío. */
   opAbierta: string;
   opTab: SwOpTab;
-}
+};
 
 class SwTagGroup extends HTMLElement {
   #root: ShadowRoot;

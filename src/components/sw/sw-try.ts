@@ -25,12 +25,7 @@ import './sw-params.js';
 import './sw-body.js';
 import './sw-json.js';
 
-interface Props {
-  op: SwOp | null;
-  spec: SwSpec | null;
-  serverBase: string;
-  authEnabled: boolean;
-}
+type Props = { op: SwOp | null; spec: SwSpec | null; serverBase: string; authEnabled: boolean; };
 
 /** Métodos que cambian estado: se confirman antes de dispararse. */
 const METODOS_PELIGROSOS = new Set(['delete', 'put', 'patch']);

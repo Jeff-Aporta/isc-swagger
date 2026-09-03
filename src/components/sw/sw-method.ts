@@ -8,9 +8,7 @@
 import { crearComponente, define, html } from './_shared.js';
 import { METHOD_COLOR } from '../../js/openapi.js';
 
-interface Props {
-  method: string;
-}
+type Props = { method: string; };
 
 const SwMethod = crearComponente<Props>(
   import.meta.url,

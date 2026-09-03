@@ -19,15 +19,7 @@ import './sw-responses.js';
 import './sw-doc.js';
 import './sw-json.js';
 
-interface Props {
-  op: SwOp | null;
-  spec: SwSpec | null;
-  serverBase: string;
-  authEnabled: boolean;
-  docMd: string;
-  abierto: boolean;
-  tab: SwOpTab;
-}
+type Props = { op: SwOp | null; spec: SwSpec | null; serverBase: string; authEnabled: boolean; docMd: string; abierto: boolean; tab: SwOpTab; };
 
 const PESTANAS: Array<{ id: SwOpTab; label: string; icon: string }> = [
   { id: 'try', label: 'Probar', icon: 'mdi:play-circle-outline' },

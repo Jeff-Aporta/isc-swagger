@@ -13,13 +13,7 @@ import { listOperations, resolveServerUrl, jsonPretty } from './openapi.js';
 import { buildIsDocument } from './is-document.js';
 import { issDocMdForPostman, opDocMd } from './postman-md.js';
 
-export interface SwFormatoExport {
-  id: string;
-  label: string;
-  icon: string;
-  filename: string;
-  build(): string | Promise<string>;
-}
+export type SwFormatoExport = { id: string; label: string; icon: string; filename: string; build(): string | Promise<string>; };
 
 const slug = (s: unknown): string =>
   String(s ?? 'documento')
@@ -55,10 +49,7 @@ export function toOpenApi30(spec: SwSpec): Record<string, unknown> {
  * La description de cada item es el markdown InSoft ya convertido para Postman
  * (PNG de diagramas + fences de código).
  */
-export async function toPostmanCollection(
-  spec: SwSpec,
-  nombre?: string,
-): Promise<Record<string, unknown>> {
+export async function toPostmanCollection(spec: SwSpec, nombre?: string): Promise<Record<string, unknown>> {
   const base = resolveServerUrl(spec) || '{{baseUrl}}';
   const porTag = new Map<string, Record<string, unknown>[]>();
 

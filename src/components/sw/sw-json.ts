@@ -9,13 +9,13 @@
 
 import { crearComponente, define, html } from './_shared.js';
 
-interface Props {
+type Props = {
   value: string;
   /** Alto máximo antes de hacer scroll interno. */
   maxHeight: string;
   /** Lenguaje de `<is-code>` (json | shell | curl | …). */
   lang: string;
-}
+};
 
 const SwJson = crearComponente<Props>(
   import.meta.url,

@@ -8,10 +8,7 @@
 import { crearComponente, define, emitir, html, avisar } from './_shared.js';
 import { buildExportFormats, descargarTexto } from '../../js/export.js';
 
-interface Props {
-  spec: SwSpec | null;
-  config: SwConfig;
-}
+type Props = { spec: SwSpec | null; config: SwConfig; };
 
 const SwDocActions = crearComponente<Props>(
   import.meta.url,

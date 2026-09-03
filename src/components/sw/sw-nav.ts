@@ -13,17 +13,7 @@ import './sw-auth.js';
 import './sw-driver-switch.js';
 import './sw-doc-actions.js';
 
-interface Props {
-  brand: SwBrand;
-  tabs: SwNavTab[];
-  activeTab: string;
-  query: string;
-  spec: SwSpec | null;
-  config: SwConfig;
-  authEnabled: boolean;
-  auth: SwAuthConfig;
-  session: SwSesion | null;
-}
+type Props = { brand: SwBrand; tabs: SwNavTab[]; activeTab: string; query: string; spec: SwSpec | null; config: SwConfig; authEnabled: boolean; auth: SwAuthConfig; session: SwSesion | null; };
 
 class SwNav extends HTMLElement {
   #root: ShadowRoot;

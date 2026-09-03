@@ -67,11 +67,7 @@ const decodeStoredSecret = (enc: string): string => {
   return '';
 };
 
-export interface SwCredenciales {
-  username: string;
-  password: string;
-  remember: boolean;
-}
+export type SwCredenciales = { username: string; password: string; remember: boolean; };
 
 export function readCredentials(): SwCredenciales {
   try {
@@ -166,12 +162,7 @@ export function sessionLabel(session: SwSesion | null): string {
 
 /* ── Login ──────────────────────────────────────────────────── */
 
-export interface SwLoginOpts {
-  loginPath?: string;
-  loginKind?: string;
-  appId?: string;
-  itercero?: string;
-}
+export type SwLoginOpts = { loginPath?: string; loginKind?: string; appId?: string; itercero?: string; };
 
 const isPortalLogin = (opts: SwLoginOpts): boolean =>
   opts.loginKind === 'portal' || String(opts.loginPath ?? '').includes('portal-login');
@@ -192,16 +183,9 @@ function resolveLoginEndpoint(authBase: unknown, loginPath?: string): string {
 /** Preferido cuando el backend responde MULTI_EMPRESA sin elección del usuario. */
 export const DEFAULT_APP_ITERCERO = '810000630';
 
-export interface SwLoginRespuesta extends SwSesion {
-  ok?: boolean;
-}
+export type SwLoginRespuesta = SwSesion & { ok?: boolean; };
 
-export async function fetchTestJwt(
-  authBase: unknown,
-  username: string,
-  password: string,
-  opts: SwLoginOpts = {},
-): Promise<SwLoginRespuesta> {
+export async function fetchTestJwt(authBase: unknown, username: string, password: string, opts: SwLoginOpts = {}): Promise<SwLoginRespuesta> {
   const portal = isPortalLogin(opts);
   const appId = opts.appId || DEFAULT_AUTH_APP_ID;
   const endpoint = resolveLoginEndpoint(authBase, opts.loginPath);

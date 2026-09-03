@@ -28,10 +28,7 @@ const subgroupDefs = (tagMeta: SwTag | Record<string, unknown> | undefined): SwS
   return Array.isArray(raw) ? (raw as SwSubgrupoDef[]) : [];
 };
 
-function resolveSubgroupDef(
-  tagMeta: SwTag | Record<string, unknown> | undefined,
-  subgroupId: string,
-): SwSubgrupoDef {
+function resolveSubgroupDef(tagMeta: SwTag | Record<string, unknown> | undefined, subgroupId: string): SwSubgrupoDef {
   const hit = subgroupDefs(tagMeta).find((d) => d?.id === subgroupId);
   if (hit) return { ...hit };
   if (subgroupId) return { id: subgroupId, name: subgroupId, icon: 'mdi:folder-outline' };
@@ -39,10 +36,7 @@ function resolveSubgroupDef(
 }
 
 /** Orden declarado en el tag primero; lo no declarado, detrás y en orden de aparición. */
-function orderSubgroups(
-  subgroupMap: Map<string, SwSubgrupo>,
-  tagMeta: SwTag | Record<string, unknown> | undefined,
-): SwSubgrupo[] {
+function orderSubgroups(subgroupMap: Map<string, SwSubgrupo>, tagMeta: SwTag | Record<string, unknown> | undefined): SwSubgrupo[] {
   const ordenados: SwSubgrupo[] = [];
   const vistos = new Set<string>();
   for (const def of subgroupDefs(tagMeta)) {
@@ -110,13 +104,7 @@ export function groupOperationsByTag(spec: SwSpec | null | undefined): SwGrupo[]
     if (t?.name) tagMeta.set(t.name, t);
   }
 
-  interface Acc {
-    name: string;
-    description: string;
-    meta: SwTag | Record<string, never>;
-    operations: SwOp[];
-    subgroupMap: Map<string, SwSubgrupo>;
-  }
+  type Acc = { name: string; description: string; meta: SwTag | Record<string, never>; operations: SwOp[]; subgroupMap: Map<string, SwSubgrupo>; };
   const groups = new Map<string, Acc>();
 
   for (const op of ops) {

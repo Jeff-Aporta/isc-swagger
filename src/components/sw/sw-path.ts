@@ -8,9 +8,7 @@
 
 import { crearComponente, define, html, raw, esc } from './_shared.js';
 
-interface Props {
-  path: string;
-}
+type Props = { path: string; };
 
 /** Parte por `{param}` conservando los delimitadores para poder marcarlos. */
 const marcar = (path: string): string =>

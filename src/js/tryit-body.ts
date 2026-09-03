@@ -14,12 +14,7 @@ export const BODY_HTTP_METHODS = new Set(['post', 'put', 'patch', 'query']);
 export const EXT_REQUEST_BODY = 'x-iss-request-body';
 export const EXT_REQUEST_BODY_EXAMPLES = 'x-iss-request-body-examples';
 
-export interface SwBodyEjemplo {
-  id: string;
-  label: string;
-  icon?: string;
-  example: unknown;
-}
+export type SwBodyEjemplo = { id: string; label: string; icon?: string; example: unknown; };
 
 export const opUsesRequestBody = (method: unknown): boolean =>
   BODY_HTTP_METHODS.has(String(method ?? '').toLowerCase());

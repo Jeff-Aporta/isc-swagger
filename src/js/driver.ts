@@ -20,13 +20,13 @@ import { migrateLegacyNavToS, readSState, writeSState } from './search-state.js'
 export const PARAM_DRIVER = 'driver';
 const CLAVE_ALMACEN = 'sw:driver';
 
-export interface SwDriver {
+export type SwDriver = {
   /** Tag del custom element que monta este driver. */
   id: 'sw-app' | 'sw-minidoc';
   label: string;
   /** Una línea para el `title` del selector: qué gana quien lo elige. */
   detalle: string;
-}
+};
 
 export const DRIVERS: readonly SwDriver[] = [
   { id: 'sw-app', label: 'Clásico', detalle: 'Lista por secciones; cada operación se despliega en su sitio' },

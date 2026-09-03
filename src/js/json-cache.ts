@@ -15,16 +15,13 @@ export const JSON_CACHE_PREFIX = 'sw:json-cache:v1:';
 
 export type JsonCacheSource = 'cache' | 'network' | 'stale-cache';
 
-export interface JsonCacheEntry {
+export type JsonCacheEntry = {
   /** Epoch ms del último GET exitoso. */
   fetchedAt: number;
   data: unknown;
-}
+};
 
-export interface FetchJsonCachedResult {
-  data: unknown;
-  source: JsonCacheSource;
-}
+export type FetchJsonCachedResult = { data: unknown; source: JsonCacheSource; };
 
 function clave(url: string): string {
   return `${JSON_CACHE_PREFIX}${String(url ?? '').trim()}`;
@@ -80,11 +77,7 @@ export function clearJsonCache(url?: string): void {
   }
 }
 
-export function isJsonCacheFresh(
-  entry: JsonCacheEntry | null | undefined,
-  now = Date.now(),
-  ttlMs = JSON_CACHE_TTL_MS,
-): boolean {
+export function isJsonCacheFresh(entry: JsonCacheEntry | null | undefined, now = Date.now(), ttlMs = JSON_CACHE_TTL_MS): boolean {
   if (!entry) return false;
   return now - entry.fetchedAt < ttlMs;
 }

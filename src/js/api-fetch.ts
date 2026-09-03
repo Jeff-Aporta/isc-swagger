@@ -17,18 +17,13 @@ export function authHeaders(includeAuth = true): Record<string, string> {
   return headers;
 }
 
-export interface SwFetchOpts extends Omit<RequestInit, 'headers'> {
+export type SwFetchOpts = Omit<RequestInit, 'headers'> & {
   headers?: Record<string, string>;
   /** `false` no adjunta el JWT (endpoints públicos). */
   auth?: boolean;
-}
+};
 
-export interface SwFetchResult {
-  data: unknown;
-  res: Response;
-  text: string;
-  ok: boolean;
-}
+export type SwFetchResult = { data: unknown; res: Response; text: string; ok: boolean; };
 
 export async function fetchApiRaw(url: string, opts: SwFetchOpts = {}): Promise<SwFetchResult> {
   const { auth, headers: extra, ...init } = opts;

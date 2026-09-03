@@ -19,14 +19,7 @@ import './sw-json.js';
 import './sw-try.js';
 import './sw-doc.js';
 
-interface Props {
-  op: SwOp | null;
-  spec: SwSpec | null;
-  grupo: string;
-  serverBase: string;
-  authEnabled: boolean;
-  docMd: string;
-}
+type Props = { op: SwOp | null; spec: SwSpec | null; grupo: string; serverBase: string; authEnabled: boolean; docMd: string; };
 
 /** Orden de lectura de los parámetros: primero lo que va en la ruta, luego lo opcional. */
 const SITIOS: Array<{ in: string; titulo: string }> = [

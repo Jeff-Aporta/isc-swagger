@@ -62,10 +62,7 @@ function leerConfigEmbebida(): SwConfig {
 /**
  * Materializa un `spec` ya en memoria (sin red): InSoft `kind:"config"`, documento IS u OpenAPI.
  */
-export function materializeEmbeddedSpec(
-  config: SwConfig,
-  raw: unknown,
-): { config: SwConfig; spec: SwSpec } | null {
+export function materializeEmbeddedSpec(config: SwConfig, raw: unknown): { config: SwConfig; spec: SwSpec } | null {
   if (!raw || typeof raw !== 'object') return null;
 
   const desdeIs = parseIsDocument(raw);
@@ -165,10 +162,7 @@ async function fetchJson(url: string, opts: { force?: boolean } = {}): Promise<u
   return data;
 }
 
-export async function loadViewerDocument(
-  config: SwConfig,
-  opts: { force?: boolean } = {},
-): Promise<{ config: SwConfig; spec: SwSpec }> {
+export async function loadViewerDocument(config: SwConfig, opts: { force?: boolean } = {}): Promise<{ config: SwConfig; spec: SwSpec }> {
   const embebido = parseIsDocument(config);
   if (embebido) {
     const { spec: _omit, ...viewer } = embebido.config;

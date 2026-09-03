@@ -25,11 +25,7 @@ export const OP_TABS = ['try', 'examples', 'doc'] as const;
 export type SwOpTab = (typeof OP_TABS)[number];
 export const OP_TAB_DEFAULT: SwOpTab = 'try';
 
-export interface SwUrlState {
-  tab: string;
-  op: string;
-  opTab: SwOpTab;
-}
+export type SwUrlState = { tab: string; op: string; opTab: SwOpTab; };
 
 function strField(bag: Record<string, unknown>, key: string): string {
   const v = bag[key];

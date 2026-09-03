@@ -111,10 +111,7 @@ function jsonResponse(description: string, schema: unknown, example: unknown): R
 }
 
 /** Construye las respuestas OpenAPI a partir del `responses` del config. */
-function buildResponses(
-  catalog: InsoftCatalog,
-  def: Record<string, unknown> | undefined,
-): Record<string, unknown> {
+function buildResponses(catalog: InsoftCatalog, def: Record<string, unknown> | undefined): Record<string, unknown> {
   if (!def || typeof def !== 'object') return { '200': jsonResponse('OK', { type: 'object' }, {}) };
   const template = String(def.template ?? '');
   const description = String(def.description ?? 'OK');

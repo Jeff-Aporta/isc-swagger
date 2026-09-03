@@ -12,11 +12,7 @@
 import { crearComponente, define, html, emitir } from './_shared.js';
 import { resolveTryItBodyExamples, validateBodyJson, formatBodyExample } from '../../js/tryit-body.js';
 
-interface Props {
-  op: SwOp | null;
-  value: string;
-  disabled: boolean;
-}
+type Props = { op: SwOp | null; value: string; disabled: boolean; };
 
 const SwBody = crearComponente<Props>(
   import.meta.url,

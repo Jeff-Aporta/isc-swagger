@@ -10,9 +10,7 @@ import { crearComponente, define, html } from './_shared.js';
 import { extractJsonExample, jsonPretty, responseTone, toneToIsColor } from '../../js/openapi.js';
 import './sw-json.js';
 
-interface Props {
-  responses: Record<string, SwResponse> | null;
-}
+type Props = { responses: Record<string, SwResponse> | null; };
 
 /** Primer media type con algo mostrable; `application/json` tiene prioridad. */
 function ejemploDe(resp: SwResponse): string {

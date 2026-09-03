@@ -54,12 +54,7 @@ export function ensureDialogHostStyles(): void {
 }
 
 /** Monta un `is-dialog` en `document.body` con ancho usable y estilos de confirmación. */
-export function openHostDialog(opts: {
-  label: string;
-  className?: string;
-  content: Node | DocumentFragment;
-  width?: string;
-}): HTMLElement {
+export function openHostDialog(opts: { label: string; className?: string; content: Node | DocumentFragment; width?: string; }): HTMLElement {
   ensureDialogHostStyles();
   const dlg = document.createElement('is-dialog');
   dlg.setAttribute('label', opts.label);

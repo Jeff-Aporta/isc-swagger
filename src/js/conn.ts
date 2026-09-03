@@ -37,7 +37,7 @@ export type SwConnPathValue = string | false | null;
 export type SwConnPaths = Partial<Record<keyof typeof DEFAULT_CONN_PATHS, SwConnPathValue>> &
   Record<string, SwConnPathValue | undefined>;
 
-export interface SwConn {
+export type SwConn = {
   apiBase?: string;
   auto?: boolean;
   embed?: boolean;
@@ -48,7 +48,7 @@ export interface SwConn {
   title?: string;
   icon?: string;
   [k: string]: unknown;
-}
+};
 
 /** `true` si el host desactivó el fetch del JSON de docs. */
 export function isDocsPathDisabled(paths: SwConnPaths | undefined): boolean {
@@ -127,13 +127,7 @@ export function resolveConnConfig(search: string | URLSearchParams | null | unde
 }
 
 /** Forma ya resuelta del conn: lo que el visor consume. */
-export interface SwConnResuelto {
-  apiBase: string;
-  paths: SwConnPaths;
-  fixedServer: boolean;
-  brand: { title?: string; icon?: string };
-  spec?: unknown;
-}
+export type SwConnResuelto = { apiBase: string; paths: SwConnPaths; fixedServer: boolean; brand: { title?: string; icon?: string }; spec?: unknown; };
 
 /**
  * Normaliza un `SwConn` ya deserializado.

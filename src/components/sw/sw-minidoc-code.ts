@@ -18,12 +18,7 @@ import {
 import { jsonPretty, extractJsonExample, responseTone, toneToIsColor } from '../../js/openapi.js';
 import './sw-json.js';
 
-interface Props {
-  op: SwOp | null;
-  spec: SwSpec | null;
-  serverBase: string;
-  requiereBearer: boolean;
-}
+type Props = { op: SwOp | null; spec: SwSpec | null; serverBase: string; requiereBearer: boolean; };
 
 type VistaPeticion = 'curl' | 'body';
 

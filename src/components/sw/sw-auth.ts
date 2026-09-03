@@ -21,11 +21,7 @@ import {
   storeJwt,
 } from '../../js/auth.js';
 
-interface Props {
-  authEnabled: boolean;
-  auth: SwAuthConfig;
-  session: SwSesion | null;
-}
+type Props = { authEnabled: boolean; auth: SwAuthConfig; session: SwSesion | null; };
 
 class SwAuth extends HTMLElement {
   #root: ShadowRoot;

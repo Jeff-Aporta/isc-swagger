@@ -9,11 +9,11 @@
 
 import { crearComponente, define, html } from './_shared.js';
 
-interface Props {
+type Props = {
   markdown: string;
   /** Texto cuando no hay documentación. */
   vacio: string;
-}
+};
 
 const SwDoc = crearComponente<Props>(
   import.meta.url,

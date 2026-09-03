@@ -8,9 +8,7 @@
 import { crearComponente, define, html } from './_shared.js';
 import './sw-doc.js';
 
-interface Props {
-  spec: SwSpec | null;
-}
+type Props = { spec: SwSpec | null; };
 
 const SwHome = crearComponente<Props>(
   import.meta.url,

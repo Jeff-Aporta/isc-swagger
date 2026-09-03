@@ -11,10 +11,7 @@
 import { crearComponente, define, html, emitir } from './_shared.js';
 import { normalizeServerBase } from '../../js/server-base.js';
 
-interface Props {
-  value: string;
-  options: string[];
-}
+type Props = { value: string; options: string[]; };
 
 const SwServer = crearComponente<Props>(
   import.meta.url,

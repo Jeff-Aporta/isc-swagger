@@ -12,10 +12,10 @@
 import { crearComponente, define, emitir, html } from './_shared.js';
 import { DRIVERS, driverMeta, readDriver, writeDriver, type SwDriver } from '../../js/driver.js';
 
-interface Props {
+type Props = {
   /** Driver activo. Si va vacío se resuelve solo (URL → preferencia guardada → default). */
   value: SwDriver['id'] | '';
-}
+};
 
 const SwDriverSwitch = crearComponente<Props>(
   import.meta.url,
