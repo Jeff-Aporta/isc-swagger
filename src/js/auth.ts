@@ -11,6 +11,7 @@
  */
 
 import { formatLoginError } from './http-error.js';
+import { resolveLoginProvider } from './login-providers.js';
 
 const STORAGE_KEY = 'jeffaporta:swagger-test-jwt';
 const CREDENTIALS_KEY = 'jeffaporta:swagger-login-creds';
@@ -162,7 +163,7 @@ export function sessionLabel(session: SwSesion | null): string {
 
 /* ── Login ──────────────────────────────────────────────────── */
 
-export type SwLoginOpts = { loginPath?: string; loginKind?: string; appId?: string; itercero?: string; };
+export type SwLoginOpts = { loginPath?: string; loginKind?: string; appId?: string; itercero?: string; provider?: string };
 
 const isPortalLogin = (opts: SwLoginOpts): boolean =>
   opts.loginKind === 'portal' || String(opts.loginPath ?? '').includes('portal-login');
@@ -186,6 +187,13 @@ export const DEFAULT_APP_ITERCERO = '810000630';
 export type SwLoginRespuesta = SwSesion & { ok?: boolean; };
 
 export async function fetchTestJwt(authBase: unknown, username: string, password: string, opts: SwLoginOpts = {}): Promise<SwLoginRespuesta> {
+  // Proveedor por server (opcional): si el host configura `opts.provider`, la petición la arma el
+  // proveedor (ej. 'patyia-portal' espera password en claro y /auth/portal-login). Sin provider se
+  // conserva exactamente el flujo por defecto de abajo (orquestador/dsclientes, sin cambios).
+  if (opts.provider) {
+    return fetchConProvider(String(authBase ?? '').trim().replace(/\/$/, ''), username, password, opts);
+  }
+
   const portal = isPortalLogin(opts);
   const appId = opts.appId || DEFAULT_AUTH_APP_ID;
   const endpoint = resolveLoginEndpoint(authBase, opts.loginPath);
@@ -224,9 +232,35 @@ export async function fetchTestJwt(authBase: unknown, username: string, password
   return data as SwLoginRespuesta;
 }
 
+/** Login vía un proveedor por server (login-providers.ts). Sin cambios al flujo por defecto. */
+async function fetchConProvider(base: string, username: string, password: string, opts: SwLoginOpts): Promise<SwLoginRespuesta> {
+  const prov = resolveLoginProvider(opts.provider);
+  const req = prov({ base, username, password, opts });
+  let res: Response;
+  try {
+    res = await fetch(req.endpoint, {
+      method: 'POST',
+      headers: req.headers,
+      body: JSON.stringify(req.body),
+    });
+  } catch {
+    throw new Error(`No se pudo conectar con el servicio de autenticación (${req.endpoint}).`);
+  }
+  let data: Record<string, unknown> = {};
+  try {
+    data = (await res.json()) as Record<string, unknown>;
+  } catch {
+    /* respuesta sin JSON */
+  }
+  if (data?.code === 'MULTI_EMPRESA' && Array.isArray(data.terceros) && data.terceros.length && !opts.itercero) {
+    return fetchConProvider(base, username, password, { ...opts, itercero: DEFAULT_APP_ITERCERO });
+  }
+  if (!res.ok || !data.ok || !data.token) throw new Error(formatLoginError(res, data, req.endpoint));
+  return data as SwLoginRespuesta;
+}
+
 /** `auth` con los valores por defecto ya resueltos; `enabled:false` si no hay dónde loguearse. */
-export function resolveAuthConfig(config: SwConfig): SwAuthConfig {
-  const auth = { ...(config.auth ?? {}) };
+export function resolveAuthConfig(config: SwConfig): SwAuthConfig {  const auth = { ...(config.auth ?? {}) };
   if (auth.enabled === false) return { enabled: false };
   if (!auth.loginUrl) return { ...auth, enabled: false };
   return {
