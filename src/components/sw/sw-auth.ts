@@ -71,6 +71,7 @@ class SwAuth extends HTMLElement {
         loginPath: auth.loginPath,
         loginKind: auth.loginKind,
         appId: auth.app,
+        provider: auth.provider,
       });
       storeJwt(data.token, { username: usuario, nombre: data.nombre, expiresAt: data.expiresAt });
       saveCredentials(usuario, clave, recordar);

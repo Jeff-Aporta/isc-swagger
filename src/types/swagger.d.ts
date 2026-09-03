@@ -131,6 +131,8 @@ interface SwAuthConfig {
   loginPath?: string;
   loginKind?: 'portal' | 'lab' | string;
   app?: string;
+  /** Id de login-provider por server (login-providers.ts); sin él se usa el default orquestador. */
+  provider?: string;
 }
 
 interface SwBrand {

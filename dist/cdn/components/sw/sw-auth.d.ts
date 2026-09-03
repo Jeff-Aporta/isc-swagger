@@ -8,11 +8,11 @@
  * Props: { authEnabled, auth, session }
  * Evento: sw-session-change  detail: { session }
  */
-interface Props {
+type Props = {
     authEnabled: boolean;
     auth: SwAuthConfig;
     session: SwSesion | null;
-}
+};
 declare class SwAuth extends HTMLElement {
     #private;
     constructor();

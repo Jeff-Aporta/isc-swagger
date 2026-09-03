@@ -283,6 +283,10 @@ function buildViewerConfig(raw: InsoftConfig, apiBase: string): SwConfig {
   const brand = (v.brand ?? {}) as Record<string, unknown>;
   const auth = (v.auth ?? {}) as Record<string, unknown>;
   const exports = (v.exports ?? {}) as Record<string, unknown>;
+  const provider = typeof auth.provider === 'string' ? auth.provider : '';
+  // patyia-portal autentica contra el propio servidor que sirve /api/docs: sin loginUrl explícito
+  // se apunta al apiBase del visor (self-host), en vez del orquestador público.
+  const loginUrlDefault = provider === 'patyia-portal' ? apiBase.replace(/\/+$/, '') : DEFAULT_AUTH_LOGIN_URL;
 
   const config: SwConfig = {
     ns: typeof v.ns === 'string' ? v.ns : 'ISS',
@@ -295,10 +299,12 @@ function buildViewerConfig(raw: InsoftConfig, apiBase: string): SwConfig {
     },
     auth: {
       enabled: auth.enabled !== false,
-      loginUrl: typeof auth.loginUrl === 'string' ? auth.loginUrl : DEFAULT_AUTH_LOGIN_URL,
+      loginUrl: typeof auth.loginUrl === 'string' ? auth.loginUrl : loginUrlDefault,
       loginKind: typeof auth.loginKind === 'string' ? (auth.loginKind as SwAuthConfig['loginKind']) : 'portal',
       loginPath: typeof auth.loginPath === 'string' ? auth.loginPath : '/api/auth/token',
       app: typeof auth.app === 'string' ? auth.app : 'swagger-viewer',
+      // Provider de login por server (login-providers.ts). Sin valor → default orquestador.
+      ...(provider ? { provider } : {}),
     },
     serverSelect: false,
   };
